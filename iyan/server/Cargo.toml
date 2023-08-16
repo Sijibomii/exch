@@ -26,3 +26,4 @@ uuid = { version = "1.4.0", features = ["serde", "v4"] }
 
 
 config = { path = "../config" }
+core = { path = "../core" }
