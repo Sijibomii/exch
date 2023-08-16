@@ -1,5 +1,8 @@
+extern crate actix;
 
+use actix::prelude::*; 
 
 fn main() {
-    println!("Hello, world!");
+    let system = System::new("iyan");
+    system.run();
 }
