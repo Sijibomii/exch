@@ -21,3 +21,4 @@ serde_derive = "1.0.167"
 serde_json = { version = "1.0.105" }
 uuid = { version = "1.4.0", features = ["serde", "v4"] }
 
+types = { path = "../types" }

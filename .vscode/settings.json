@@ -1,5 +1,6 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./iyan/config/Cargo.toml"
+        "./iyan/config/Cargo.toml",
+        "./iyan/types/Cargo.toml"
     ]
 }
