@@ -15,3 +15,6 @@
 | [ewedu](ewedu)        |   React Native App        |
 | [amala](amala)        |   Next.js frontend        |
 | [beef](beef)          |      API Client           |
+
+
+lettre_email = "0.8"
