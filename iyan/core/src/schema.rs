@@ -97,6 +97,14 @@ table! {
 }
 
 // token onwership map no of tokens owned to trading wallet
+table! {
+    token_ownership(id) {
+        id -> Uuid,
+        token_id -> Uuid,
+        balance -> Numeric
+    }
+}
+
 
 allow_tables_to_appear_in_same_query!(
     
