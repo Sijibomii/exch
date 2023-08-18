@@ -25,3 +25,9 @@ extern crate types;
 
 
 mod schema;
+pub mod db;
+mod models;
+
+pub use models::{ 
+    user, Error as ModelError,
+}; 

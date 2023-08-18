@@ -1,6 +1,6 @@
 use actix::MailboxError;
-use db::Error as DbError;
 use jwt::errors::Error as JwtError;
+use super::super::db::Error as DbError;
 
 #[derive(Debug, Fail)]
 pub enum Error {

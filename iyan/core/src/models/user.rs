@@ -5,15 +5,15 @@ use futures::Future;
 use serde_json::Value;
 use uuid::Uuid;
 
-use db::{
+use super::super::db::{
     postgres::PgExecutorAddr,
     users::{
         Activate, Delete, DeleteExpired, FindByEmail, FindById, FindByResetToken, Insert, Update, 
     },
 };
 
-use models::Error;
-use schema::users;
+use super::Error;
+use super::super::schema::users;
 
 #[derive(Insertable, AsChangeset, Deserialize, Clone)]
 #[table_name = "users"]
@@ -29,7 +29,7 @@ pub struct UserPayload {
     pub reset_token: Option<Option<Uuid>>,
     pub reset_token_expires_at: Option<Option<DateTime<Utc>>>,
     pub last_login_time: Option<Option<DateTime<Utc>>>,
-    pub last_login_ip: Option<String>,
+    pub last_login_ip: Option<Option<String>>,
 }
 
 impl UserPayload {
@@ -67,5 +67,143 @@ impl UserPayload {
     pub fn set_reset_token(&mut self) {
         self.reset_token = Some(Some(Uuid::new_v4()));
         self.reset_token_expires_at = Some(Some(Utc::now() + Duration::days(1)));
+    }
+
+    pub fn set_last_login_time(&mut self) {
+        self.last_login_time = Some(Some(Utc::now()));
+    }
+
+}
+
+
+#[derive(Identifiable, Queryable, Serialize, Clone)]
+pub struct User {
+    pub id: Uuid,
+    pub email: String,
+    pub password: String,
+    pub salt: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub is_verified: bool,
+    pub verification_token: Uuid,
+    pub verification_token_expires_at: DateTime<Utc>,
+    pub reset_token: Option<Uuid>,
+    pub reset_token_expires_at: Option<DateTime<Utc>>,
+    pub last_login_time: Option<DateTime<Utc>>,
+    pub last_login_ip: Option<String>,
+}
+
+impl From<User> for UserPayload {
+    fn from(user: User) -> Self {
+        UserPayload {
+            email: Some(user.email),
+            password: Some(user.password),
+            salt: Some(user.salt),
+            created_at: Some(user.created_at),
+            updated_at: Some(user.updated_at),
+            is_verified: Some(user.is_verified),
+            verification_token: Some(user.verification_token),
+            verification_token_expires_at: Some(user.verification_token_expires_at),
+            reset_token: Some(user.reset_token),
+            reset_token_expires_at: Some(user.reset_token_expires_at),
+            last_login_time: Some(user.last_login_time),
+            last_login_ip: Some(user.last_login_ip),
+        }
+    }
+}
+
+impl User {
+    pub fn insert(
+        mut payload: UserPayload,
+        postgres: &PgExecutorAddr,
+    ) -> impl Future<Item = User, Error = Error> {
+        payload.set_created_at();
+        payload.set_updated_at();
+        payload.set_verification_token();
+        // sends the Insert message to the postgres actor
+        (*postgres)
+            .send(Insert(payload))
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+
+    pub fn update(
+        id: Uuid,
+        mut payload: UserPayload,
+        postgres: &PgExecutorAddr,
+    ) -> impl Future<Item = User, Error = Error> {
+        payload.set_updated_at();
+
+        (*postgres)
+            .send(Update { id, payload })
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+
+    pub fn find_by_reset_token(
+        token: Uuid,
+        postgres: &PgExecutorAddr,
+    ) -> impl Future<Item = User, Error = Error> {
+        (*postgres)
+            .send(FindByResetToken(token))
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+
+    pub fn find_by_email(
+        email: String,
+        postgres: &PgExecutorAddr,
+    ) -> impl Future<Item = User, Error = Error> {
+        (*postgres)
+            .send(FindByEmail(email))
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+
+    pub fn find_by_id(
+        id: Uuid,
+        postgres: &PgExecutorAddr,
+    ) -> impl Future<Item = User, Error = Error> {
+        (*postgres)
+            .send(FindById(id))
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+
+    pub fn activate(
+        token: Uuid,
+        postgres: &PgExecutorAddr,
+    ) -> impl Future<Item = User, Error = Error> {
+        // send activate message to pgexecutor
+        (*postgres)
+            .send(Activate(token))
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+
+    pub fn delete(id: Uuid, postgres: &PgExecutorAddr) -> impl Future<Item = usize, Error = Error> {
+        (*postgres)
+            .send(Delete(id))
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+ 
+    pub fn delete_expired(
+        email: String,
+        postgres: &PgExecutorAddr,
+    ) -> impl Future<Item = usize, Error = Error> {
+        (*postgres)
+            .send(DeleteExpired(email))
+            .from_err()
+            .and_then(|res| res.map_err(|e| Error::from(e)))
+    }
+
+    pub fn export(&self) -> Value {
+        json!({
+            "id": self.id,
+            "email": self.email,
+            "created_at": self.created_at.timestamp(),
+            "updated_at": self.updated_at.timestamp(),
+        })
     }
 }

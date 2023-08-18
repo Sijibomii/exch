@@ -6,6 +6,10 @@
         "./iyan/core/Cargo.toml",
         "./iyan/core/Cargo.toml",
         "./iyan/core/Cargo.toml",
+        "./iyan/core/Cargo.toml",
+        "./iyan/core/Cargo.toml",
         "./iyan/core/Cargo.toml"
-    ]
+    ],
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    "deepscan.enable": true
 }
