@@ -10,12 +10,13 @@ actix = "0.13.0"
 actix-web = "4.3.1"
 env_logger = "0.10.0"
 toml = "0.4.2"
+log = "0.4"
 
 server = { path = "./server" }
 config = { path = "./config" }
 types = { path = "./types" }
 core = { path = "./core" }
-
+logger =  { path = "./logger" }
 
 [[bin]]
 path = "iyan/main.rs"
