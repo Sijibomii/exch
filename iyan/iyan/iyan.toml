@@ -1,0 +1,18 @@
+[postgres]
+database = "postgres"
+user = "postgres"
+password = "postgres"
+
+[server]
+host = "localhost"
+port = 4000
+mail_sender = "noreply@example.com"
+web_client_url = "https://example.com"
+public_key = "public_key_contents"
+private_key = "private_key_contents"
+
+[smtp]
+host = "smtp.example.com"
+port = 587
+user = "smtpuser"
+pass = "smtppassword"
