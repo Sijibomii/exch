@@ -42,8 +42,7 @@ defmodule Egusi do
     [
       {:_,
        [
-         {"/socket", Ugwu.SocketHandler, []},
-         {:_, Plug.Cowboy.Handler, {Ugwu, []}}
+         {"/socket", Ugwu.SocketHandler, []}
        ]}
     ]
   end
