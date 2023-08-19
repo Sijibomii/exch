@@ -4,7 +4,7 @@
 <p align="center">
   <strong>An exchange platform for fundraising</strong>
 </p>
-## Structure
+
 
 | Codebase              |      Description          |
 | :-------------------- | :-----------------------: |
@@ -17,4 +17,3 @@
 | [beef](beef)          |      API Client           |
 
 
-lettre_email = "0.8"
