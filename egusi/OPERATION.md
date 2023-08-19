@@ -1,0 +1,1 @@
+websocket message handler: holds a usersession
