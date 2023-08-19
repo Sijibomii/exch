@@ -1,8 +1,6 @@
 use std::convert::From;
 
-// use actix_web::cookie::time::Error;
 use chrono::{prelude::*, Duration};
-use futures::Future;
 use serde_json::Value;
 use uuid::Uuid;
 
