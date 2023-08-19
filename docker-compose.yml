@@ -25,6 +25,15 @@ services:
       - 5000:5000
     depends_on:
       - elasticsearch
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.10.0
+    user: root
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    depends_on:
+      - logstash
   kibana:
     image: docker.elastic.co/kibana/kibana:7.10.0
     ports:
