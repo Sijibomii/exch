@@ -1,5 +1,6 @@
 use std::convert::From;
 
+// use actix_web::cookie::time::Error;
 use chrono::{prelude::*, Duration};
 use futures::Future;
 use serde_json::Value;
@@ -11,7 +12,6 @@ use super::super::db::{
         Activate, Delete, DeleteExpired, FindByEmail, FindById, FindByResetToken, Insert, Update, 
     },
 };
-
 use super::Error;
 use super::super::schema::users;
 
@@ -113,89 +113,193 @@ impl From<User> for UserPayload {
 }
 
 impl User {
-    pub fn insert(
+    pub async fn insert(
         mut payload: UserPayload,
         postgres: &PgExecutorAddr,
-    ) -> impl Future<Item = User, Error = Error> {
+    ) ->  Result<User, Error> {
         payload.set_created_at();
-        payload.set_updated_at();
+        payload.set_updated_at(); 
         payload.set_verification_token();
-        // sends the Insert message to the postgres actor
-        (*postgres)
-            .send(Insert(payload))
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+        
+        let sum_result = (*postgres)
+        .send(Insert(payload))
+        .await
+        .map_err(|e| {
+            eprintln!("Encountered mailbox error: {:?}", e);
+            Error::from(e)
+        });
+
+    match sum_result {
+        Ok(res) => 
+        match res {
+            Ok(user) => Ok(user),
+            Err(e) => Err(Error::from(e)),
+        }
+        ,
+        Err(e) => Err(e),
+        }
     }
 
-    pub fn update(
+    pub async fn update(
         id: Uuid,
         mut payload: UserPayload,
         postgres: &PgExecutorAddr,
-    ) -> impl Future<Item = User, Error = Error> {
+    ) ->  Result<User, Error> {
         payload.set_updated_at();
 
-        (*postgres)
+        let sum_result = (*postgres)
             .send(Update { id, payload })
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+            .await
+            .map_err(|e| {
+                eprintln!("Encountered mailbox error: {:?}", e);
+                Error::from(e)
+            });
+
+        match sum_result {
+            Ok(res) => 
+            match res {
+                Ok(user) => Ok(user),
+                Err(e) => Err(Error::from(e)),
+            }
+            ,
+            Err(e) => Err(e),
+        }
     }
 
-    pub fn find_by_reset_token(
+    pub async fn find_by_reset_token(
         token: Uuid,
         postgres: &PgExecutorAddr,
-    ) -> impl Future<Item = User, Error = Error> {
-        (*postgres)
+    ) ->  Result<User, Error> {
+        let sum_result=(*postgres)
             .send(FindByResetToken(token))
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+            .await
+            .map_err(|e| {
+                eprintln!("Encountered mailbox error: {:?}", e);
+                Error::from(e)
+            });
+
+        match sum_result {
+            Ok(res) => 
+            match res {
+                Ok(user) => Ok(user),
+                Err(e) => Err(Error::from(e)),
+            }
+            ,
+            Err(e) => Err(e),
+        }
     }
 
-    pub fn find_by_email(
+    pub async fn find_by_email(
         email: String,
         postgres: &PgExecutorAddr,
-    ) -> impl Future<Item = User, Error = Error> {
-        (*postgres)
+    ) ->  Result<User, Error> {
+        let sum_result= (*postgres)
             .send(FindByEmail(email))
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+            .await
+            .map_err(|e| {
+                eprintln!("Encountered mailbox error: {:?}", e);
+                Error::from(e)
+            });
+
+        match sum_result {
+            Ok(res) => 
+            match res {
+                Ok(user) => Ok(user),
+                Err(e) => Err(Error::from(e)),
+            }
+            ,
+            Err(e) => Err(e),
+        }
     }
 
-    pub fn find_by_id(
+    pub async fn find_by_id(
         id: Uuid,
         postgres: &PgExecutorAddr,
-    ) -> impl Future<Item = User, Error = Error> {
-        (*postgres)
+    ) ->  Result<User, Error> {
+        let sum_result = (*postgres)
             .send(FindById(id))
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+            .await
+            .map_err(|e| {
+                eprintln!("Encountered mailbox error: {:?}", e);
+                Error::from(e)
+            });
+
+        match sum_result {
+            Ok(res) => 
+            match res {
+                Ok(user) => Ok(user),
+                Err(e) => Err(Error::from(e)),
+            }
+            ,
+            Err(e) => Err(e),
+        }
     }
 
-    pub fn activate(
+    pub async fn activate(
         token: Uuid,
         postgres: &PgExecutorAddr,
-    ) -> impl Future<Item = User, Error = Error> {
+    ) ->  Result<User, Error> {
         // send activate message to pgexecutor
-        (*postgres)
+        let sum_result= (*postgres)
             .send(Activate(token))
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+            .await
+            .map_err(|e| {
+                eprintln!("Encountered mailbox error: {:?}", e);
+                Error::from(e)
+            });
+
+        match sum_result {
+            Ok(res) => 
+            match res {
+                Ok(user) => Ok(user),
+                Err(e) => Err(Error::from(e)),
+            }
+            ,
+            Err(e) => Err(e),
+        }
     }
 
-    pub fn delete(id: Uuid, postgres: &PgExecutorAddr) -> impl Future<Item = usize, Error = Error> {
-        (*postgres)
+    pub async fn delete(id: Uuid, postgres: &PgExecutorAddr) -> Result<usize, Error> {
+        let sum_result = (*postgres)
             .send(Delete(id))
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+            .await
+            .map_err(|e| {
+                eprintln!("Encountered mailbox error: {:?}", e);
+                Error::from(e)
+            });
+
+        match sum_result {
+            Ok(res) => 
+            match res {
+                Ok(user) => Ok(user),
+                Err(e) => Err(Error::from(e)),
+            }
+            ,
+            Err(e) => Err(e),
+        }
     }
  
-    pub fn delete_expired(
+    pub async fn delete_expired(
         email: String,
         postgres: &PgExecutorAddr,
-    ) -> impl Future<Item = usize, Error = Error> {
-        (*postgres)
+    ) -> Result<usize, Error> {
+        let sum_result = (*postgres)
             .send(DeleteExpired(email))
-            .from_err()
-            .and_then(|res| res.map_err(|e| Error::from(e)))
+            .await
+            .map_err(|e| {
+                eprintln!("Encountered mailbox error: {:?}", e);
+                Error::from(e)
+            });
+
+        match sum_result {
+            Ok(res) => 
+            match res {
+                Ok(user) => Ok(user),
+                Err(e) => Err(Error::from(e)),
+            }
+            ,
+            Err(e) => Err(e),
+        }
     }
 
     pub fn export(&self) -> Value {

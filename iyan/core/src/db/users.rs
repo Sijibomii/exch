@@ -7,27 +7,27 @@ use super::{Error, postgres::{PgExecutor, PooledConnection}};
 use super::super::models::user::{User, UserPayload}; 
 
 // uses diesel to insert into the db
-pub fn insert(payload: UserPayload, conn: &PooledConnection) -> Result<User, Error> {
+pub fn insert(payload: UserPayload, conn: &mut PooledConnection) -> Result<User, Error> {
     use diesel::insert_into;
     use super::super::schema::users::dsl;
 
     insert_into(dsl::users)
         .values(&payload)
-        .get_result(conn.get_mut())
+        .get_result(conn)
         .map_err(|e| Error::from(e))
 }
 
-pub fn update(id: Uuid, payload: UserPayload, conn: &PooledConnection) -> Result<User, Error> {
+pub fn update(id: Uuid, payload: UserPayload, conn: &mut PooledConnection) -> Result<User, Error> {
     use diesel::update;
     use super::super::schema::users::dsl;
  
     update(dsl::users.filter(dsl::id.eq(id)))
         .set(&payload)
-        .get_result(conn.get_mut())
+        .get_result(conn)
         .map_err(|e| Error::from(e))
 }
 
-pub fn find_by_email(email: String, conn: &PooledConnection) -> Result<User, Error> {
+pub fn find_by_email(email: String, conn: &mut PooledConnection) -> Result<User, Error> {
     use super::super::schema::users::dsl;
 
     dsl::users
@@ -36,7 +36,7 @@ pub fn find_by_email(email: String, conn: &PooledConnection) -> Result<User, Err
         .map_err(|e| Error::from(e))
 }
 
-pub fn find_by_id(id: Uuid, conn: &PooledConnection) -> Result<User, Error> {
+pub fn find_by_id(id: Uuid, conn: &mut PooledConnection) -> Result<User, Error> {
     use super::super::schema::users::dsl;
 
     dsl::users
@@ -45,7 +45,7 @@ pub fn find_by_id(id: Uuid, conn: &PooledConnection) -> Result<User, Error> {
         .map_err(|e| Error::from(e))
 }
 
-pub fn find_by_reset_token(token: Uuid, conn: &PooledConnection) -> Result<User, Error> {
+pub fn find_by_reset_token(token: Uuid, conn: &mut PooledConnection) -> Result<User, Error> {
     use super::super::schema::users::dsl;
 
     dsl::users
@@ -58,7 +58,7 @@ pub fn find_by_reset_token(token: Uuid, conn: &PooledConnection) -> Result<User,
         .map_err(|e| Error::from(e))
 }
 // activate user account
-pub fn activate(token: Uuid, conn: &PooledConnection) -> Result<User, Error> {
+pub fn activate(token: Uuid, conn: &mut PooledConnection) -> Result<User, Error> {
     use diesel::update;
     use super::super::schema::users::dsl;
 
@@ -86,7 +86,7 @@ pub fn activate(token: Uuid, conn: &PooledConnection) -> Result<User, Error> {
     .map_err(|e| Error::from(e))
 }
 
-pub fn delete(id: Uuid, conn: &PooledConnection) -> Result<usize, Error> {
+pub fn delete(id: Uuid, conn: &mut PooledConnection) -> Result<usize, Error> {
     use diesel::delete;
     use super::super::schema::users::dsl;
 
@@ -97,7 +97,7 @@ pub fn delete(id: Uuid, conn: &PooledConnection) -> Result<usize, Error> {
     Ok(1)
 }
 
-pub fn delete_expired(email: String, conn: &PooledConnection) -> Result<usize, Error> {
+pub fn delete_expired(email: String, conn: &mut PooledConnection) -> Result<usize, Error> {
     use diesel::delete;
     use super::super::schema::users::dsl;
 
@@ -127,9 +127,9 @@ impl Handler<Insert> for PgExecutor {
     type Result = Result<User, Error>;
 
     fn handle(&mut self, Insert(payload): Insert, _: &mut Self::Context) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        insert(payload, &conn)
+        insert(payload, conn)
     }
 }
 
@@ -144,9 +144,9 @@ impl Handler<Update> for PgExecutor {
     type Result = Result<User, Error>;
 
     fn handle(&mut self, Update { id, payload }: Update, _: &mut Self::Context) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        update(id, payload, &conn)
+        update(id, payload, conn)
     }
 }
 
@@ -158,9 +158,9 @@ impl Handler<FindByEmail> for PgExecutor {
     type Result = Result<User, Error>;
 
     fn handle(&mut self, FindByEmail(email): FindByEmail, _: &mut Self::Context) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        find_by_email(email, &conn)
+        find_by_email(email, conn)
     }
 }
 
@@ -172,9 +172,9 @@ impl Handler<FindById> for PgExecutor {
     type Result = Result<User, Error>;
 
     fn handle(&mut self, FindById(id): FindById, _: &mut Self::Context) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        find_by_id(id, &conn)
+        find_by_id(id, conn)
     }
 }
 
@@ -190,9 +190,9 @@ impl Handler<FindByResetToken> for PgExecutor {
         FindByResetToken(token): FindByResetToken,
         _: &mut Self::Context,
     ) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        find_by_reset_token(token, &conn)
+        find_by_reset_token(token, conn)
     }
 }
 
@@ -204,9 +204,9 @@ impl Handler<Activate> for PgExecutor {
     type Result = Result<User, Error>;
 
     fn handle(&mut self, Activate(token): Activate, _: &mut Self::Context) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        activate(token, &conn)
+        activate(token, conn)
     }
 }
 
@@ -218,9 +218,9 @@ impl Handler<Delete> for PgExecutor {
     type Result = Result<usize, Error>;
 
     fn handle(&mut self, Delete(id): Delete, _: &mut Self::Context) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        conn.transaction::<_, Error, _>(|| delete(id, &conn))
+        conn.transaction::<_, Error, _>(|conn| delete(id, conn))
     }
 }
 
@@ -237,8 +237,8 @@ impl Handler<DeleteExpired> for PgExecutor {
         DeleteExpired(email): DeleteExpired,
         _: &mut Self::Context,
     ) -> Self::Result {
-        let conn = &self.get()?;
+        let conn = &mut self.get()?;
 
-        delete_expired(email, &conn)
+        delete_expired(email, conn)
     }
 }
