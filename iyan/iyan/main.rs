@@ -1,11 +1,13 @@
 extern crate actix;
 extern crate server; 
+extern crate core;
+extern crate config;
 
+use std::io::Read;
 use actix::prelude::*; 
-use std::{env, fs::File, io::prelude::*, path::Path};
-use clap::App;
+use std::{env, fs::File};
 
-
+use core::db::postgres;
 fn main() {
     env::set_var(
         "RUST_LOG",
@@ -20,7 +22,7 @@ fn main() {
         format!("{}/iyan.toml", env!("HOME")).as_str(),
     ) .and_then(|mut f| f.read_to_string(&mut settings)).unwrap();
 
-    let config: Config = toml::from_str(&settings).unwrap();
+    let config: config::Config = toml::from_str(&settings).unwrap();
 
     let system = System::new();
 

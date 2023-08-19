@@ -1,16 +1,16 @@
 use actix_cors::Cors;
-use actix::prelude::*;
+// use actix::prelude::*;
 use actix_web::{web, App, middleware, HttpResponse, HttpServer};
 
-use std::fs;
+use std::{fs};
 use config::Config; 
 use core::db::postgres;
 
 
 mod state;
 
-async fn index() -> Result<HttpResponse> {
-    Ok(HttpResponse::Ok().body("Hello, world!"))
+async fn index() -> HttpResponse {
+    HttpResponse::Ok().body("Hello, world!")
 }
 
 pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io::Result<()> {

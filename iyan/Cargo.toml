@@ -12,6 +12,10 @@ env_logger = "0.10.0"
 toml = "0.4.2"
 
 server = { path = "./server" }
+config = { path = "./config" }
+types = { path = "./types" }
+core = { path = "./core" }
+
 
 [[bin]]
 path = "iyan/main.rs"
