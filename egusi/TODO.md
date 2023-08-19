@@ -1,0 +1,1 @@
+create a websocket contract basically messages the websocket server expects and the replies(if any) that the client should expect
