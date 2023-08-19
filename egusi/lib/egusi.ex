@@ -16,7 +16,7 @@ defmodule Egusi do
         scheme: :http,
         plug: Ugwu,
         options: [
-          port: String.to_integer(System.get_env("PORT") || "5000"),
+          port: String.to_integer(System.get_env("PORT") || "6000"),
           dispatch: dispatch(),
           protocol_options: [idle_timeout: :infinity]
         ]
