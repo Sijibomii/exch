@@ -40,6 +40,7 @@ pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io:
         .service(
             web::scope("/api/v1")
                     .route("/hello", web::get().to(index))
+                    .route("/login", web::post().to(index))
         )
     })
     .bind(format!("{}:{}", host, port))
