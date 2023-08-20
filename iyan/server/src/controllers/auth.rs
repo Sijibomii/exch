@@ -1,5 +1,6 @@
-use actix_web::{web, Responder};
-use crate::AppState; // Import your AppState type
+use actix_web::{web, Responder, HttpResponse};
+use super::super::state::AppState; // Import your AppState type
+use serde::Deserialize;
 
 #[derive(Deserialize)]
 pub struct LoginParams {

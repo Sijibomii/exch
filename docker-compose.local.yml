@@ -40,6 +40,23 @@ services:
       - 5601:5601
     depends_on:
       - elasticsearch
+  iyan:
+    build: ./iyan
+    environment: 
+      - PORT=4001
+    ports: 
+      - 4001:4001
+    volumes:
+      - shared_keys:/keys
+
+  egusi:
+    build: ./egusi
+    environment:
+      - PORT=6000
+    ports:
+      - 6000:6000
+    volumes:
+      - shared_keys:/keys
   nginx:
     image: nginx:latest
     container_name: nginx-gateway
@@ -49,3 +66,6 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./html:/usr/share/nginx/html
+
+volumes:
+  shared_keys:

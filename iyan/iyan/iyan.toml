@@ -5,11 +5,11 @@ password = "postgres"
 
 [server]
 host = "localhost"
-port = 4000
+port = 4001
 mail_sender = "noreply@example.com"
 web_client_url = "https://example.com"
-public_key = "public_key_contents"
-private_key = "private_key_contents"
+public_key = "/keys/private_key.pem"
+private_key = "/keys/public_key.pem"
 
 [smtp]
 host = "smtp.example.com"

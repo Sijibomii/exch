@@ -23,6 +23,8 @@ lettre = "0.10.4"
 native-tls = "0.2.11"
 num_cpus = "1.16.0"
 openssl = "0.10.56"
+serde = "1.0.183"
+serde_derive = "1.0.167"
 uuid = { version = "1.4.0", features = ["serde", "v4"] }
 
 

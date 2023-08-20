@@ -6,8 +6,10 @@ use std::{fs};
 use config::Config; 
 use core::db::postgres;
 
-
+mod controllers;
+mod services;
 mod state;
+mod auth;
 
 async fn index() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
