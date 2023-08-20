@@ -2,12 +2,11 @@ use chrono::{prelude::*, Duration};
 use futures::future::{err, Future, IntoFuture};
 use uuid::Uuid;
 
-use auth::{AuthUser, JWTPayload};
 use core::{
     db::postgres::PgExecutorAddr,
     user::{User, UserPayload},
 };
-use services::Error;
+use super::errors;
 
 
 pub fn authenticate(
