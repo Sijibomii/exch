@@ -18,7 +18,9 @@ services:
     ports:
       - 9200:9200
   logstash:
-    image: docker.elastic.co/logstash/logstash:7.10.0
+    # image: docker.elastic.co/logstash/logstash:7.10.0 remember to change for prod
+    image: arm64v8/logstash:8.8.1
+    platform: linux/arm64/v8
     volumes:
       - ./logstash/config:/usr/share/logstash/config
     ports:
@@ -29,7 +31,7 @@ services:
     image: docker.elastic.co/beats/filebeat:7.10.0
     user: root
     volumes:
-      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
       - /var/run/docker.sock:/var/run/docker.sock
       - /var/lib/docker/containers:/var/lib/docker/containers
     depends_on:
@@ -40,23 +42,30 @@ services:
       - 5601:5601
     depends_on:
       - elasticsearch
-  iyan:
-    build: ./iyan
-    environment: 
-      - PORT=4001
-    ports: 
-      - 4001:4001
-    volumes:
-      - shared_keys:/keys
+  # iyan:
+  #   build: ./iyan
+  #   environment: 
+  #     - PORT=4001
+  #   ports: 
+  #     - 4001:4001
+  #   volumes:
+  #     - shared_keys:/keys
 
-  egusi:
-    build: ./egusi
-    environment:
-      - PORT=6000
-    ports:
-      - 6000:6000
-    volumes:
-      - shared_keys:/keys
+  # egusi:
+  #   build: ./egusi
+  #   environment:
+  #     - PORT=6000
+  #   ports:
+  #     - 6000:6000
+  #   volumes:
+  #     - shared_keys:/keys
+  rabbits:
+    container_name: rabbits
+    image: rabbitmq:3-management-alpine
+    environment: 
+      RABBITMQ_ERLANG_COOKIE: erlang_dev_only_cookie
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
   nginx:
     image: nginx:latest
     container_name: nginx-gateway
