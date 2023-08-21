@@ -51,10 +51,6 @@ impl error::ResponseError for Error {
                 HttpResponse::build(http::StatusCode::FORBIDDEN).body(user_err_message)
             }
 
-            Error::PaymentNotConfirmed => {
-                HttpResponse::build(http::StatusCode::NOT_FOUND).body(user_err_message)
-            }
-
             Error::ModelError(ref e) => match *e {
                 ModelError::DbError(ref e) => match *e {
                     DbError::DieselError(ref e) => match *e {
