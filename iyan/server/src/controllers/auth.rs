@@ -1,6 +1,15 @@
-use actix_web::{web, Responder, HttpResponse};
-use super::super::state::AppState; // Import your AppState type
+use actix_web::{web};
+use actix_web::web::Json;
+use crate::auth::AuthUser;
+use futures::FutureExt;
+use super::super::state::AppState; 
 use serde::Deserialize;
+use serde_json::json;
+use serde_json::Value;
+use std::future::Future;
+use super::super::services::{ self, errors::Error };
+use core::user::{UserPayload, self};
+use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct LoginParams {
@@ -8,21 +17,28 @@ pub struct LoginParams {
     pub password: String,
 }
 
-// login
-pub fn authentication(
-    (state, params): (State<AppState>, Json<LoginParams>),
-) -> impl Future<Item = Json<Value>, Error = Error> {
-    let params = params.into_inner();
+// login 
+pub async fn authentication(
+    data: web::Json<LoginParams>,
+    state: web::Data<AppState>
+) -> Result<Json<Value>, Error>  {
+    let params = data.into_inner();
 
-    services::users::authenticate(
+    let res = services::users::authenticate(
         params.email,
         params.password,
         &state.postgres,
         state.jwt_private.clone(),
-    )
-    .then(|res| {
-        res.and_then(|(token, user)| Ok(Json(json!({ "token": token, "user": user.export() }))))
-    })
+    ).await;
+
+    match res {
+        Ok((token, user)) => {
+            return Ok(Json(json!({ "token": token, "user": user.export() })))
+        }
+        Err(error) => {
+            return Err(Error::from(error))
+        }
+    };
 }
 
 #[derive(Debug, Deserialize)]
@@ -32,30 +48,33 @@ pub struct RegistrationParams {
 }
 // registration
 pub fn registration(
-    (state, params): (State<AppState>, Json<RegistrationParams>),
-) ->  impl Future<Item = Json<Value>, Error = Error> {
-    let params = params.into_inner();
+    data: web::Json<RegistrationParams>,
+    state: web::Data<AppState>
+) ->  Result<Json<Value>, Error> {
+    let params = data.into_inner();
 
     if params.email.len() == 0 {
-        return Box::new(err(Error::BadRequest("email is empty")));
+        return Box::new(Error::BadRequest("email is empty"));
     }
 
     if params.password.len() == 0 {
-        return Box::new(err(Error::BadRequest("password is empty")));
+        return Box::new(Error::BadRequest("password is empty"));
     }
 
     let mut payload = UserPayload::new();
     payload.email = Some(params.email);
     payload.password = Some(params.password);
 
-    services::users::register(
+    let res = services::users::register(
         payload,
         state.mailer.clone(),
         &state.postgres,
         state.config.web_client_url.clone(),
         state.config.mail_sender.clone(),
     )
-    .then(|res| res.and_then(|user| Ok(Json(user.export()))))
+    .then(|res| res.and_then(|user| Ok(Json(user.export()))));
+
+    HttpResponse::Ok().body(res);
 }
 
 
@@ -65,15 +84,18 @@ pub struct ActivationParams {
 }
 
 pub fn activation(
-    (state, params): (State<AppState>, Json<ActivationParams>),
-) -> impl Future<Item = Json<Value>, Error = Error> {
-    let params = params.into_inner();
+    data: web::Json<ActivationParams>,
+    state: web::Data<AppState>
+) ->  Result<Json<Value>, Error> {
+    let params = data.into_inner();
     // activate. when email link is clicked
-    services::users::activate(params.token, &state.postgres, state.jwt_private.clone()).then(
+    let res = services::users::activate(params.token, &state.postgres, state.jwt_private.clone()).then(
         |res| {
             res.and_then(|(token, user)| Ok(Json(json!({ "token": token, "user": user.export() }))))
         },
-    )
+    );
+
+    HttpResponse::Ok().body(res);
 }
 
 #[derive(Deserialize)]
@@ -82,18 +104,21 @@ pub struct ResetPasswordParams {
 }
 
 pub fn reset_password(
-    (state, params): (State<AppState>, Json<ResetPasswordParams>),
-) -> impl Future<Item = Json<Value>, Error = Error> {
-    let params = params.into_inner();
+    data: web::Json<ResetPasswordParams>,
+    state: web::Data<AppState>
+) -> Result<(), Error> {
+    let params = data.into_inner();
 
-    services::users::reset_password( 
+    let res = services::users::reset_password( 
         params.email,
         state.mailer.clone(),
         &state.postgres,
         state.config.web_client_url.clone(),
         state.config.mail_sender.clone(),
     )
-    .then(|res| res.and_then(|_| Ok(Json(json!({})))))
+    .then(|res| res.and_then(|_| Ok(Json(json!({})))));
+
+    HttpResponse::Ok().body(res);
 }
 
 #[derive(Deserialize)]
@@ -103,11 +128,12 @@ pub struct ChangePasswordParams {
 }
 
 pub fn change_password(
-    (state, params): (State<AppState>, Json<ChangePasswordParams>),
-) -> impl Future<Item = Json<Value>, Error = Error> {
-    let params = params.into_inner();
+    data: web::Json<ChangePasswordParams>,
+    state: web::Data<AppState>
+) -> Result<Json<Value>, Error> {
+    let params = data.into_inner();
 
-    services::users::change_password(
+    let res = services::users::change_password(
         params.token,
         params.password,
         &state.postgres,
@@ -115,21 +141,26 @@ pub fn change_password(
     )
     .then(|res| {
         res.and_then(|(token, user)| Ok(Json(json!({ "token": token, "user": user.export() }))))
-    })
+    });
+
+    HttpResponse::Ok().body(res);    
 }
 
 //  get the entire user
 pub fn profile( 
-    (state, user): (State<AppState>, AuthUser),
-) -> impl Future<Item = Json<Value>, Error = Error> {
-    services::users::get(user.id, &state.postgres)
-        .then(|res| res.and_then(|user| Ok(Json(user.export()))))
+    state: web::Data<AppState>,
+    user: AuthUser
+) -> Result<Json<Value>, Error> {
+    let res = services::users::get(user.id, &state.postgres)
+        .then(|res| res.and_then(|user| Ok(Json(user.export()))));
+
+    HttpResponse::Ok().body(res);    
 }
 
 // this is how to get path parms in rust. the uuid is passed in
 pub fn delete(
-    (state, path, user): (State<AppState>, Path<Uuid>, AuthUser),
-) -> Box<Future<Item = Json<Value>, Error = Error>> {
+    // (state, path, user): (State<AppState>, Path<Uuid>, AuthUser),
+) -> Box<Result<Json<Value>, Error>> {
     let id = path.into_inner();
     if id != user.id {
         return Box::new(err(Error::InvalidRequestAccount));
