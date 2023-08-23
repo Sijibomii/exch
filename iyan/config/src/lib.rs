@@ -5,7 +5,7 @@ extern crate bigdecimal;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
-    pub postgres: String,
+    pub postgres: String, 
     pub server: ServerConfig,
     pub smtp: SmtpConfig
 }

@@ -2,7 +2,7 @@ extern crate actix;
 extern crate server; 
 extern crate core;
 extern crate config;
-
+use server::run;
 use std::io::Read;
 use actix::prelude::*; 
 use std::{env, fs::File};
@@ -28,7 +28,7 @@ fn main() {
     log::info!("reading iyan.toml");
 
     File::open(
-        format!("{}/iyan.toml", env!("HOME")).as_str(),
+        format!("./iyan/iyan.toml").as_str(),
     ) .and_then(|mut f| f.read_to_string(&mut settings)).unwrap();
 
     let config: config::Config = toml::from_str(&settings).unwrap();
@@ -42,4 +42,11 @@ fn main() {
     server::run(postgres, config);
     log::info!("Server up and running");
     let _ = system.run();
+
+    // export LDFLAGS="-L/opt/homebrew/opt/postgresql@15/lib"
+//   export CPPFLAGS="-I/opt/homebrew/opt/postgresql@15/include"
+// Or, if you don't want/need a background service you can just run:
+//   LC_ALL="C" /opt/homebrew/opt/postgresql@15/bin/postgres -D /opt/homebrew/var/postgresql@15
+
+// /opt/homebrew/Cellar/postgresql@15/15.4  export LIBRARY_PATH=/opt/homebrew/opt/postgresql@15/lib:$LIBRARY_PATH
 }

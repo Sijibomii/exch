@@ -47,15 +47,12 @@ defmodule Egusi do
     ]
   end
 
-  # each user can only be in one or more trading rooms. trading rooms hold the user ids of memebers
-  # it calls their user sessions to send them some ws update
+  #each token will have a running trading session that listed to rabbitmq for messages on that token. It then broadcasts it using pubsub to all subscribed users
+  # each usersession should keep track of the running user trades, on every price update, the user subscribes to,  it calc the profit and loss and sends back.
   defp start_trading_sessions() do
-
+    # get the list of all tokens and start a trading session
   end
 
-  # TODO: bake this into the supervision tree itself by having the
-  # supervisor fetch and look up the the list of online voice servers
-  # by querying GCP tags.
   defp start_rabbits() do
     IO.puts("about to start_rabbits")
 
