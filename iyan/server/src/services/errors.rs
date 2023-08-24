@@ -1,5 +1,5 @@
 use actix::MailboxError;
-use actix_web::{error, http, HttpResponse, body};
+use actix_web::{error, http, HttpResponse};
 use data_encoding::DecodeError;
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use jsonwebtoken::errors::Error as JwtError;
@@ -24,8 +24,6 @@ pub enum Error {
     MailboxError(#[cause] MailboxError),
     #[fail(display = "incorrect password")]
     IncorrectPassword,
-    #[fail(display = "invalid request account")]
-    InvalidRequestAccount,
     #[fail(display = "{}", _0)]
     PayloadError(#[cause] error::PayloadError),
     #[fail(display = "{}", _0)]
@@ -45,10 +43,6 @@ impl error::ResponseError for Error {
             Error::BadRequest(_) | Error::IncorrectPassword  => {
                 HttpResponse::build(http::StatusCode::BAD_REQUEST)
                     .body(user_err_message)
-            }
-
-            Error::InvalidRequestAccount => {
-                HttpResponse::build(http::StatusCode::FORBIDDEN).body(user_err_message)
             }
 
             Error::ModelError(ref e) => match *e {

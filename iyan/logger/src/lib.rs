@@ -42,5 +42,12 @@ impl log::Log for ElasticsearchLogger {
 
 pub fn init_elasticsearch_logger(logstash_url: &str) -> Result<(), log::SetLoggerError> {
     log::set_max_level(log::LevelFilter::Info); 
-    log::set_boxed_logger(Box::new(ElasticsearchLogger::new(logstash_url)))
+
+    let logger = Box::new(ElasticsearchLogger::new(logstash_url));
+    // Attempt to set the logger
+    if let Err(error) = log::set_boxed_logger(logger) {
+        print!("Failed to set logger: {}", error);
+        return Err(error);
+    }
+    Ok(())
 }

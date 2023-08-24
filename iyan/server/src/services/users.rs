@@ -1,7 +1,6 @@
-use actix::fut::ok;
+
 use chrono::{prelude::*, Duration};
 // use std::future::Future;
-use uuid::Uuid;
 use std::num::NonZeroU32;
 use ring::{pbkdf2::{self, PBKDF2_HMAC_SHA512 as PBKDF2_ALGORITHM}, rand, digest, rand::SecureRandom};
 use super::super::auth::{AuthUser, JWTPayload};
@@ -105,3 +104,11 @@ pub async fn register(
     }
 } 
 
+// // get a user by id 
+// pub fn get(id: Uuid, postgres: &PgExecutorAddr) -> impl Future<Item = User, Error = Error> {
+//     User::find_by_id(id, postgres).from_err()
+// }
+
+// pub fn delete(id: Uuid, postgres: &PgExecutorAddr) -> impl Future<Item = usize, Error = Error> {
+//     User::delete(id, postgres).from_err()
+// }

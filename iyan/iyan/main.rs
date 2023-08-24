@@ -6,7 +6,7 @@ use server::run;
 use std::io::Read;
 use actix::prelude::*; 
 use std::{env, fs::File};
-
+// use env_logger::{Builder, Target};
 use logger::{init_elasticsearch_logger};
 
 use core::db::postgres;
@@ -15,9 +15,8 @@ fn main() {
         "RUST_LOG",
         "info,error,debug,actix_web=info,tokio_reactor=info",
     );
-    env_logger::init();
 
-    init_elasticsearch_logger("http://logstash:5000");
+    init_elasticsearch_logger("http://logstash:5000").unwrap();
 
     log::info!("This is an info log message.");
     log::error!("This is an error log message.");
@@ -39,7 +38,7 @@ fn main() {
     let pg_pool = postgres::init_pool(&postgres_url);
     let postgres = SyncArbiter::start(4, move || postgres::PgExecutor(pg_pool.clone()));
     log::info!("Running server");
-    server::run(postgres, config);
+    run(postgres, config);
     log::info!("Server up and running");
     let _ = system.run();
 
