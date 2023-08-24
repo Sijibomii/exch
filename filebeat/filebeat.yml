@@ -5,4 +5,5 @@ filebeat.inputs:
       - /var/log/nginx/error.log
 
 output.logstash:
-  hosts: ["logstash:5000"]
+  hosts: ["logstash:5044"] 
+ 
