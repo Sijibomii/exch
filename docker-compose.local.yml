@@ -11,9 +11,9 @@ services:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     init: true
     volumes:
-      - ./elk/setup/entrypoint.sh:/entrypoint.sh:ro,Z
-      - ./elk/setup/lib.sh:/lib.sh:ro,Z
-      - ./elk/setup/roles:/roles:ro,Z
+      - ./setup/entrypoint.sh:/entrypoint.sh:ro,Z
+      - ./setup/lib.sh:/lib.sh:ro,Z
+      - ./setup/roles:/roles:ro,Z
     environment:
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
       LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
@@ -23,8 +23,7 @@ services:
       HEARTBEAT_INTERNAL_PASSWORD: ${HEARTBEAT_INTERNAL_PASSWORD:-}
       MONITORING_INTERNAL_PASSWORD: ${MONITORING_INTERNAL_PASSWORD:-}
       BEATS_SYSTEM_PASSWORD: ${BEATS_SYSTEM_PASSWORD:-}
-    networks:
-      - elk
+    
     depends_on:
       - elasticsearch
 
@@ -34,7 +33,7 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
+      - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro,Z
       - elasticsearch:/usr/share/elasticsearch/data:Z
     ports:
       - 9200:9200
@@ -44,8 +43,7 @@ services:
       ES_JAVA_OPTS: -Xms512m -Xmx512m
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-}
       discovery.type: single-node
-    networks:
-      - elk
+   
     restart: unless-stopped
 
   logstash:
@@ -54,8 +52,8 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
-      - ./elk/logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro,Z
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro,Z
     ports:
       - 5044:5044
       - 50000:50000/tcp
@@ -64,8 +62,6 @@ services:
     environment:
       LS_JAVA_OPTS: -Xms256m -Xmx256m
       LOGSTASH_INTERNAL_PASSWORD: ${LOGSTASH_INTERNAL_PASSWORD:-}
-    networks:
-      - elk
     depends_on:
       - elasticsearch
     restart: unless-stopped
@@ -76,20 +72,15 @@ services:
       args:
         ELASTIC_VERSION: ${ELASTIC_VERSION}
     volumes:
-      - ./elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
+      - ./kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro,Z
     ports:
       - 5601:5601
     environment:
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:-}
-    networks:
-      - elk
+   
     depends_on:
       - elasticsearch
     restart: unless-stopped
-
-networks:
-  elk:
-    driver: bridge
 
 # app stuff
   postgres:
@@ -142,8 +133,6 @@ networks:
       - ./filebeat.yml:/usr/share/filebeat.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers
-    networks:
-      - shared-network
     logging:
       driver: "json-file"
       options:
@@ -158,8 +147,6 @@ networks:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/data:/nginx/data
-    networks:
-      - shared-network
     logging:
       driver: json-file
 volumes:

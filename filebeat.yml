@@ -18,6 +18,6 @@ filebeat.autodiscover:
     - type: docker
       hints.enabled: true
 output.logstash:
-  hosts: ["logstash:5044"] 
+  hosts: ["localhost:5044"] 
 output.elasticsearch:
-  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'
+  hosts: '${ELASTICSEARCH_HOSTS:localhost:9200}'
