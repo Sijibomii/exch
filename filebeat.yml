@@ -1,23 +1,9 @@
 filebeat.inputs:
   - type: log
     paths:
-      - /var/log/nginx/access.log 
-      - /var/log/nginx/error.log
-      - /dev/stdout
-      - /var/lib/docker/containers/*/*.log
-    containers.ids:
-      - "*"
-    processors:
-      - add_docker_metadata: ~
-filebeat.config:
-  modules:
-    path: ${path.config}/modules.d/*.yml
-    reload.enabled: false
-filebeat.autodiscover:
-  providers:
-    - type: docker
-      hints.enabled: true
+      - /logs/nginx/access.log
+      - /logs/nginx/error.log
+
+
 output.logstash:
-  hosts: ["localhost:5044"] 
-output.elasticsearch:
-  hosts: '${ELASTICSEARCH_HOSTS:localhost:9200}'
+  hosts: ["host.docker.internal:5000"]
