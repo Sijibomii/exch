@@ -100,18 +100,18 @@ pub async fn delete(
     state: web::Data<AppState>, // Access the app state
     path: web::Path<Uuid>, // Extract dynamic path parameter
     user: AuthUser,
-) -> Box<Result<Json<Value>, Error>> {
+) -> Result<Json<Value>, Error> {
     let id = path.into_inner();
     if id != user.id {
-        return Box::new(Err((Error::UnAuthorizedRequestAccount)));
+        return Err(Error::UnAuthorizedRequestAccount);
     }
     let res = services::users::delete(user.id, &state.postgres).await;
     match res {
         Ok(us) => {
-            return Box::new(Ok(Json(json!({ "deleted": us }))))
+            return Ok(Json(json!({ "deleted": us })))
         }
         Err(error) => {
-            return Box::new(Err(Error::from(error)))
+            return Err(Error::from(error))
         }
     }
 }

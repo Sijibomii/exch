@@ -1,10 +1,12 @@
 use actix_web::{error, Error as ActixError, FromRequest, web, HttpRequest, dev::Payload};
 use serde::{Serialize, Deserialize};
 use chrono::prelude::*;
-use futures::future::{ready, Ready};
+use futures::{future::{ready, Ready}, TryFutureExt};
 use jsonwebtoken::{encode, EncodingKey, DecodingKey};
 use uuid::Uuid;
 use futures::future;
+
+
 use super::state::AppState;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -73,3 +75,20 @@ pub struct AuthClient {
 pub struct AuthUser {
     pub id: Uuid,
 }
+
+// implementation of the FromRequest trait from the Actix web framework for the AuthUser type.
+impl FromRequest for AuthUser {
+    type Error = ActixError;
+    type Future = Ready<Result<Self, Self::Error>>; 
+
+    // the from_request function is impl, this takes in a request and returns an AuthUser
+    fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
+
+        let token = JWTPayload::extract(&req);
+
+       
+        
+      
+    }
+}
+

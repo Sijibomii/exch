@@ -44,6 +44,8 @@ pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io:
                     .route("/hello", web::get().to(index))
                     .route("/login", web::post().to(controllers::auth::authentication))
                     .route("/register", web::post().to(controllers::auth::registration))
+                    .route("/user/me", web::get().to(controllers::auth::profile))
+                    .route("/user/{id}", web::delete().to(controllers::auth::delete))
         )
     })
     .bind(format!("{}:{}", host, port))
