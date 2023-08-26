@@ -83,12 +83,39 @@ impl FromRequest for AuthUser {
 
     // the from_request function is impl, this takes in a request and returns an AuthUser
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
+        // i should normally do this but I can't find a way to await the extract function without making from_request async.
+        // the trait won't let me make it async.
+        // let token = JWTPayload::extract(&req);
+               
+        let state = req.app_data::<web::Data<AppState>>().unwrap();
 
-        let token = JWTPayload::extract(&req);
+        let auth_header = match req.headers().get("authorization") {
+            Some(auth_header) => auth_header,
+            None => return future::err(error::ErrorUnauthorized("invalid authorization token")),
+        };
 
-       
+        let auth_header_parts: Vec<_> = auth_header.to_str().unwrap().split_whitespace().collect();
+        if auth_header_parts.len() != 2 {
+            return future::err(error::ErrorUnauthorized("invalid authorization token"));
+        }
+
+        if auth_header_parts.len() != 2 || auth_header_parts[0].to_lowercase() != "bearer" {
+            return future::err(error::ErrorUnauthorized("invalid authorization token"));
+        }
+
+        let validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
+        let jwt_public = DecodingKey::from_rsa_pem(&state.jwt_public).expect("Failed to create DecodingKey");
+         match jsonwebtoken::decode::<JWTPayload>(&auth_header_parts[1], &jwt_public, &validation) {
+            Ok(token) => {
+                let tok = token.claims;
+                match tok.user {
+                    Some(user) => ready(Ok(user)),
+                    None => future::err(error::ErrorUnauthorized("invalid authorization token")),
+                }
+            },
+            Err(_) =>future::err(error::ErrorUnauthorized("invalid authorization token")),
+        }
         
-      
     }
 }
 
