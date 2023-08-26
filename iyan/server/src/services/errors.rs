@@ -74,7 +74,7 @@ impl error::ResponseError for Error {
             },
 
             _ => HttpResponse::build(http::StatusCode::INTERNAL_SERVER_ERROR)
-                .body(server_err_message),
+            .body(server_err_message),
         }
     }
 }

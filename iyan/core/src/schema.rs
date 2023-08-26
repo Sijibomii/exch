@@ -1,4 +1,4 @@
-
+use diesel::sql_types::*;
 // customer account
 table! {
     users (id) {
@@ -18,53 +18,6 @@ table! {
     }
 } 
 
-// admin accounts
-table! {
-    admin (id) {
-        id -> Uuid,
-        email -> Varchar,
-        password -> Varchar,
-        salt -> Varchar,
-        created_at -> Timestamptz,
-        updated_at -> Timestamptz,
-        reset_token -> Nullable<Uuid>,
-        reset_token_expires_at -> Nullable<Timestamptz>,
-        last_login_time -> Nullable<Timestamptz>,
-        last_login_ip -> Nullable<VarChar>,
-        role_name -> VarChar,
-        role_id -> Uuid,
-        department_id -> Uuid,
-    } 
-}
-
-// admin activity log
-table! {
-    admin_activity (id) {
-        id -> Uuid,
-        admin_id -> Uuid,
-        operation -> VarChar,
-        access_mode -> VarChar, 
-        access_time -> Timestamptz,
-        admin_activity_type -> Varchar,
-    } 
-}
-
-// currency 
-table! {
-    currency(id) {
-        id -> Uuid,
-        name -> VarChar
-    }
-}
-
-// startup 
-table! {
-    startup(id) {
-        id -> Uuid,
-        name -> VarChar,
-        description -> VarChar
-    }
-}
 
 // token
 table! {
@@ -72,7 +25,8 @@ table! {
         id -> Uuid,
         ticker -> VarChar,
         is_trading -> Bool,
-        supply -> Numeric
+        supply -> BigInt,
+        owner_id -> Uuid,
     }
 }
 
@@ -86,22 +40,13 @@ table! {
     }
 }
 
-// trading wallet
-table! {
-    trading_wallet(id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        balance -> Numeric,
-        last_activity_time -> Nullable<Timestamptz>,
-    }
-}
-
 // token onwership map no of tokens owned to trading wallet
 table! {
     token_ownership(id) {
         id -> Uuid,
         token_id -> Uuid,
-        balance -> Numeric
+        balance -> Numeric,
+        wallet_id -> Uuid,
     }
 }
 

@@ -1,7 +1,7 @@
 use actix_web::{error, Error as ActixError, FromRequest, web, HttpRequest, dev::Payload};
 use serde::{Serialize, Deserialize};
 use chrono::prelude::*;
-use futures::{future::{ready, Ready}, TryFutureExt};
+use futures::{future::{ready, Ready}};
 use jsonwebtoken::{encode, EncodingKey, DecodingKey};
 use uuid::Uuid;
 use futures::future;
