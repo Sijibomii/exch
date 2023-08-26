@@ -47,3 +47,64 @@ pub fn delete(id: Uuid, conn: &mut PooledConnection) -> Result<usize, Error> {
 
     Ok(1)
 }
+
+
+#[derive(Message)]
+#[rtype(result = "Result<Token, Error>")]
+pub struct Insert(pub TokenPayload);
+
+impl Handler<Insert> for PgExecutor {
+    type Result = Result<Token, Error>;
+
+    fn handle(&mut self, Insert(payload): Insert, _: &mut Self::Context) -> Self::Result {
+        let conn = &mut self.get()?;
+
+        insert(payload, conn)
+    }
+}
+
+
+#[derive(Message)]
+#[rtype(result = "Result<Token, Error>")]
+pub struct Update {
+    pub id: Uuid,
+    pub payload: TokenPayload,
+}
+
+impl Handler<Update> for PgExecutor {
+    type Result = Result<Token, Error>;
+
+    fn handle(&mut self, Update { id, payload }: Update, _: &mut Self::Context) -> Self::Result {
+        let conn = &mut self.get()?;
+
+        update(id, payload, conn)
+    }
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<Token, Error>")]
+pub struct FindById(pub Uuid);
+
+impl Handler<FindById> for PgExecutor {
+    type Result = Result<Token, Error>;
+
+    fn handle(&mut self, FindById(id): FindById, _: &mut Self::Context) -> Self::Result {
+        let conn = &mut self.get()?;
+
+        find_by_id(id, conn)
+    }
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<usize, Error>")]
+pub struct DeleteToken(pub Uuid);
+
+impl Handler<DeleteToken> for PgExecutor {
+    type Result = Result<usize, Error>;
+
+    fn handle(&mut self, DeleteToken(id): DeleteToken, _: &mut Self::Context) -> Self::Result {
+        let conn = &mut self.get()?;
+
+        conn.transaction::<_, Error, _>(|conn| delete(id, conn))
+    }
+}
