@@ -21,7 +21,7 @@ table! {
 
 // token
 table! {
-    token(id) {
+    tokens(id) {
         id -> Uuid,
         ticker -> VarChar,
         is_trading -> Bool,

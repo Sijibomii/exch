@@ -1,9 +1,9 @@
 use uuid::Uuid;
-use super::super::schema::token;
+use super::super::schema::tokens;
 use super::user::User;
 
 #[derive(Debug, Insertable, AsChangeset, Deserialize)]
-#[table_name = "token"]
+#[table_name = "tokens"]
 pub struct TokenPayload {
     pub id: Option<Uuid>,
     pub ticker: Option<String>, 
@@ -38,7 +38,7 @@ impl From<Token> for TokenPayload {
 
 #[derive(Debug, Identifiable, Queryable, Associations, Clone, Serialize, Deserialize)]
 #[belongs_to(User, foreign_key = "owner_id")]
-pub struct Token{
+pub struct Token {
     pub id: Uuid,
     pub ticker: String, 
     pub owner_id: Uuid,
@@ -48,5 +48,5 @@ pub struct Token{
 
 
 impl Token {
-
+    
 }
