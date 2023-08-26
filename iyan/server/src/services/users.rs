@@ -9,6 +9,7 @@ use core::{
     db::postgres::PgExecutorAddr,
     user::{User, UserPayload},
 };
+use uuid::Uuid;
 use super::errors::Error;
 
 
@@ -104,11 +105,25 @@ pub async fn register(
     }
 } 
 
-// // get a user by id 
-// pub fn get(id: Uuid, postgres: &PgExecutorAddr) -> impl Future<Item = User, Error = Error> {
-//     User::find_by_id(id, postgres).from_err()
-// }
+// get a user by id 
+pub async fn get(id: Uuid, postgres: &PgExecutorAddr) -> Result<User, Error> {
+    match User::find_by_id(id, postgres).await {
+        Ok(user) => {
+            Ok(user)
+         }
+         Err(err) => {
+             Err(err.into())
+         }
+    }
+}
 
-// pub fn delete(id: Uuid, postgres: &PgExecutorAddr) -> impl Future<Item = usize, Error = Error> {
-//     User::delete(id, postgres).from_err()
-// }
+pub async fn delete(id: Uuid, postgres: &PgExecutorAddr) -> Result<usize, Error>{
+    match User::delete(id, postgres).await {
+        Ok(_) => {
+            Ok(0)
+        }
+        Err(err) => {
+            Err(err.into())
+        }
+    }
+}

@@ -26,6 +26,8 @@ pub enum Error {
     IncorrectPassword,
     #[fail(display = "{}", _0)]
     PayloadError(#[cause] error::PayloadError),
+    #[fail(display = "unauthorized request")]
+    UnAuthorizedRequestAccount,
     #[fail(display = "{}", _0)]
     SerdeError(#[cause] SerdeError),
     #[fail(display = "{}", _0)]
@@ -43,6 +45,10 @@ impl error::ResponseError for Error {
             Error::BadRequest(_) | Error::IncorrectPassword  => {
                 HttpResponse::build(http::StatusCode::BAD_REQUEST)
                     .body(user_err_message)
+            }
+
+            Error::UnAuthorizedRequestAccount => {
+                HttpResponse::build(http::StatusCode::FORBIDDEN).body(user_err_message)
             }
 
             Error::ModelError(ref e) => match *e {

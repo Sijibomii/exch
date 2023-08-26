@@ -16,7 +16,7 @@ async fn index() -> HttpResponse {
 }
 
 pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io::Result<()> {
-
+    
     let app_state = state::AppState{
         postgres: postgres.clone(),
         config: config.server.clone(),

@@ -6,8 +6,8 @@ use serde_json::json;
 use serde_json::Value;
 use super::super::services::{ self, errors::Error };
 use core::user::{UserPayload};
-
-
+use super::super::auth::AuthUser;
+use uuid::Uuid;
 #[derive(Deserialize)]
 pub struct LoginParams {
     pub email: String,
@@ -78,97 +78,41 @@ pub async fn registration(
     }
 }
 
+//  get the entire user
+pub async fn profile( 
+    state: web::Data<AppState>,
+    user: AuthUser
+) -> Result<Json<Value>, Error> {
+    let res = services::users::get(user.id, &state.postgres).await;
 
-// #[derive(Deserialize)] 
-// pub struct ActivationParams {
-//     pub token: Uuid,
-// }
+    match res {
+        Ok(user) => {
+            return Ok(Json(json!({ "user": user.export() })))
+        }
+        Err(error) => {
+            return Err(Error::from(error))
+        }
+    }
+}
 
-// pub fn activation(
-//     data: web::Json<ActivationParams>,
-//     state: web::Data<AppState>
-// ) ->  Result<Json<Value>, Error> {
-//     let params = data.into_inner();
-//     // activate. when email link is clicked
-//     let res = services::users::activate(params.token, &state.postgres, state.jwt_private.clone()).then(
-//         |res| {
-//             res.and_then(|(token, user)| Ok(Json(json!({ "token": token, "user": user.export() }))))
-//         },
-//     );
+// this is how to get path parms in rust. the uuid is passed in
+pub async fn delete(
+    state: web::Data<AppState>, // Access the app state
+    path: web::Path<Uuid>, // Extract dynamic path parameter
+    user: AuthUser,
+) -> Box<Result<Json<Value>, Error>> {
+    let id = path.into_inner();
+    if id != user.id {
+        return Box::new(Err((Error::UnAuthorizedRequestAccount)));
+    }
+    let res = services::users::delete(user.id, &state.postgres).await;
+    match res {
+        Ok(us) => {
+            return Box::new(Ok(Json(json!({ "deleted": us }))))
+        }
+        Err(error) => {
+            return Box::new(Err(Error::from(error)))
+        }
+    }
+}
 
-//     HttpResponse::Ok().body(res);
-// }
-
-// #[derive(Deserialize)]
-// pub struct ResetPasswordParams {
-//     pub email: String,
-// }
-
-// pub fn reset_password(
-//     data: web::Json<ResetPasswordParams>,
-//     state: web::Data<AppState>
-// ) -> Result<(), Error> {
-//     let params = data.into_inner();
-
-//     let res = services::users::reset_password( 
-//         params.email,
-//         state.mailer.clone(),
-//         &state.postgres,
-//         state.config.web_client_url.clone(),
-//         state.config.mail_sender.clone(),
-//     )
-//     .then(|res| res.and_then(|_| Ok(Json(json!({})))));
-
-//     HttpResponse::Ok().body(res);
-// }
-
-// #[derive(Deserialize)]
-// pub struct ChangePasswordParams {
-//     pub token: Uuid,
-//     pub password: String,
-// }
-
-// pub fn change_password(
-//     data: web::Json<ChangePasswordParams>,
-//     state: web::Data<AppState>
-// ) -> Result<Json<Value>, Error> {
-//     let params = data.into_inner();
-
-//     let res = services::users::change_password(
-//         params.token,
-//         params.password,
-//         &state.postgres,
-//         state.jwt_private.clone(),
-//     )
-//     .then(|res| {
-//         res.and_then(|(token, user)| Ok(Json(json!({ "token": token, "user": user.export() }))))
-//     });
-
-//     HttpResponse::Ok().body(res);    
-// }
-
-// //  get the entire user
-// pub fn profile( 
-//     state: web::Data<AppState>,
-//     user: AuthUser
-// ) -> Result<Json<Value>, Error> {
-//     let res = services::users::get(user.id, &state.postgres)
-//         .then(|res| res.and_then(|user| Ok(Json(user.export()))));
-
-//     HttpResponse::Ok().body(res);    
-// }
-
-// // this is how to get path parms in rust. the uuid is passed in
-// pub fn delete(
-//     // (state, path, user): (State<AppState>, Path<Uuid>, AuthUser),
-// ) -> Box<Result<Json<Value>, Error>> {
-//     let id = path.into_inner();
-//     if id != user.id {
-//         return Box::new(err(Error::InvalidRequestAccount));
-//     }
-
-//     Box::new(
-//         services::users::delete(user.id, &state.postgres)
-//             .then(|res| res.and_then(|deleted| Ok(Json(json!({ "deleted": deleted }))))),
-//     )
-// }
