@@ -1,9 +1,15 @@
 use uuid::Uuid;
 use super::super::schema::tokens;
 use super::user::User;
+use super::super::db::{
+    postgres::PgExecutorAddr,
+    token::{Insert}
+};
+use super::super::models::errors::Error;
+
 
 #[derive(Debug, Insertable, AsChangeset, Deserialize)]
-#[table_name = "tokens"]
+#[diesel(table_name = tokens)]
 pub struct TokenPayload {
     pub id: Option<Uuid>,
     pub ticker: Option<String>, 
@@ -37,7 +43,7 @@ impl From<Token> for TokenPayload {
 }
 
 #[derive(Debug, Identifiable, Queryable, Associations, Clone, Serialize, Deserialize)]
-#[belongs_to(User, foreign_key = "owner_id")]
+#[diesel(belongs_to(User, foreign_key = owner_id))]
 pub struct Token {
     pub id: Uuid,
     pub ticker: String, 
@@ -48,5 +54,19 @@ pub struct Token {
 
 
 impl Token {
-    
+    pub async fn insert(
+        mut payload: TokenPayload,
+        postgres: &PgExecutorAddr, 
+    ) -> Result<Token, Error> {
+        (*postgres)
+        .send(Insert(payload))
+        .await
+        .map_err(Error::from)
+        .and_then(|res| {
+            res.map_err(|e| Error::from(e))
+        })
+    }
+
+
 }
+// -> impl Future<Item = Token, Error = Error> 

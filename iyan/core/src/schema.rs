@@ -1,4 +1,4 @@
-use diesel::sql_types::*;
+// use diesel::sql_types::BigInt;
 // customer account
 table! {
     users (id) {
@@ -35,7 +35,7 @@ table! {
     wallet(id) {
         id -> Uuid,
         user_id -> Uuid,
-        balance -> Numeric,
+        balance -> BigInt,
         last_activity_time -> Nullable<Timestamptz>,
     }
 }
@@ -45,7 +45,7 @@ table! {
     token_ownership(id) {
         id -> Uuid,
         token_id -> Uuid,
-        balance -> Numeric,
+        balance -> BigInt,
         wallet_id -> Uuid,
     }
 }

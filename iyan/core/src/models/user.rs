@@ -14,7 +14,7 @@ use super::Error;
 use super::super::schema::users;
 
 #[derive(Insertable, AsChangeset, Deserialize, Clone)]
-#[table_name = "users"]
+#[diesel(table_name = users)]
 pub struct UserPayload {
     pub email: Option<String>,
     pub password: Option<String>,
