@@ -1,6 +1,17 @@
-// use diesel::sql_types::BigInt;
+
+// token
+diesel::table! {
+    tokens(id) {
+        id -> Uuid,
+        ticker -> VarChar,
+        is_trading -> Bool,
+        supply -> BigInt,
+        user_id -> Uuid,
+    }
+}
+
 // customer account
-table! {
+diesel::table! {
     users (id) {
         id -> Uuid,
         email -> Varchar,
@@ -19,38 +30,31 @@ table! {
 } 
 
 
-// token
-table! {
-    tokens(id) {
-        id -> Uuid,
-        ticker -> VarChar,
-        is_trading -> Bool,
-        supply -> BigInt,
-        owner_id -> Uuid,
-    }
-}
 
-// wallet 
-table! {
-    wallet(id) {
-        id -> Uuid,
-        user_id -> Uuid,
-        balance -> BigInt,
-        last_activity_time -> Nullable<Timestamptz>,
-    }
-}
+diesel::joinable!(tokens -> users (user_id));
 
-// token onwership map no of tokens owned to trading wallet
-table! {
-    token_ownership(id) {
-        id -> Uuid,
-        token_id -> Uuid,
-        balance -> BigInt,
-        wallet_id -> Uuid,
-    }
-}
+// // wallet 
+// diesel::table! {
+//     wallet(id) {
+//         id -> Uuid,
+//         user_id -> Uuid,
+//         balance -> BigInt,
+//         last_activity_time -> Nullable<Timestamptz>,
+//     }
+// }
+
+// // token onwership map no of tokens owned to trading wallet
+// diesel::table! {
+//     token_ownership(id) {
+//         id -> Uuid,
+//         token_id -> Uuid,
+//         balance -> BigInt,
+//         wallet_id -> Uuid,
+//     }
+// }
 
 
 allow_tables_to_appear_in_same_query!(
-    
+    users,
+    tokens,
 );

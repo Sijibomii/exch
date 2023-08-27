@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use super::super::schema::tokens;
+use super::super::schema::{tokens, users};
 use super::user::User;
 use super::super::db::{
     postgres::PgExecutorAddr,
@@ -13,19 +13,20 @@ use super::super::models::errors::Error;
 pub struct TokenPayload {
     pub id: Option<Uuid>,
     pub ticker: Option<String>, 
-    pub owner_id: Option<Uuid>,
+    pub user_id: Option<Uuid>,
     pub is_trading: Option<bool>,
-    pub supply: Option<i64>
+    pub supply: Option<i64>,
 }
 
 impl TokenPayload {
     pub fn new() -> Self {
         TokenPayload {
-            owner_id: None,
+            user_id: None,
             id: None,
             ticker: None,
             is_trading: None,
-            supply: None
+            supply: None,
+
         }
     }
 }
@@ -35,21 +36,25 @@ impl From<Token> for TokenPayload {
         TokenPayload {
             id: Some(token.id),
             ticker: Some(token.ticker), 
-            owner_id: Some(token.owner_id),
+            user_id: Some(token.user_id),
             is_trading: Some(token.is_trading),
-            supply: Some(token.supply)
+            supply: Some(token.supply),
+       
         }
     }
 }
-
-#[derive(Debug, Identifiable, Queryable, Associations, Clone, Serialize, Deserialize)]
-#[diesel(belongs_to(User, foreign_key = owner_id))]
+// Associations,
+// #[derive(Identifiable, Queryable, Serialize, Associations, Debug)]
+// #[diesel(belongs_to(User, foreign_key = user_id))]
+#[derive(Queryable, Selectable, Identifiable,  Debug, PartialEq)]
+// #[diesel(belongs_to(User))]
+#[diesel(table_name = tokens)]
 pub struct Token {
     pub id: Uuid,
     pub ticker: String, 
-    pub owner_id: Uuid,
+    pub user_id: Uuid,
     pub is_trading: bool,
-    pub supply: i64
+    pub supply: i64,
 }
 
 
@@ -69,4 +74,3 @@ impl Token {
 
 
 }
-// -> impl Future<Item = Token, Error = Error> 

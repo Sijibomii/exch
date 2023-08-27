@@ -5,28 +5,32 @@ use super::{Error, postgres::{PgExecutor, PooledConnection}};
 use super::super::models::token::{Token, TokenPayload};
 
 
-// insert
 pub fn insert(payload: TokenPayload, conn: &mut PooledConnection) -> Result<Token, Error> {
     use diesel::insert_into;
-    use super::super::schema::tokens::dsl;
-
-    insert_into(dsl::tokens)
+    use super::super::schema::tokens;
+    // Build the insert statement
+    let new_token = insert_into(tokens::table)
         .values(&payload)
-        .get_result(conn)
-        .map_err(|e| Error::from(e))
+        .returning(tokens::all_columns);
 
+    // Execute the insert statement and get the inserted token
+    let inserted_token: Token = new_token
+        .get_result(conn)
+        .map_err(Error::from)?;
+
+    Ok(inserted_token)
 }
 
 // update 
-pub fn update(id: Uuid, payload: TokenPayload, conn: &mut PooledConnection) -> Result<Token, Error> {
-    use diesel::update;
-    use super::super::schema::tokens::dsl;
+// pub fn update(id: Uuid, payload: TokenPayload, conn: &mut PooledConnection) -> Result<Token, Error> {
+//     use diesel::update;
+//     use super::super::schema::tokens::dsl;
  
-    update(dsl::tokens.filter(dsl::id.eq(id)))
-        .set(&payload)
-        .get_result(conn)
-        .map_err(|e| Error::from(e))
-}
+//     update(dsl::tokens.filter(dsl::id.eq(id)))
+//         .set(&payload)
+//         .get_result(conn)
+//         .map_err(|e| Error::from(e))
+// }
 
 // find by id
 // pub fn find_by_id(id: Uuid, conn: &mut PooledConnection) -> Result<Token, Error> {
@@ -73,15 +77,15 @@ pub struct Update {
     pub payload: TokenPayload,
 }
 
-impl Handler<Update> for PgExecutor {
-    type Result = Result<Token, Error>;
+// impl Handler<Update> for PgExecutor {
+//     type Result = Result<Token, Error>;
 
-    fn handle(&mut self, Update { id, payload }: Update, _: &mut Self::Context) -> Self::Result {
-        let conn = &mut self.get()?;
+//     fn handle(&mut self, Update { id, payload }: Update, _: &mut Self::Context) -> Self::Result {
+//         let conn = &mut self.get()?;
 
-        update(id, payload, conn)
-    }
-}
+//         update(id, payload, conn)
+//     }
+// }
 
 // #[derive(Message)]
 // #[rtype(result = "Result<Token, Error>")]
