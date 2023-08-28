@@ -1,32 +1,30 @@
 use uuid::Uuid;
-use super::super::schema::{tokens, users};
-use super::user::User;
+use super::super::schema::{tokens};
 use super::super::db::{
     postgres::PgExecutorAddr,
-    token::{Insert}
+    token::{Insert, Update, FindById, DeleteToken}
 };
 use super::super::models::errors::Error;
-
+use diesel::prelude::*;
 
 #[derive(Debug, Insertable, AsChangeset, Deserialize)]
 #[diesel(table_name = tokens)]
 pub struct TokenPayload {
     pub id: Option<Uuid>,
     pub ticker: Option<String>, 
-    pub user_id: Option<Uuid>,
     pub is_trading: Option<bool>,
     pub supply: Option<i64>,
+    pub user_id: Option<Uuid>,
 }
 
 impl TokenPayload {
     pub fn new() -> Self {
         TokenPayload {
-            user_id: None,
             id: None,
             ticker: None,
             is_trading: None,
             supply: None,
-
+            user_id: None,
         }
     }
 }
@@ -36,31 +34,29 @@ impl From<Token> for TokenPayload {
         TokenPayload {
             id: Some(token.id),
             ticker: Some(token.ticker), 
-            user_id: Some(token.user_id),
             is_trading: Some(token.is_trading),
             supply: Some(token.supply),
-       
+            user_id: Some(token.user_id),
         }
     }
 }
 // Associations,
-// #[derive(Identifiable, Queryable, Serialize, Associations, Debug)]
-// #[diesel(belongs_to(User, foreign_key = user_id))]
-#[derive(Queryable, Selectable, Identifiable,  Debug, PartialEq)]
-// #[diesel(belongs_to(User))]
+#[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Clone)]
+#[diesel(belongs_to(User))]
 #[diesel(table_name = tokens)]
 pub struct Token {
     pub id: Uuid,
     pub ticker: String, 
-    pub user_id: Uuid,
     pub is_trading: bool,
     pub supply: i64,
+    pub user_id: Uuid,
 }
 
 
 impl Token {
+
     pub async fn insert(
-        mut payload: TokenPayload,
+        payload: TokenPayload,
         postgres: &PgExecutorAddr, 
     ) -> Result<Token, Error> {
         (*postgres)
@@ -72,5 +68,46 @@ impl Token {
         })
     }
 
+
+    pub async fn update(
+        id: Uuid,
+        payload: TokenPayload,
+        postgres: &PgExecutorAddr,
+    ) -> Result<Token, Error> {
+
+        (*postgres)
+            .send(Update { id, payload })
+            .await
+            .map_err(Error::from)
+            .and_then(|res| {
+                res.map_err(|e| Error::from(e))
+            })
+    }
+
+    pub async fn find_by_id(
+        id: Uuid,
+        postgres: &PgExecutorAddr,
+    ) -> Result<Token, Error> {
+        (*postgres)
+        .send(FindById(id))
+        .await
+        .map_err(Error::from)
+        .and_then(|res| {
+            res.map_err(|e| Error::from(e))
+        })
+    }
+
+    pub async fn delete(
+        id: Uuid,
+        postgres: &PgExecutorAddr,
+    ) -> Result<usize, Error>  {
+        (*postgres)
+        .send(DeleteToken(id))
+        .await
+        .map_err(Error::from)
+        .and_then(|res| {
+            res.map_err(|e| Error::from(e))
+        })
+    }
 
 }

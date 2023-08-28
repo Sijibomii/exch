@@ -22,25 +22,25 @@ pub fn insert(payload: TokenPayload, conn: &mut PooledConnection) -> Result<Toke
 }
 
 // update 
-// pub fn update(id: Uuid, payload: TokenPayload, conn: &mut PooledConnection) -> Result<Token, Error> {
-//     use diesel::update;
-//     use super::super::schema::tokens::dsl;
+pub fn update(id: Uuid, payload: TokenPayload, conn: &mut PooledConnection) -> Result<Token, Error> {
+    use diesel::update;
+    use super::super::schema::tokens::dsl;
  
-//     update(dsl::tokens.filter(dsl::id.eq(id)))
-//         .set(&payload)
-//         .get_result(conn)
-//         .map_err(|e| Error::from(e))
-// }
+    update(dsl::tokens.filter(dsl::id.eq(id)))
+        .set(&payload)
+        .get_result(conn)
+        .map_err(|e| Error::from(e))
+}
 
 // find by id
-// pub fn find_by_id(id: Uuid, conn: &mut PooledConnection) -> Result<Token, Error> {
-//     use super::super::schema::tokens::dsl;
+pub fn find_by_id(id: Uuid, conn: &mut PooledConnection) -> Result<Token, Error> {
+    use super::super::schema::tokens::dsl;
 
-//     dsl::tokens
-//         .filter(dsl::id.eq(id)) 
-//         .first::<Token>(conn)
-//         .map_err(|e| Error::from(e))
-// }
+    dsl::tokens
+        .filter(dsl::id.eq(id)) 
+        .first::<Token>(conn)
+        .map_err(|e| Error::from(e))
+}
 
 // delete
 pub fn delete(id: Uuid, conn: &mut PooledConnection) -> Result<usize, Error> {
@@ -77,29 +77,29 @@ pub struct Update {
     pub payload: TokenPayload,
 }
 
-// impl Handler<Update> for PgExecutor {
-//     type Result = Result<Token, Error>;
+impl Handler<Update> for PgExecutor {
+    type Result = Result<Token, Error>;
 
-//     fn handle(&mut self, Update { id, payload }: Update, _: &mut Self::Context) -> Self::Result {
-//         let conn = &mut self.get()?;
+    fn handle(&mut self, Update { id, payload }: Update, _: &mut Self::Context) -> Self::Result {
+        let conn = &mut self.get()?;
 
-//         update(id, payload, conn)
-//     }
-// }
+        update(id, payload, conn)
+    }
+}
 
-// #[derive(Message)]
-// #[rtype(result = "Result<Token, Error>")]
-// pub struct FindById(pub Uuid);
+#[derive(Message)]
+#[rtype(result = "Result<Token, Error>")]
+pub struct FindById(pub Uuid);
 
-// impl Handler<FindById> for PgExecutor {
-//     type Result = Result<Token, Error>;
+impl Handler<FindById> for PgExecutor {
+    type Result = Result<Token, Error>;
 
-//     fn handle(&mut self, FindById(id): FindById, _: &mut Self::Context) -> Self::Result {
-//         let conn = &mut self.get()?;
+    fn handle(&mut self, FindById(id): FindById, _: &mut Self::Context) -> Self::Result {
+        let conn = &mut self.get()?;
 
-//         find_by_id(id, conn)
-//     }
-// }
+        find_by_id(id, conn)
+    }
+}
 
 #[derive(Message)]
 #[rtype(result = "Result<usize, Error>")]
