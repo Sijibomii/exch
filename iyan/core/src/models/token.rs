@@ -6,6 +6,7 @@ use super::super::db::{
 };
 use super::super::models::errors::Error;
 use diesel::prelude::*;
+use serde_json::Value;
 
 #[derive(Debug, Insertable, AsChangeset, Deserialize)]
 #[diesel(table_name = tokens)]
@@ -41,7 +42,7 @@ impl From<Token> for TokenPayload {
     }
 }
 // Associations,
-#[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Clone)]
+#[derive(Queryable, Identifiable, Selectable, Debug, PartialEq, Serialize, Clone)]
 #[diesel(belongs_to(User))]
 #[diesel(table_name = tokens)]
 pub struct Token {
@@ -107,6 +108,14 @@ impl Token {
         .map_err(Error::from)
         .and_then(|res| {
             res.map_err(|e| Error::from(e))
+        })
+    }
+
+    pub fn export(&self) -> Value {
+        json!({
+            "id": self.id,
+            "ticker": self.ticker,
+            "supply": self.supply
         })
     }
 
