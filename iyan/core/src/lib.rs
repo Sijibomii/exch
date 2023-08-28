@@ -29,5 +29,5 @@ pub mod db;
 mod models;
 
 pub use models::{ 
-    user, token, Error as ModelError,
+    user, token, wallet, Error as ModelError,
 }; 
