@@ -2,7 +2,7 @@ use uuid::Uuid;
 use super::super::schema::{tokens};
 use super::super::db::{
     postgres::PgExecutorAddr,
-    token::{Insert, Update, FindById, DeleteToken}
+    token::{Insert, Update, FindById, DeleteToken, FindAllTradedTokens}
 };
 use super::super::models::errors::Error;
 use diesel::prelude::*;
@@ -78,6 +78,20 @@ impl Token {
 
         (*postgres)
             .send(Update { id, payload })
+            .await
+            .map_err(Error::from)
+            .and_then(|res| {
+                res.map_err(|e| Error::from(e))
+            })
+    }
+
+    pub async fn find_all_traded_tokens(
+        limit: i64,
+        offset: i64,
+        postgres: &PgExecutorAddr
+    ) -> Result<Vec<Token>, Error>  {
+        (*postgres)
+            .send(FindAllTradedTokens{ offset, limit })
             .await
             .map_err(Error::from)
             .and_then(|res| {

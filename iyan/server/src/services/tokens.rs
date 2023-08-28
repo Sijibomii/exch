@@ -32,4 +32,13 @@ pub async fn get(id: Uuid, postgres: &PgExecutorAddr) -> Result<Token, Error> {
 }
 
 // get all tokens
-
+pub async fn get_all_tokens(limit: i64, offset: i64,postgres: &PgExecutorAddr) -> Result<Vec<Token>, Error> {
+    match Token::find_all_traded_tokens(limit, offset, postgres).await {
+        Ok(token) => {
+            Ok(token)
+         }
+         Err(err) => {
+             Err(err.into())
+         }
+    }
+}

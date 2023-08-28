@@ -32,6 +32,22 @@ pub fn update(id: Uuid, payload: TokenPayload, conn: &mut PooledConnection) -> R
         .map_err(|e| Error::from(e))
 }
 
+// get all traded tokens
+pub fn find_all_traded_tokens(
+    limit: i64,
+    offset: i64,
+    conn: &mut PooledConnection,
+) -> Result<Vec<Token>, Error> {
+    use super::super::schema::tokens::dsl;
+
+    dsl::tokens
+        .filter(dsl::is_trading.eq(true))
+        .limit(limit)
+        .offset(offset)
+        .load::<Token>(conn)
+        .map_err(|e| Error::from(e))
+}
+
 // find by id
 pub fn find_by_id(id: Uuid, conn: &mut PooledConnection) -> Result<Token, Error> {
     use super::super::schema::tokens::dsl;
@@ -84,6 +100,30 @@ impl Handler<Update> for PgExecutor {
         let conn = &mut self.get()?;
 
         update(id, payload, conn)
+    }
+}
+
+#[derive(Message)]
+#[rtype(result = "Result<Vec<Token>, Error>")]
+pub struct FindAllTradedTokens {
+    pub limit: i64,
+    pub offset: i64,
+} 
+
+impl Handler<FindAllTradedTokens> for PgExecutor {
+    type Result = Result<Vec<Token>, Error>;
+
+    fn handle(
+        &mut self,
+        FindAllTradedTokens {
+            limit,
+            offset,
+        }: FindAllTradedTokens,
+        _: &mut Self::Context,
+    ) -> Self::Result {
+        let conn = &mut self.get()?;
+
+        find_all_traded_tokens(limit, offset, conn)
     }
 }
 

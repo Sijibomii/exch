@@ -65,7 +65,43 @@ pub async fn get_token(
     }
 }
 
+const LIMIT: i64 = 15;
+const OFFSET: i64 = 0;
+
+#[derive(Debug, Deserialize)]
+pub struct ListParams {
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+}
+
 // get all tokens
+pub async fn get_all_tokens(
+    data: web::Json<ListParams>,
+    state: web::Data<AppState>
+) -> Result<Json<Value>, Error> {
+    let mut limit = LIMIT;
+    let mut offset = OFFSET;
+
+    if let Some(_limit) = data.limit { 
+        if _limit < LIMIT {
+            limit = _limit;
+        }
+    };
+
+    if let Some(_offset) = data.offset {
+        offset = _offset;
+    };
+
+    let res = services::tokens::get_all_tokens(limit, offset, &state.postgres).await;
+    match res {
+        Ok(token) => {
+            return Ok(Json(json!({ "token": token })))
+        }
+        Err(error) => {
+            return Err(Error::from(error))
+        }
+    }
+}
 
 // start token trading
 
