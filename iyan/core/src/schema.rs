@@ -33,28 +33,30 @@ diesel::table! {
 
 diesel::joinable!(tokens -> users (user_id));
 
-// // wallet 
-// diesel::table! {
-//     wallet(id) {
-//         id -> Uuid,
-//         user_id -> Uuid,
-//         balance -> BigInt,
-//         last_activity_time -> Nullable<Timestamptz>,
-//     }
-// }
+// wallet 
+diesel::table! {
+    wallet(id) {
+        id -> Uuid,
+        user_id -> Uuid,
+        balance -> BigInt,
+        last_activity_time -> Nullable<Timestamptz>,
+    }
+}
 
 // // token onwership map no of tokens owned to trading wallet
-// diesel::table! {
-//     token_ownership(id) {
-//         id -> Uuid,
-//         token_id -> Uuid,
-//         balance -> BigInt,
-//         wallet_id -> Uuid,
-//     }
-// }
+diesel::table! {
+    token_ownership(id) {
+        id -> Uuid,
+        token_id -> Uuid,
+        balance -> BigInt,
+        wallet_id -> Uuid,
+    }
+}
 
 
 allow_tables_to_appear_in_same_query!(
     users,
     tokens,
+    wallet,
+    token_ownership
 );
