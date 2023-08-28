@@ -152,3 +152,35 @@ pub async fn halt_trading_token(
 
 
 // delete token
+pub async fn delete_token(
+    data: web::Json<StartTradingTokenParams>,
+    state: web::Data<AppState>,
+    user: AuthUser
+) -> Result<Json<Value>, Error> {
+    if user.id.is_nil() {
+        return Err(Error::UnAuthorizedRequestAccount);
+    }
+
+    let res = services::tokens::get(data.id, &state.postgres).await;
+
+    match res {
+        Ok(token) => {
+            if user.id != token.user_id {
+                return Err(Error::UnAuthorizedRequestAccount);
+            }
+
+            match services::tokens::delete(data.id, &state.postgres).await {
+                Ok(u) => {
+                    return Ok(Json(json!({ "token": u })))
+                }
+                Err(error) => {
+                    return Err(Error::from(error))
+                }
+
+            }
+        }
+        Err(error) => {
+            return Err(Error::from(error))
+        }
+    }
+}

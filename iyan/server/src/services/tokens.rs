@@ -84,6 +84,16 @@ pub async fn halt_trading_token(id: Uuid, postgres: &PgExecutorAddr) -> Result<T
          Err(err) => {
              Err(err.into())
          }
-    }
-    
+    }   
 }
+
+pub async fn delete(id: Uuid, postgres: &PgExecutorAddr) -> Result<usize, Error> {
+    match Token::delete(id, postgres).await {
+        Ok(u) => {
+            Ok(u)
+        }
+        Err(err) => {
+            Err(err.into())
+        }
+    }
+} 

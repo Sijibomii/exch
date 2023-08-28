@@ -49,6 +49,7 @@ pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io:
                     .route("/token", web::post().to(controllers::token::create_token))
                     .route("/token", web::get().to(controllers::token::create_token))
                     .route("/token/{id}", web::get().to(controllers::token::get_token))
+                    .route("/token/{id}", web::delete().to(controllers::token::delete_token))
                     .route("/token/trade", web::post().to(controllers::token::begin_trading_token))
                     .route("/token/halt", web::post().to(controllers::token::halt_trading_token))
         )       
