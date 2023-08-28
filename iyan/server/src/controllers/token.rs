@@ -103,7 +103,32 @@ pub async fn get_all_tokens(
     }
 }
 
+#[derive(Deserialize)]
+pub struct StartTradingTokenParams {
+    pub id: Uuid
+}
+
 // start token trading
+pub async fn begin_trading_token(
+    data: web::Json<StartTradingTokenParams>,
+    state: web::Data<AppState>,
+    user: AuthUser
+) -> Result<Json<Value>, Error> {
+
+    if user.id.is_nil() {
+        return Err(Error::UnAuthorizedRequestAccount);
+    }
+    let res = services::tokens::start_trading_token(data.id, &state.postgres).await;
+    match res {
+        Ok(token) => {
+            return Ok(Json(json!({ "token": token })))
+        }
+        Err(error) => {
+            return Err(Error::from(error))
+        }
+    }
+}
+
 
 // turn off trading
 
