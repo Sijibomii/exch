@@ -2,7 +2,7 @@ use uuid::Uuid;
 use super::super::schema::{tokens};
 use super::super::db::{
     postgres::PgExecutorAddr,
-    token::{Insert, Update, FindById, DeleteToken, FindAllTradedTokens}
+    token::{Insert, Update, FindTokenById, DeleteToken, FindAllTradedTokens}
 };
 use super::super::models::errors::Error;
 use diesel::prelude::*;
@@ -104,7 +104,7 @@ impl Token {
         postgres: &PgExecutorAddr,
     ) -> Result<Token, Error> {
         (*postgres)
-        .send(FindById(id))
+        .send(FindTokenById(id))
         .await
         .map_err(Error::from)
         .and_then(|res| {

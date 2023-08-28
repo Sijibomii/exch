@@ -129,12 +129,12 @@ impl Handler<FindAllTradedTokens> for PgExecutor {
 
 #[derive(Message)]
 #[rtype(result = "Result<Token, Error>")]
-pub struct FindById(pub Uuid);
+pub struct FindTokenById(pub Uuid);
 
-impl Handler<FindById> for PgExecutor {
+impl Handler<FindTokenById> for PgExecutor {
     type Result = Result<Token, Error>;
 
-    fn handle(&mut self, FindById(id): FindById, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, FindTokenById(id): FindTokenById, _: &mut Self::Context) -> Self::Result {
         let conn = &mut self.get()?;
 
         find_by_id(id, conn)
