@@ -65,3 +65,25 @@ pub async fn start_trading_token(id: Uuid, postgres: &PgExecutorAddr) -> Result<
     }
     
 }
+
+pub async fn halt_trading_token(id: Uuid, postgres: &PgExecutorAddr) -> Result<Token, Error> {
+    // get token by id first 
+    match Token::find_by_id(id, postgres).await {
+        Ok(token) => {
+            let mut payload = TokenPayload::from(token);
+            payload.is_trading = Some(false);
+            match Token::update(id, payload, postgres).await {
+                Ok(ret_token) => {
+                    Ok(ret_token)
+                }
+                Err(err) => {
+                    Err(err.into())
+                }
+            }
+         }
+         Err(err) => {
+             Err(err.into())
+         }
+    }
+    
+}
