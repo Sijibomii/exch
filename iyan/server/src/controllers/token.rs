@@ -15,7 +15,7 @@ pub struct CreateTokenParams {
     pub supply: i64,
 }
 
-pub async fn createToken(
+pub async fn create_token(
     data: web::Json<CreateTokenParams>,
     state: web::Data<AppState>,
     user: AuthUser
@@ -43,3 +43,32 @@ pub async fn createToken(
         }
     };
 }
+
+// get token
+pub async fn get_token(
+    state: web::Data<AppState>,
+    path: web::Path<Uuid>, 
+    user: AuthUser,
+) -> Result<Json<Value>, Error> {
+    let id = path.into_inner();
+    if user.id.is_nil() {
+        return Err(Error::UnAuthorizedRequestAccount);
+    }
+    let res = services::tokens::get(id, &state.postgres).await;
+    match res {
+        Ok(token) => {
+            return Ok(Json(json!({ "token": token })))
+        }
+        Err(error) => {
+            return Err(Error::from(error))
+        }
+    }
+}
+
+// get all tokens
+
+// start token trading
+
+// turn off trading
+
+// delete token
