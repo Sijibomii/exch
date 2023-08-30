@@ -65,9 +65,7 @@ namespace Exchange {
     std::string time_str_;
     Logger logger_;
 
-    /// Multicast socket to represent the incremental market data stream.
-    Common::McastSocket incremental_socket_;
-
+   
     /// Snapshot synthesizer which synthesizes and publishes limit order book snapshots on the snapshot multicast stream.
     SnapshotSynthesizer *snapshot_synthesizer_ = nullptr;
   };

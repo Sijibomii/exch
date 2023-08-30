@@ -22,3 +22,6 @@ target_link_libraries(exchange_main PUBLIC ${LIBS})
 
 add_executable(trading_main trading/trading_main.cpp)
 target_link_libraries(trading_main PUBLIC ${LIBS})
+
+find_package(amqpcpp REQUIRED)
+target_link_libraries(MatchingEngine PRIVATE AMQP-CPP::AMQP-CPP)

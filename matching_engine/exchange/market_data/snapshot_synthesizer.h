@@ -4,20 +4,21 @@
 #include "common/thread_utils.h"
 #include "common/lf_queue.h"
 #include "common/macros.h"
-#include "common/mcast_socket.h"
+// #include "common/mcast_socket.h"
 #include "common/mem_pool.h"
 #include "common/logging.h"
 
 #include "market_data/market_update.h"
 #include "matcher/me_order.h"
 
+#include "common/rabbitmq.h"
+
 using namespace Common;
 
 namespace Exchange {
   class SnapshotSynthesizer {
   public:
-    SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates, const std::string &iface,
-                        const std::string &snapshot_ip, int snapshot_port);
+    SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates);
 
     ~SnapshotSynthesizer();
 
@@ -48,7 +49,7 @@ namespace Exchange {
 
   private:
     /// Lock free queue containing incremental market data updates coming in from the market data publisher.
-    MDPMarketUpdateLFQueue *snapshot_md_updates_ = nullptr;
+    MDPMarketUpdateLFQueue *snapshot_md_updates_ = nullptr; 
 
     Logger logger_;
 
@@ -56,15 +57,16 @@ namespace Exchange {
 
     std::string time_str_;
 
-    /// Multicast socket for the snapshot multicast stream.
-    McastSocket snapshot_socket_;
-
     /// Hash map from TickerId -> Full limit order book snapshot containing information for every live order.
     std::array<std::array<MEMarketUpdate *, ME_MAX_ORDER_IDS>, ME_MAX_TICKERS> ticker_orders_;
     size_t last_inc_seq_num_ = 0;
     Nanos last_snapshot_time_ = 0;
 
+    
+
     /// Memory pool to manage MEMarketUpdate messages for the orders in the snapshot limit order books.
     MemPool<MEMarketUpdate> order_pool_;
+
+    AMQP::Channel* chan;
   };
 }

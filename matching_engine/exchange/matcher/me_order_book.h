@@ -74,7 +74,7 @@ namespace Exchange {
     auto generateNewMarketOrderId() noexcept -> OrderId {
       return next_market_order_id_++;
     }
-
+    // this mimics the hash map(takes in a price and returns an index)
     auto priceToIndex(Price price) const noexcept {
       return (price % ME_MAX_PRICE_LEVELS);
     }
@@ -157,9 +157,9 @@ namespace Exchange {
     auto getNextPriority(Price price) noexcept {
       const auto orders_at_price = getOrdersAtPrice(price);
       if (!orders_at_price)
-        return 1lu;
+        return 1ull;
 
-      return orders_at_price->first_me_order_->prev_order_->priority_ + 1;
+      return orders_at_price->first_me_order_->prev_order_-> priority_ + 1;
     }
 
     /// Match a new aggressive order with the provided parameters against a passive order held in the bid_itr object and generate client responses and market updates for the match.

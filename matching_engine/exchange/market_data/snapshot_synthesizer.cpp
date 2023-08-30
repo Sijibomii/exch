@@ -1,13 +1,20 @@
 #include "snapshot_synthesizer.h"
 
 namespace Exchange {
-  SnapshotSynthesizer::SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates, const std::string &iface,
-                                           const std::string &snapshot_ip, int snapshot_port)
-      : snapshot_md_updates_(market_updates), logger_("exchange_snapshot_synthesizer.log"), snapshot_socket_(logger_), order_pool_(ME_MAX_ORDER_IDS) {
-    ASSERT(snapshot_socket_.init(snapshot_ip, iface, snapshot_port, /*is_listening*/ false) >= 0,
-           "Unable to create snapshot mcast socket. error:" + std::string(std::strerror(errno)));
+  
+  SnapshotSynthesizer::SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates)
+      : snapshot_md_updates_(market_updates), logger_("exchange_snapshot_synthesizer.log"), order_pool_(ME_MAX_ORDER_IDS) {
     for(auto& orders : ticker_orders_)
       orders.fill(nullptr);
+
+      Rabbits snapshotRabbit("snapshot", myCallback);
+      // create a AMQP connection object
+      AMQP::Connection connection(&snapshotRabbit, AMQP::Login("guest","guest"), "/");
+
+      // and create a channel
+      AMQP::Channel channel(&connection);
+
+      chan = &channel;
   }
 
   SnapshotSynthesizer::~SnapshotSynthesizer() {
@@ -19,10 +26,15 @@ namespace Exchange {
     run_ = true;
     ASSERT(Common::createAndStartThread(-1, "Exchange/SnapshotSynthesizer", [this]() { run(); }) != nullptr,
            "Failed to start SnapshotSynthesizer thread.");
-  }
+  } 
 
   void SnapshotSynthesizer::stop() {
     run_ = false;
+  }
+
+  bool myCallback(const AMQP::Message &msg) {
+    // Callback implementation not needed here
+    return true;
   }
 
   /// Process an incremental market update and update the limit order book snapshot.
@@ -75,7 +87,8 @@ namespace Exchange {
     // The snapshot cycle starts with a SNAPSHOT_START message and order_id_ contains the last sequence number from the incremental market data stream used to build this snapshot.
     const MDPMarketUpdate start_market_update{snapshot_size++, {MarketUpdateType::SNAPSHOT_START, last_inc_seq_num_}};
     logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), start_market_update.toString());
-    snapshot_socket_.send(&start_market_update, sizeof(MDPMarketUpdate));
+    
+    // snapshot_socket_.send(&start_market_update, sizeof(MDPMarketUpdate));
 
     // Publish order information for each order in the limit order book for each instrument.
     for (size_t ticker_id = 0; ticker_id < ticker_orders_.size(); ++ticker_id) {
@@ -88,7 +101,7 @@ namespace Exchange {
       // We start order information for each instrument by first publishing a CLEAR message so the downstream consumer can clear the order book.
       const MDPMarketUpdate clear_market_update{snapshot_size++, me_market_update};
       logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), clear_market_update.toString());
-      snapshot_socket_.send(&clear_market_update, sizeof(MDPMarketUpdate));
+      // snapshot_socket_.send(&clear_market_update, sizeof(MDPMarketUpdate));
 
       // Publish each order.
       for (const auto order: orders) {
@@ -128,5 +141,9 @@ namespace Exchange {
         publishSnapshot();
       }
     }
+  }
+  
+  void send(const void *data, size_t len) {
+     // send rabbit mq message
   }
 }
