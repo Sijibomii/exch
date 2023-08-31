@@ -1,7 +1,6 @@
 #include "snapshot_synthesizer.h"
 
 namespace Exchange {
-  
   SnapshotSynthesizer::SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates)
       : snapshot_md_updates_(market_updates), logger_("exchange_snapshot_synthesizer.log"), order_pool_(ME_MAX_ORDER_IDS) {
     for(auto& orders : ticker_orders_)
@@ -9,12 +8,30 @@ namespace Exchange {
 
       Rabbits snapshotRabbit("snapshot", myCallback);
       // create a AMQP connection object
-      AMQP::Connection connection(&snapshotRabbit, AMQP::Login("guest","guest"), "/");
+      AMQP::Address address("localhost", 5672, AMQP::Login("guest", "guest"), "/");
+      AMQP::Connection connection(&snapshotRabbit, address);
+      logger_.log("%:% %() Exchange connection successful.\n ", __FILE__, __LINE__, __FUNCTION__);
+      std::string exchangeName = "exch";
+      std::string exchangeType = "direct"; 
 
-      // and create a channel
-      AMQP::Channel channel(&connection);
+      // create a channel
+      AMQP::Channel* cha;
+      cha = new AMQP::Channel(&connection);
+      AMQP::Channel& channel = *cha;
+      AMQP::ExchangeType exchangeType = AMQP::direct; 
+      int flags = AMQP::durable; 
+      AMQP::Table arguments; 
 
-      chan = &channel;
+      channel.declareExchange(exchangeName)
+          .onSuccess([this]() {
+             logger_.log("%:% %() Exchange declaration successful.\n ", __FILE__, __LINE__, __FUNCTION__);
+          })
+          .onError([this](const char *message) {
+            logger_.log("%:% %() Exchange declaration error % \n ", __FILE__, __LINE__, __FUNCTION__, message);
+          });
+      channel.declareQueue(snapshotRabbit.QUEUE_NAME);
+      channel.bindQueue(exchangeName, snapshotRabbit.QUEUE_NAME, snapshotRabbit.QUEUE_NAME);
+      // chan = &channel;
   }
 
   SnapshotSynthesizer::~SnapshotSynthesizer() {
@@ -108,8 +125,8 @@ namespace Exchange {
         if (order) {
           const MDPMarketUpdate market_update{snapshot_size++, *order};
           logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), market_update.toString());
-          snapshot_socket_.send(&market_update, sizeof(MDPMarketUpdate));
-          snapshot_socket_.sendAndRecv();
+          // snapshot_socket_.send(&market_update, sizeof(MDPMarketUpdate));
+
         }
       }
     }
@@ -117,8 +134,8 @@ namespace Exchange {
     // The snapshot cycle ends with a SNAPSHOT_END message and order_id_ contains the last sequence number from the incremental market data stream used to build this snapshot.
     const MDPMarketUpdate end_market_update{snapshot_size++, {MarketUpdateType::SNAPSHOT_END, last_inc_seq_num_}};
     logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), end_market_update.toString());
-    snapshot_socket_.send(&end_market_update, sizeof(MDPMarketUpdate));
-    snapshot_socket_.sendAndRecv();
+    // snapshot_socket_.send(&end_market_update);
+
 
     logger_.log("%:% %() % Published snapshot of % orders.\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), snapshot_size - 1);
   }
@@ -143,7 +160,12 @@ namespace Exchange {
     }
   }
   
-  void send(const void *data, size_t len) {
-     // send rabbit mq message
+  auto SnapshotSynthesizer::publish(const void *data, size_t len) {
+    // send rabbit mq messag
+    std::string exchange = "exch";
+    std::string_view exch_view = exchange;
+    std::string key = "snapshot";
+    std::string_view key_view = key;
+    this->channel.publish(exch_view, key_view, static_cast<const char*>(data), len);
   }
 }

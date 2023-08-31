@@ -39,10 +39,12 @@ namespace Common {
 
     Rabbits &operator=(const Rabbits &&) = delete;
 
+    std::string QUEUE_NAME;
+
     private:
 
       Logger logger_;
-      std::string QUEUE_NAME;
+      
       HandlerFunction handler_;
   };
 

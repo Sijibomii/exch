@@ -36,6 +36,8 @@ namespace Exchange {
     /// Main method for this thread - processes incremental updates from the market data publisher, updates the snapshot and publishes the snapshot periodically.
     auto run() -> void;
 
+    auto publish(const void *data, size_t len);
+
     /// Deleted default, copy & move constructors and assignment-operators.
     SnapshotSynthesizer() = delete;
 
@@ -67,6 +69,6 @@ namespace Exchange {
     /// Memory pool to manage MEMarketUpdate messages for the orders in the snapshot limit order books.
     MemPool<MEMarketUpdate> order_pool_;
 
-    AMQP::Channel* chan;
+    AMQP::Channel channel = NULL;
   };
 }
