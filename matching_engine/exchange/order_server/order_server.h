@@ -48,5 +48,6 @@ namespace Exchange {
         std::string time_str_;
         Logger logger_;
         AMQP::Channel channel = NULL;
+        FIFOSequencer fifo_sequencer_;
   };
 }

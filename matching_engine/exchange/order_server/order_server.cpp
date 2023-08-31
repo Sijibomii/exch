@@ -2,7 +2,7 @@
 
 namespace Exchange {
   OrderServer::OrderServer(ClientRequestLFQueue *client_requests, ClientResponseLFQueue *client_responses)
-      :outgoing_responses_(client_responses), logger_("exchange_order_server.log") {
+      :outgoing_responses_(client_responses), logger_("exchange_order_server.log"), fifo_sequencer_(client_requests, &logger_) {
       
       // rabbitmq
       Rabbits orderRabbit("order", myCallback);
@@ -61,17 +61,20 @@ namespace Exchange {
 
     // callback operation when a message was received
     auto messageCb = [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
-
-        std::cout << "message received" << std::endl;
-
-        // acknowledge the message
-        this->channel.ack(deliveryTag);
+        if (message.bodySize() >= sizeof(OMClientRequest)) {
+          auto request = reinterpret_cast<const OMClientRequest *>(message.body());
+          logger_.log("%:% %() % Received %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), request->toString());
+          fifo_sequencer_.addClientRequest(getCurrentNanos(), request->me_client_request_);
+          // acknowledge the message
+          this->channel.ack(deliveryTag);
+          fifo_sequencer_.sequenceAndPublish();
+        }
+        
     };
 
     // callback that is called when the consumer is cancelled by RabbitMQ (this only happens in
     // rare situations, for example when someone removes the queue that you are consuming from)
     auto cancelledCb = [](const std::string &consumertag) {
-
         std::cout << "consume operation cancelled by the RabbitMQ server" << std::endl;
     };
    

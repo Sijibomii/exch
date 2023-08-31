@@ -64,8 +64,6 @@ namespace Exchange {
     size_t last_inc_seq_num_ = 0;
     Nanos last_snapshot_time_ = 0;
 
-    
-
     /// Memory pool to manage MEMarketUpdate messages for the orders in the snapshot limit order books.
     MemPool<MEMarketUpdate> order_pool_;
 
