@@ -8,9 +8,7 @@
 namespace Exchange {
   class MarketDataPublisher {
   public:
-    MarketDataPublisher(MEMarketUpdateLFQueue *market_updates, const std::string &iface,
-                        const std::string &snapshot_ip, int snapshot_port,
-                        const std::string &incremental_ip, int incremental_port);
+    MarketDataPublisher(MEMarketUpdateLFQueue *market_updates);
 
     ~MarketDataPublisher() {
       stop();

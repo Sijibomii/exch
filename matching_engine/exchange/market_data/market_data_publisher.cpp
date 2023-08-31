@@ -1,9 +1,7 @@
 #include "market_data_publisher.h"
 
 namespace Exchange {
-  MarketDataPublisher::MarketDataPublisher(MEMarketUpdateLFQueue *market_updates, const std::string &iface,
-                                           const std::string &snapshot_ip, int snapshot_port,
-                                           const std::string &incremental_ip, int incremental_port)
+  MarketDataPublisher::MarketDataPublisher(MEMarketUpdateLFQueue *market_updates)
       : outgoing_md_updates_(market_updates), snapshot_md_updates_(ME_MAX_MARKET_UPDATES),
         run_(false), logger_("exchange_market_data_publisher.log") {
 
