@@ -3,6 +3,7 @@
 #include <functional>
 
 #include "market_data/snapshot_synthesizer.h"
+#include "common/rabbitmq.h"
 
 namespace Exchange {
   class MarketDataPublisher {
@@ -39,6 +40,8 @@ namespace Exchange {
     /// Main run loop for this thread - consumes market updates from the lock free queue from the matching engine, publishes them on the incremental multicast stream and forwards them to the snapshot synthesizer.
     auto run() noexcept -> void;
 
+    void publish(const void *data, size_t len);
+
     // Deleted default, copy & move constructors and assignment-operators.
     MarketDataPublisher() = delete;
 
@@ -68,5 +71,7 @@ namespace Exchange {
    
     /// Snapshot synthesizer which synthesizes and publishes limit order book snapshots on the snapshot multicast stream.
     SnapshotSynthesizer *snapshot_synthesizer_ = nullptr;
+
+    AMQP::Channel channel = NULL;
   };
 }

@@ -36,7 +36,7 @@ namespace Exchange {
     /// Main method for this thread - processes incremental updates from the market data publisher, updates the snapshot and publishes the snapshot periodically.
     auto run() -> void;
 
-    auto publish(const void *data, size_t len);
+    void publish(const void *data, size_t len);
 
     /// Deleted default, copy & move constructors and assignment-operators.
     SnapshotSynthesizer() = delete;
