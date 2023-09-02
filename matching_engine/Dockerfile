@@ -10,17 +10,34 @@ RUN apt-get update && apt-get install -y \
     cmake \
     make \
     libpthread-stubs0-dev \
+    git \ 
     && rm -rf /var/lib/apt/lists/*
 
+RUN apt-get update && \
+    apt-get install -y ninja-build && \
+    rm -rf /var/lib/apt/lists/*
 # Create a directory for the app
 WORKDIR /app
 
 # Copy your CMake project files into the container
 COPY . /app
 
+# # Clone and build amqpcpp
+RUN git clone https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git \
+    && cd AMQP-CPP \
+    && mkdir build && cd build \
+    && cmake .. && cmake --build . --target install && make && make install
+
+RUN cd /app
+
+COPY scripts/build.sh /usr/local/bin/
+
+RUN chmod +x /usr/local/bin/build.sh
+RUN /usr/local/bin/build.sh
+
 # Build the project
-RUN cmake .
-RUN make
+# RUN cmake .
+# RUN make
 
 # Command to run your application
-CMD ["./exchange_main"]
+# CMD ["./exchange_main"]

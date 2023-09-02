@@ -8,44 +8,64 @@
 
 namespace Common {
 
-  class Rabbits : public AMQP::ConnectionHandler 
+  class RabbitHandler : public AMQP::ConnectionHandler 
   { 
     public:
-    // takes in queue name and the handler for messages on that queue
-    Rabbits(const std::string &queue_name,  bool (*func)(const AMQP::Message &msg));
+      RabbitHandler(std::string QUEUE_NAME, std::string EXCHANGE_NAME, std::string log_file, 
+      AMQP::MessageCallback &&message_callback, AMQP::ConsumeCallback &&consume_callback, 
+      AMQP::CancelCallback &&cancel_callback, AMQP::ErrorCallback &&error_callback): logger_(log_file) {
+        AMQP::Address address("localhost", 5672, AMQP::Login("guest", "guest"), "/");
+        AMQP::Connection connection(this, address);
+        logger_.log("%:% %() Exchange connection successful.\n ", __FILE__, __LINE__, __FUNCTION__);
+        // create a channel
+        AMQP::Channel* channel;
+        channel = new AMQP::Channel(&connection);
+        AMQP::Channel& chanel = *channel;
+  
+        chanel.declareExchange(EXCHANGE_NAME)
+            .onSuccess([this]() {
+                logger_.log("%:% %() Exchange declaration successful.\n ", __FILE__, __LINE__, __FUNCTION__);
+            })
+            .onError([this](const char *message) {
+              logger_.log("%:% %() Exchange declaration error % \n ", __FILE__, __LINE__, __FUNCTION__, message);
+            });
+        chanel.declareQueue(QUEUE_NAME);
+        chanel.bindQueue(EXCHANGE_NAME, QUEUE_NAME, QUEUE_NAME);
 
-    ~Rabbits();
+        chanel.consume(QUEUE_NAME)
+          .onReceived(message_callback)
+          .onSuccess(consume_callback)
+          .onCancelled(cancel_callback)
+          .onError(error_callback);
 
-    using HandlerFunction = std::function<void(const AMQP::Message &msg)>;
-    
-    void onReady(AMQP::Connection *connection) override;
+    }
 
-    void onError(AMQP::Connection *connection, const char *message) override;
+    void onReady(AMQP::Connection *connection) {
+      logger_.log("%:% %()connected to rabbitmq successfully % \n ", __FILE__, __LINE__, __FUNCTION__, connection->vhost());
+      // bind to a queue
+    }
 
-    void onClosed(AMQP::Connection *connection) override; 
+    void onError(AMQP::Connection *connection, const char *message) {
+      logger_.log("%:% %()connected to rabbitmq successfully % % \n ", __FILE__, __LINE__, __FUNCTION__, connection->vhost(), message);
+    }
 
-    void handleMessage(const AMQP::Message &msg);
+    void onClosed(AMQP::Connection *connection) {
+      logger_.log("%:% %()connection to rabbitmq closed % \n ", __FILE__, __LINE__, __FUNCTION__, connection->vhost());
+    }
 
-    void onData(AMQP::Connection *connection, const char *data, size_t size) override;
+    void onData(AMQP::Connection *connection, const char *data, size_t size) {
+      logger_.log("%:% %()connected to rabbitmq successfully % % %s \n ", __FILE__, __LINE__, __FUNCTION__, connection->vhost(), data, size);
+    }
 
-    /// Deleted default, copy & move constructors and assignment-operators.
-    Rabbits() = delete;
 
-    Rabbits(const Rabbits &) = delete;
+    RabbitHandler &operator=(const RabbitHandler &) = delete;
 
-    Rabbits(const Rabbits &&) = delete;
-
-    Rabbits &operator=(const Rabbits &) = delete;
-
-    Rabbits &operator=(const Rabbits &&) = delete;
+    RabbitHandler &operator=(const RabbitHandler &&) = delete;
 
     std::string QUEUE_NAME;
 
-    private:
-
-      Logger logger_;
-      
-      HandlerFunction handler_;
+    AMQP::Channel chanel = NULL;
+    Logger logger_;
   };
 
 }

@@ -159,7 +159,7 @@ namespace Exchange {
       if (!orders_at_price)
         return 1ull;
 
-      return orders_at_price->first_me_order_->prev_order_-> priority_ + 1;
+      return orders_at_price->first_me_order_->prev_order_-> priority_ + 1ull;
     }
 
     /// Match a new aggressive order with the provided parameters against a passive order held in the bid_itr object and generate client responses and market updates for the match.

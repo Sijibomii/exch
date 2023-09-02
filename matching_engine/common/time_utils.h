@@ -4,7 +4,7 @@
 #include <chrono>
 #include <ctime>
 
-#include "perf_utils.h"
+// #include "perf_utils.h"
 
 namespace Common {
   /// Represent a nanosecond timestamp.

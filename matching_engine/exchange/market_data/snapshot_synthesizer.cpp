@@ -3,35 +3,24 @@
 namespace Exchange {
   SnapshotSynthesizer::SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates)
       : snapshot_md_updates_(market_updates), logger_("exchange_snapshot_synthesizer.log"), order_pool_(ME_MAX_ORDER_IDS) {
-    for(auto& orders : ticker_orders_)
+    for(auto& orders : ticker_orders_){
       orders.fill(nullptr);
+    }
 
-      Rabbits snapshotRabbit("snapshot", myCallback);
-      // create a AMQP connection object
-      AMQP::Address address("localhost", 5672, AMQP::Login("guest", "guest"), "/");
-      AMQP::Connection connection(&snapshotRabbit, address);
-      logger_.log("%:% %() Exchange connection successful.\n ", __FILE__, __LINE__, __FUNCTION__);
-      std::string exchangeName = "exch";
-      std::string exchangeType = "direct"; 
-
-      // create a channel
-      AMQP::Channel* cha;
-      cha = new AMQP::Channel(&connection);
-      AMQP::Channel& channel = *cha;
-      AMQP::ExchangeType exchangeType = AMQP::direct; 
-      int flags = AMQP::durable; 
-      AMQP::Table arguments; 
-
-      channel.declareExchange(exchangeName)
-          .onSuccess([this]() {
-             logger_.log("%:% %() Exchange declaration successful.\n ", __FILE__, __LINE__, __FUNCTION__);
-          })
-          .onError([this](const char *message) {
-            logger_.log("%:% %() Exchange declaration error % \n ", __FILE__, __LINE__, __FUNCTION__, message);
-          });
-      channel.declareQueue(snapshotRabbit.QUEUE_NAME);
-      channel.bindQueue(exchangeName, snapshotRabbit.QUEUE_NAME, snapshotRabbit.QUEUE_NAME);
-      // chan = &channel;
+      RabbitHandler incrementalRabbit("snapshot", "exch", "exchange_SnapshotSynthesizer_rabbitmq.log", 
+    [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
+       logger_.log("%:% %() % Received % % redeliverd: %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message.body(), deliveryTag, redelivered);   
+    },
+    [this](const std::string &consumertag) {
+      logger_.log("%:% %() % consume operation started % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);   
+    },
+    [this](const std::string &consumertag) {
+       logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);  
+    },
+    [this](const char *message) {
+       logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
+    }
+    );
   }
 
   SnapshotSynthesizer::~SnapshotSynthesizer() {
@@ -47,11 +36,6 @@ namespace Exchange {
 
   void SnapshotSynthesizer::stop() {
     run_ = false;
-  }
-
-  bool myCallback(const AMQP::Message &msg) {
-    // Callback implementation not needed here
-    return true;
   }
 
   /// Process an incremental market update and update the limit order book snapshot.
