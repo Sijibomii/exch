@@ -21,8 +21,18 @@ defmodule Egusi.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+      {:amqp, "~> 3.3"},
+      {:plug_cowboy, "~> 2.6.1"},
+      {:phoenix_pubsub, "~> 2.1.3"},
+      {:ecto_sql, "~> 3.10.2"},
+      {:ecto_enum, "~> 1.4.0"},
+      {:jason, "~> 1.4.1"},
+      {:joken, "~> 2.6.0"},
+      {:elixir_uuid, "~> 1.2.1"},
+      {:net_address, "~> 0.3"},
+      {:prometheus_ex, "~> 3.0.5"},
+      {:prometheus_plugs, "~> 1.1.5"},
+      {:timex, "~> 3.7.11"}
     ]
   end
 end

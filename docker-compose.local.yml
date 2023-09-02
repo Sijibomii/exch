@@ -20,6 +20,11 @@ services:
       - "8080:8080"
     logging:
       driver: json-file
+
+  me:
+    build: ./mactching_engine
+    
+  
   # iyan:
   #   build: ./iyan
   #   environment: 

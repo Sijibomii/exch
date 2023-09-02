@@ -4,7 +4,7 @@ FROM ubuntu:20.04
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Update and install required packages
+# Update and install required packages 
 RUN apt-get update && apt-get install -y \
     g++ \
     cmake \
@@ -35,9 +35,5 @@ COPY scripts/build.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/build.sh
 RUN /usr/local/bin/build.sh
 
-# Build the project
-# RUN cmake .
-# RUN make
+CMD ["./scripts/run_exchange.sh"]
 
-# Command to run your application
-# CMD ["./exchange_main"]
