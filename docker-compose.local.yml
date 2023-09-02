@@ -26,6 +26,7 @@ services:
     
   
   # iyan:
+  # depends on me and rabbit
   #   build: ./iyan
   #   environment: 
   #     - PORT=4001
@@ -35,6 +36,7 @@ services:
   #     - shared_keys:/keys
 
   # egusi:
+  # depends on me and rabbit
   #   build: ./egusi
   #   environment:
   #     - PORT=6000

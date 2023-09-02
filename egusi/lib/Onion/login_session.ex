@@ -1,61 +1,67 @@
-defmodule Onion.Rabbit do
-  use GenServer
+defmodule Onion.LoginSession do
+  use GenServer, restart: :temporary
   use AMQP
 
-  # this will act as a dispatcher for order rabbit. ticker session will collect orders from usersession and send to order_rabbit who will dispatch to rabbit
-  defmodule State do
+  defmodule Users do
     @type t :: %{
-            id: String.t(),
-            chan: map()
+          user_id: String.t(),
+          email: String.t(),
+          wallets: [Wallet.t()],
           }
 
-    defstruct id: "", chan: nil
+    defstruct user_id: nil,
+              email: nil,
+              wallets: []
   end
 
-  def start_supervised(id) do
+  defmodule State do
+    @type t :: %__MODULE__{
+            users: [Users.t()],
+            chan: map()
+          }
+    defstruct users: [], nil
+  end
+
+
+  def start_supervised() do
     DynamicSupervisor.start_child(
-      Onion.RabbitClientDynamicSupervisor,
-      {__MODULE__, id}
+      Onion.LoginDynamicSupervisor,
+      {__MODULE__}
     )
   end
 
-  def start_link(id) do
+  def start_link() do
     GenServer.start_link(
       __MODULE__,
-      id,
-      name: via(id)
+      name: via()
     )
   end
 
-  defp via(id), do: {:via, Registry, {Onion.RabbitClientRegistry, id}}
+  defp via(), do: {:via, Registry, {Onion.LoginSessionRegistry, 1}}
 
-  @send_queue "order"
+
   @receive_exchange "exch"
-  @receive_queue_1 "snapshot"
-  @receive_queue_2 "incremental"
-
-  def init(id) do
+  @receive_queue "authentication"
+  def init() do
     {:ok, conn} =
       Connection.open(Application.get_env(:egusi, :rabbit_url, "amqp://guest:guest@localhost"))
 
     {:ok, chan} = Channel.open(conn)
-    setup_queue(id, chan)
+    setup_queue(chan)
 
-    queue_to_consume_1 = @receive_queue_1
-    queue_to_consume_2 = @receive_queue_2
+    queue_to_consume = @receive_queue
     IO.puts("queue_to_consume: " <> queue_to_consume)
     # Register the GenServer process as a consumer
-    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_1, nil, no_ack: true)
-    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_2, nil, no_ack: true)
-    {:ok, %State{chan: chan, id: id}}
+    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume, nil, no_ack: true)
+    {:ok, %State{chan: chan, users: []}}
   end
 
   def send(id, msg) do
-    GenServer.cast(via(id), {:send, msg})
+    GenServer.cast(via(), {:send, msg})
   end
 
   def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
-    AMQP.Basic.publish(chan, "", @send_queue, Jason.encode!(msg))
+    AMQP.Basic.publish(chan, "", @recieve_queue, Jason.encode!(msg))
     {:noreply, state}
   end
 
@@ -80,7 +86,7 @@ defmodule Onion.Rabbit do
     data = Jason.decode!(payload)
 
     case data do
-      #types of message that can come in
+      # map on the data here
     end
 
     # You might want to run payload consumption in separate Tasks in production
@@ -88,11 +94,9 @@ defmodule Onion.Rabbit do
     {:noreply, state}
   end
 
-  defp setup_queue(id, chan) do
-    {:ok, _} = Queue.declare(chan, @send_queue_1, durable: true)
-    {:ok, _} = Queue.declare(chan, @receive_queue_1, durable: true)
-    {:ok, _} = Queue.declare(chan, @receive_queue_2, durable: true)
-
+  defp setup_queue(chan) do
+    {:ok, _} = Queue.declare(chan, @receive_queue, durable: true)
     :ok = Queue.bind(chan, @receive_queue, @receive_exchange)
   end
+
 end
