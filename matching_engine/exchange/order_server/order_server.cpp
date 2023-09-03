@@ -31,8 +31,8 @@ namespace Exchange {
           }else{
             MEClientRequest me_request{req, client_id, ticker_id, order_id, side, price, qty};
             OMClientRequest request {seq_num, me_request};
-            logger_.log("%:% %() % Received % % \n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), request->toString(), redelivered);
-            fifo_sequencer_.addClientRequest(getCurrentNanos(), request->me_client_request_);
+            logger_.log("%:% %() % Received % % \n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), request.seq_num_, redelivered);
+            fifo_sequencer_.addClientRequest(getCurrentNanos(), me_request);
             // acknowledge the message
             this->channel.ack(deliveryTag);
             fifo_sequencer_.sequenceAndPublish();
