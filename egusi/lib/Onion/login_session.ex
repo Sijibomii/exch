@@ -87,6 +87,7 @@ defmodule Onion.LoginSession do
 
     case data do
       # map on the data here
+
     end
 
     # You might want to run payload consumption in separate Tasks in production

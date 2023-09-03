@@ -49,5 +49,11 @@ namespace Exchange {
         Logger logger_;
         AMQP::Channel channel = NULL;
         FIFOSequencer fifo_sequencer_;
+
+        /// Hash map from ClientId -> the next sequence number to be sent on outgoing client responses.
+        std::array<size_t, ME_MAX_NUM_CLIENTS> cid_next_outgoing_seq_num_;
+
+        /// Hash map from ClientId -> the next sequence number expected on incoming client requests.
+        std::array<size_t, ME_MAX_NUM_CLIENTS> cid_next_exp_seq_num_;
   };
 }
