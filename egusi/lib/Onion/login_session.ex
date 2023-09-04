@@ -60,6 +60,17 @@ defmodule Onion.LoginSession do
     GenServer.cast(via(), {:send, msg})
   end
 
+  def call(id, msg) do
+    GenServer.call(via(id), msg)
+  end
+
+  defp user_info_impl(_reply, user_id, state) do
+    user = Enum.find(state.users, fn user -> user.user_id == user_id end)
+    {:reply, user, state}
+  end
+
+  def handle_call({:get_user_info, user_id}, reply, state), do: user_info_impl(reply, user_id, state)
+
   def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
     AMQP.Basic.publish(chan, "", @recieve_queue, Jason.encode!(msg))
     {:noreply, state}

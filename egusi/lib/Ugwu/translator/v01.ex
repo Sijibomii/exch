@@ -31,7 +31,7 @@ defmodule Ugwu.Translator.V0_1_0 do
 
   # these casts need to be instrumented with fetchId in order to be treated
   # as a cast.
-  @casts_to_calls ~w(auth leave_room ban make_room_public mute deafen)
+  @casts_to_calls ~w()
 
   def add_in_ref(message, op) when op in @casts_to_calls do
     Map.put(message, "fetchId", UUID.uuid4())

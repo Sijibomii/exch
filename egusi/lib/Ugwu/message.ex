@@ -120,7 +120,7 @@ defmodule Ugwu.Message do
         put_change(changeset, :payload, inner_changeset)
 
       inner_changeset = %{valid?: false} ->
-        errors = Kousa.Utils.Errors.changeset_errors(inner_changeset)
+        errors = Egusi.Utils.Errors.changeset_errors(inner_changeset)
         put_change(changeset, :errors, errors)
     end
   end
