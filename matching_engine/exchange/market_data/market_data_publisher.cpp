@@ -1,8 +1,8 @@
 #include "market_data_publisher.h"
-
+#include <nlohmann/json.hpp>
 
 namespace Exchange {
- 
+  using json = nlohmann::json;
   MarketDataPublisher::MarketDataPublisher(MEMarketUpdateLFQueue *market_updates)
       : outgoing_md_updates_(market_updates), snapshot_md_updates_(ME_MAX_MARKET_UPDATES),
         run_(false), logger_("exchange_market_data_publisher.log") {
@@ -38,8 +38,18 @@ namespace Exchange {
 
         // START_MEASURE(Exchange_McastSocket_send);
         
-        publish(&next_inc_seq_num_, sizeof(next_inc_seq_num_));
-        publish(market_update, sizeof(MEMarketUpdate));
+        json jsonData;
+        jsonData["refId"] = NULL;
+        jsonData["op"] = "MARKET-INCREMENTAL-UPDATE";
+        jsonData["data"]["seq_num"] = next_inc_seq_num_;
+        jsonData["data"]["order_id"] = market_update->order_id_;
+        jsonData["data"]["side"] = (market_update->side_ == Side::BUY) ? "BUY" : "SELL";
+        jsonData["data"]["price"] = market_update->price_;
+        jsonData["data"]["qty"] = market_update->qty_;
+        // publish(&next_inc_seq_num_, sizeof(next_inc_seq_num_));
+        std::string json_str = jsonData.dump();
+        const char* message = json_str.c_str();
+        publish(message, sizeof(message));
         // END_MEASURE(Exchange_McastSocket_send, logger_);
 
         outgoing_md_updates_->updateReadIndex();
@@ -56,13 +66,15 @@ namespace Exchange {
     }
   }
 
-  void MarketDataPublisher::publish(const void *data, size_t len) {
+  void MarketDataPublisher::publish(const char *message, size_t len) {
     // send rabbit mq messag
     std::string exchange = "exch";
     std::string_view exch_view = exchange;
     std::string key = "incremental";
     std::string_view key_view = key;
-    this->channel.publish(exch_view, key_view, static_cast<const char*>(data), len);
+
+    // create a json message here 
+    this->channel.publish(exch_view, key_view, message, len);
   }
 }
 

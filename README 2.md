@@ -1,10 +1,11 @@
 the rabbitmq contract:
 refId, operation, data
 
+sequ_num for order is different from seq_num for incremental market data publisher
 for a new trade:
 {
   refId:
-  op: CANCEL, NEW, 
+  op: TRADE-CANCEL, TRADE-NEW, 
   data: {
     seq_num: 2,
     client_id: 1,
@@ -16,3 +17,7 @@ for a new trade:
     qty: 200,
   }
 }
+
+OP: TRADE-NEW TRADE-CANCEL MARKET-INCREMENTAL-UPDATE MARKET-SNAPSHOT
+
+write login for listening to udate for a ticker. i.e user session can send its id to ticker session so it get sent update from tickersession

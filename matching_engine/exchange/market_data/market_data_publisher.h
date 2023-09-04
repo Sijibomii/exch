@@ -38,7 +38,7 @@ namespace Exchange {
     /// Main run loop for this thread - consumes market updates from the lock free queue from the matching engine, publishes them on the incremental multicast stream and forwards them to the snapshot synthesizer.
     auto run() noexcept -> void;
 
-    void publish(const void *data, size_t len);
+    void publish(const char *message, size_t len);
 
     // Deleted default, copy & move constructors and assignment-operators.
     MarketDataPublisher() = delete;
