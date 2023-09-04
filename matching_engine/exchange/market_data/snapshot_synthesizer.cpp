@@ -1,6 +1,8 @@
 #include "snapshot_synthesizer.h"
+#include <nlohmann/json.hpp>
 
 namespace Exchange {
+  using json = nlohmann::json;
   SnapshotSynthesizer::SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates)
       : snapshot_md_updates_(market_updates), logger_("exchange_snapshot_synthesizer.log"), order_pool_(ME_MAX_ORDER_IDS) {
     for(auto& orders : ticker_orders_){
@@ -88,8 +90,23 @@ namespace Exchange {
     // The snapshot cycle starts with a SNAPSHOT_START message and order_id_ contains the last sequence number from the incremental market data stream used to build this snapshot.
     const MDPMarketUpdate start_market_update{snapshot_size++, {MarketUpdateType::SNAPSHOT_START, last_inc_seq_num_}};
     logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), start_market_update.toString());
-    
-    publish(&start_market_update, sizeof(MDPMarketUpdate));
+
+    // json
+    json jsonData;
+    // TODO: replace NULL with a UUID
+    jsonData["refId"] = NULL;
+    jsonData["op"] = "MARKET-UPDATE-" + marketUpdateTypeToString(start_market_update.me_market_update_.type_);
+    // first message in sequence
+    jsonData["data"]["seq_num"] = start_market_update.seq_num_;
+    // order_id here is the last order after which this snapshot stream will start. if the last snapshot stopped at order 5, this starts from 6
+    jsonData["data"]["ticker_id"] = NULL;
+    jsonData["data"]["order_id"] = start_market_update.me_market_update_.order_id_;
+    jsonData["data"]["side"] = NULL;
+    jsonData["data"]["price"] = NULL;
+    jsonData["data"]["qty"] = NULL;
+    std::string json_str = jsonData.dump();
+    const char* message = json_str.c_str();
+    publish(message, strlen(message) + 1);
 
     // Publish order information for each order in the limit order book for each instrument.
     for (size_t ticker_id = 0; ticker_id < ticker_orders_.size(); ++ticker_id) {
@@ -102,14 +119,43 @@ namespace Exchange {
       // We start order information for each instrument by first publishing a CLEAR message so the downstream consumer can clear the order book.
       const MDPMarketUpdate clear_market_update{snapshot_size++, me_market_update};
       logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), clear_market_update.toString());
-      publish(&clear_market_update, sizeof(MDPMarketUpdate));
+
+      // json
+      json jsonData;
+      // TODO: replace NULL with a UUID
+      jsonData["refId"] = NULL;
+      jsonData["op"] = "MARKET-UPDATE-" + marketUpdateTypeToString(clear_market_update.me_market_update_.type_);
+      // first message in sequence
+      jsonData["data"]["seq_num"] = clear_market_update.seq_num_;
+      jsonData["data"]["ticker_id"] = clear_market_update.me_market_update_.ticker_id_;
+      jsonData["data"]["order_id"] = NULL;
+      jsonData["data"]["side"] = NULL;
+      jsonData["data"]["price"] = NULL;
+      jsonData["data"]["qty"] = NULL;
+      std::string json_str = jsonData.dump();
+      const char* message = json_str.c_str();
+      publish(message, strlen(message) + 1);
 
       // Publish each order.
       for (const auto order: orders) {
         if (order) {
           const MDPMarketUpdate market_update{snapshot_size++, *order};
           logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), market_update.toString());
-          publish(&market_update, sizeof(MDPMarketUpdate));
+          // json
+          json jsonData;
+          // TODO: replace NULL with a UUID
+          jsonData["refId"] = NULL;
+          jsonData["op"] = "MARKET-UPDATE-" + marketUpdateTypeToString(market_update.me_market_update_.type_);
+          // first message in sequence
+          jsonData["data"]["seq_num"] = market_update.seq_num_;
+          jsonData["data"]["ticker_id"] = market_update.me_market_update_.ticker_id_;
+          jsonData["data"]["order_id"] = market_update.me_market_update_.order_id_;
+          jsonData["data"]["side"] = (market_update.me_market_update_.side_ == Side::BUY) ? "BUY" : "SELL";
+          jsonData["data"]["price"] = market_update.me_market_update_.price_;
+          jsonData["data"]["qty"] = market_update.me_market_update_.price_;
+          std::string json_str = jsonData.dump();
+          const char* message = json_str.c_str();
+          publish(message, strlen(message) + 1);
           
         }
       }
@@ -118,8 +164,21 @@ namespace Exchange {
     // The snapshot cycle ends with a SNAPSHOT_END message and order_id_ contains the last sequence number from the incremental market data stream used to build this snapshot.
     const MDPMarketUpdate end_market_update{snapshot_size++, {MarketUpdateType::SNAPSHOT_END, last_inc_seq_num_}};
     logger_.log("%:% %() % %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), end_market_update.toString());
-    publish(&end_market_update, sizeof(MDPMarketUpdate));
-
+    // json
+    json jsonD;
+    // TODO: replace NULL with a UUID
+    jsonD["refId"] = NULL;
+    jsonD["op"] = "MARKET-UPDATE-" + marketUpdateTypeToString(end_market_update.me_market_update_.type_);
+    // first message in sequence
+    jsonD["data"]["seq_num"] = end_market_update.seq_num_;
+    jsonD["data"]["ticker_id"] = NULL;
+    jsonD["data"]["order_id"] = NULL;
+    jsonD["data"]["side"] = NULL;
+    jsonD["data"]["price"] = NULL;
+    jsonD["data"]["qty"] = NULL;
+    std::string json_str = jsonData.dump();
+    const char* msg = json_str.c_str();
+    publish(msg, strlen(msg) + 1);
 
     logger_.log("%:% %() % Published snapshot of % orders.\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), snapshot_size - 1);
   }
@@ -144,12 +203,12 @@ namespace Exchange {
     }
   }
   
-  void SnapshotSynthesizer::publish(const void *data, size_t len) {
+  void SnapshotSynthesizer::publish(const char *message, size_t len) {
     // send rabbit mq messag
     std::string exchange = "exch";
     std::string_view exch_view = exchange;
     std::string key = "snapshot";
     std::string_view key_view = key;
-    this->channel.publish(exch_view, key_view, static_cast<const char*>(data), len);
+    this->channel.publish(exch_view, key_view, message, len);
   }
 }

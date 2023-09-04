@@ -40,8 +40,9 @@ namespace Exchange {
         
         json jsonData;
         jsonData["refId"] = NULL;
-        jsonData["op"] = "MARKET-INCREMENTAL-UPDATE";
+        jsonData["op"] = "MARKET-UPDATE-" + marketUpdateTypeToString(market_update->type_);
         jsonData["data"]["seq_num"] = next_inc_seq_num_;
+        jsonData["data"]["ticker_id"] = market_update->ticker_id_;
         jsonData["data"]["order_id"] = market_update->order_id_;
         jsonData["data"]["side"] = (market_update->side_ == Side::BUY) ? "BUY" : "SELL";
         jsonData["data"]["price"] = market_update->price_;
@@ -49,7 +50,7 @@ namespace Exchange {
         // publish(&next_inc_seq_num_, sizeof(next_inc_seq_num_));
         std::string json_str = jsonData.dump();
         const char* message = json_str.c_str();
-        publish(message, sizeof(message));
+        publish(message, strlen(message) + 1);
         // END_MEASURE(Exchange_McastSocket_send, logger_);
 
         outgoing_md_updates_->updateReadIndex();

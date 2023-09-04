@@ -18,6 +18,8 @@ for a new trade:
   }
 }
 
-OP: TRADE-NEW TRADE-CANCEL MARKET-INCREMENTAL-UPDATE MARKET-SNAPSHOT
+OP: 
+TRADE-NEW TRADE-CANCEL 
+MARKET-UPDATE-{CLEAR, ADD, MODIFY, CANCEL, TRADE, SNAPSHOT-START, SNAPSHOT-END}
 
 write login for listening to udate for a ticker. i.e user session can send its id to ticker session so it get sent update from tickersession
