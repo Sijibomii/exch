@@ -37,16 +37,23 @@ defmodule Ugwu.Message.Trade.New do
     end
   end
 
-  @impl true
-  def execute(changeset, state) do
-    with {:ok, request} <- apply_action(changeset, :validate),
-         {:ok, user} <- Egusi.Trade.create(request) do
 
-      {:reply, user, %{state | user: user }}
-    else
-      # don't tolerate malformed requests with any response besides closing
-      # out websocket.
-      _ -> {:close, 4001, "invalid_authentication"}
+  @impl true
+  def execute(changeset!, state) do
+
+    with {:ok, trade_spec} <- apply_action(changeset!, :validation),
+         {:ok, %{trade: trade}} <-
+          Egusi.Trade.create(
+            state.user.id,
+            trade_spec.ticker_id,
+            trade_spec.side,
+            trade_spec.price,
+            trade_spec.qty
+          ) do
+      {:reply, struct(__MODULE__,  Map.from_struct(trade) |> Map.update!(:success, fn _ -> true end)), state}
+          else
+            # error handling
+            {:error, message } -> {:error, message}
     end
   end
 

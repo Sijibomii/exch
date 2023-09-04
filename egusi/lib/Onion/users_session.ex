@@ -15,17 +15,23 @@ defmodule Onion.UserSession do
   defmodule State do
     @type t :: %__MODULE__{
             user_id: String.t(),
+            trading_client_id: Integer.t(),
             email: String.t(),
-            wallets: [Wallet.t()],
+            wallet: Wallet.t(),
             ip: String.t(),
-            pid: pid()
+            pid: pid(),
+            last_order_number: Integer.t(),
+            last_seq_num: Integer.t()
           }
 
     defstruct user_id: nil,
+              trading_client_id: nil,
               ip: nil,
               pid: nil,
               email: nil,
-              wallets: []
+              wallet: nil,
+              last_order_number: nil,
+              last_seq_num: nil
   end
 
    #################################################################################
@@ -107,6 +113,30 @@ defmodule Onion.UserSession do
     {:reply, :ok, %{state | pid: pid}}
   end
 
+  defp new_trade_impl(ticker_id, side, price, qty, _reply, state) do
+    # check balance
+    if state.wallet.balance < (price*qty) do
+      {:reply, {:error, "insufficient balance in wallet"}, state}
+    else
+      new_balance = state.balace - (price*qty)
+      random_id = :rand.uniform(3)
+      Onion.Rabbit.send(random_id, %{
+        refId: UUID.new,
+        op: "TRADE-NEW",
+        data: %{
+          seq_num: state.last_seq_num + 1,
+          client_id: state.trading_client_id,
+          ticker_id: ticker_id,
+          order_id: state.last_order_number+1,
+          side: side,
+          price: price,
+          qty: qty
+        }
+      })
+      {:reply, {:ok}, %{state | last_seq_num: last_seq_num+1, last_order_number: last_order_number+1, wallet: %Wallet{ id: state.wallet.id, balance: state.wallet.balance }}}
+    end
+  end
+
 
   ##############################################################################
   ## MESSAGING API.
@@ -131,7 +161,7 @@ defmodule Onion.UserSession do
   def handle_call(:get_info_for_msg, reply, state), do: get_info_for_msg_impl(reply, state)
   def handle_call({:get, key}, reply, state), do: get_impl(key, reply, state)
   def handle_call({:set_active_ws, pid}, reply, state), do: set_active_ws(pid, reply, state)
-
+  def handle_call({:new_trade, %{ ticker_id: ticker_id, side: side, price: price, qty: qty }}, reply, state),  do: new_trade_impl(ticker_id, side, price, qty, reply, state)
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state), do: handle_disconnect(pid, state)
 
 end

@@ -59,6 +59,7 @@ defmodule Onion.Rabbit do
     {:noreply, state}
   end
 
+
   def handle_info({:basic_consume_ok, %{consumer_tag: _consumer_tag}}, state) do
     {:noreply, state}
   end

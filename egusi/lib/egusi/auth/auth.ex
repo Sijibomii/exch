@@ -23,8 +23,9 @@ defmodule Egusi.Auth do
           ip: ip,
           username: user.username,
           email: user.email,
-          wallets: user.wallets,
+          wallet: user.wallet,
           ip: ip,
+          trading_client_id: user.trading_client_id
         )
         UserSession.set_active_ws(user.id, self())
         {:ok, user}

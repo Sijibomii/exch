@@ -2,16 +2,28 @@ defmodule Onion.LoginSession do
   use GenServer, restart: :temporary
   use AMQP
 
+  defmodule Wallet do
+    @type t :: %{
+            id: String.t(),
+            balance: number()
+          }
+
+    defstruct id: nil,
+              balance: nil
+  end
+
   defmodule Users do
     @type t :: %{
           user_id: String.t(),
+          trading_client_id: Integer.t(),
           email: String.t(),
-          wallets: [Wallet.t()],
+          wallet: Wallet.t(),
           }
 
     defstruct user_id: nil,
               email: nil,
-              wallets: []
+              wallets: nil
+              trading_client_id: nil
   end
 
   defmodule State do
