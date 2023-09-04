@@ -1,5 +1,5 @@
 #include "snapshot_synthesizer.h"
-#include <nlohmann/json.hpp>
+#include "common/nlohmann/json.hpp"
 
 namespace Exchange {
   using json = nlohmann::json;
@@ -176,8 +176,8 @@ namespace Exchange {
     jsonD["data"]["side"] = NULL;
     jsonD["data"]["price"] = NULL;
     jsonD["data"]["qty"] = NULL;
-    std::string json_str = jsonData.dump();
-    const char* msg = json_str.c_str();
+    std::string json_ = jsonData.dump();
+    const char* msg = json_.c_str();
     publish(msg, strlen(msg) + 1);
 
     logger_.log("%:% %() % Published snapshot of % orders.\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), snapshot_size - 1);
@@ -188,8 +188,7 @@ namespace Exchange {
     logger_.log("%:% %() %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_));
     while (run_) {
       for (auto market_update = snapshot_md_updates_->getNextToRead(); snapshot_md_updates_->size() && market_update; market_update = snapshot_md_updates_->getNextToRead()) {
-        logger_.log("%:% %() % Processing %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_),
-                    market_update->toString().c_str());
+        logger_.log("%:% %() % Processing %\n", __FILE__, __LINE__, __FUNCTION__, getCurrentTimeStr(&time_str_), market_update->toString().c_str());
 
         addToSnapshot(market_update);
 

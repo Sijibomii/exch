@@ -1,5 +1,5 @@
 #include "market_data_publisher.h"
-#include <nlohmann/json.hpp>
+#include "common/nlohmann/json.hpp"
 
 namespace Exchange {
   using json = nlohmann::json;
