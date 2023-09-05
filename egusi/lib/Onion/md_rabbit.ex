@@ -75,17 +75,10 @@ defmodule Onion.MDRabbit do
     data = Jason.decode!(payload)
     # how to make sure that each ticker is up to date
     case data do
-      %{"op" => "MARKET-UPDATE-CLEAR"} -> # look at the ticker id in the message and notify the appropraite tickersession to get ready
+      %{"op" => "MARKET-UPDATE-CLEAR"} -> :ok
 
       # publish order types depending on ticker_id
-      %{"op" => "MARKET-UPDATE-ADD"} ->
-
-      %{"op" => "MARKET-UPDATE-MODIFY"} ->
-
-      %{"op" => "MARKET-UPDATE-CANCEL"} ->
-
-      %{"op" => "MARKET-UPDATE-TRADE"} ->
-
+      %{"op" => _} -> Onion.TickerSession.add_order(data["data"]["ticker_id"], %{ data["data"] | "operation" => data["op"]})
     end
 
     # You might want to run payload consumption in separate Tasks in production

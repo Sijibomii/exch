@@ -78,24 +78,7 @@ defmodule Onion.SnapshotRabbit do
     data = Jason.decode!(payload)
     # how to make sure that each ticker is up to date
     case data do
-      %{"op" => "MARKET-UPDATE-CLEAR"} -> # look at the ticker id in the message and notify the appropraite tickersession to get ready
-
-      # publish order types depending on ticker_id
-      %{"op" => "MARKET-UPDATE-ADD"} ->
-
-        # each ticker session must keep a snapshot messages queue
-        # check if first snapshot message is clear
-        # check snapshot sync every 5 sec?
-        #
-      %{"op" => "MARKET-UPDATE-MODIFY"} ->
-
-      %{"op" => "MARKET-UPDATE-CANCEL"} ->
-
-      %{"op" => "MARKET-UPDATE-TRADE"} ->
-
-      %{"op" => "MARKET-UPDATE-SNAPSHOT-START"} ->  # clear snapshot seq_num stored by rabbit and start from 0
-
-      %{"op" => "MARKET-UPDATE-SNAPSHOT-END"} ->
+      %{"op" => _ } -> :ok
     end
 
     # You might want to run payload consumption in separate Tasks in production

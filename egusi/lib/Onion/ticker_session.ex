@@ -9,14 +9,16 @@ defmodule Onion.TickerSession do
             operation: String.t(),
             time: String.t(),
             volume: number(),
-            seq_num: number()
+            seq_num: number(),
+            price: number()
           }
 
     defstruct id: nil,
               side: nil,
               operation: nil,
               time: nil,
-              volume: nil
+              volume: nil,
+              price: nil
   end
 
   defmodule Node do
@@ -91,9 +93,12 @@ defmodule Onion.TickerSession do
     {:ok, struct(State, init)}
   end
 
-   ########################################################################
+  ########################################################################
   ## API
+  def add_order(ticker_id, msg), do: cast(ticker_id, {:incremental, msg})
 
+  ########################################################################
+  ## impl
   defp get_orderbook_impl(_reply, state) do
     # let the caller take care of encoding
     {:reply, to_list(state.order_book), state}
@@ -178,7 +183,8 @@ defmodule Onion.TickerSession do
       operation: message["op"],
       time: System.system_time(:millisecond),
       volume: message["qty"],
-      seq_num: message["seq_num"]
+      seq_num: message["seq_num"],
+      price: message["price"],
     })}}
 
     def handle_call(:get_orderbook, reply, state), do: get_orderbook_impl(reply, state)

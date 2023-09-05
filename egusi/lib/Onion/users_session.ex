@@ -164,4 +164,5 @@ defmodule Onion.UserSession do
   def handle_call({:new_trade, %{ ticker_id: ticker_id, side: side, price: price, qty: qty }}, reply, state),  do: new_trade_impl(ticker_id, side, price, qty, reply, state)
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state), do: handle_disconnect(pid, state)
 
+  # WHEN REQUESTING ORDERBOOK FROM TICKER MAKE SURE TO FILTER ONLY TRADES AND RETURN TO CLIENT
 end
