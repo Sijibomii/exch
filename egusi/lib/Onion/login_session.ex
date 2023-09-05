@@ -16,14 +16,19 @@ defmodule Onion.LoginSession do
     @type t :: %{
           user_id: String.t(),
           trading_client_id: Integer.t(),
+          last_order_number: Integer.t(),
+          last_seq_num: Integer.t()
           email: String.t(),
           wallet: Wallet.t(),
           }
 
     defstruct user_id: nil,
               email: nil,
-              wallets: nil
-              trading_client_id: nil
+              wallets: nil,
+              trading_client_id: nil,
+              last_order_number: nil,
+              last_seq_num: nil
+
   end
 
   defmodule State do

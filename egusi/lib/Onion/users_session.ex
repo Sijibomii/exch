@@ -11,7 +11,6 @@ defmodule Onion.UserSession do
               balance: nil
   end
 
-
   defmodule State do
     @type t :: %__MODULE__{
             user_id: String.t(),
@@ -121,7 +120,8 @@ defmodule Onion.UserSession do
       new_balance = state.balace - (price*qty)
       random_id = :rand.uniform(3)
       Onion.Rabbit.send(random_id, %{
-        refId: UUID.new,
+        # error here
+        refId: :uuid.uuid4(),
         op: "TRADE-NEW",
         data: %{
           seq_num: state.last_seq_num + 1,

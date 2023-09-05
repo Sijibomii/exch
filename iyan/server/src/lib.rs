@@ -1,6 +1,7 @@
 use actix_cors::Cors;
-// use actix::prelude::*;
+use uuid::Uuid;
 use actix_web::{web, App, middleware, HttpResponse, HttpServer};
+use core::client::{Client, ClientPayload};
 
 use std::{fs};
 use config::Config; 
@@ -10,6 +11,8 @@ mod controllers;
 mod services;
 mod state;
 mod auth;
+
+use services::{ errors::Error };
 
 async fn index() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
@@ -24,6 +27,25 @@ pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io:
             .expect("failed to open the public key file"),
         jwt_private: fs::read(config.server.private_key.clone())
             .expect("failed to open the private key file"),
+    };
+
+    // check for client count. if not insert one.
+    let ctl: Client = match services::client::get_client_count(&postgres).await {
+        Ok(client) => {
+            client
+        }
+        Err(_) => {
+            // could not find the client
+            let mut payload = ClientPayload::new();
+            payload.next_id = Some(0);
+            payload.id = Some(Uuid::new_v4());
+            match services::client::insert(payload, &postgres).await {
+                Ok(ctl) => {
+                    ctl
+                }
+                Err(_) => panic!("could not insert new client count")
+            }
+        }
     };
 
     let host = config.server.host.clone();

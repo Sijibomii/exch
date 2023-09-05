@@ -6,6 +6,7 @@ use serde_json::json;
 use serde_json::Value;
 use super::super::services::{ self, errors::Error };
 use core::user::{UserPayload};
+use core::client::Client;
 use super::super::auth::AuthUser;
 use uuid::Uuid;
 #[derive(Deserialize)]
@@ -59,14 +60,32 @@ pub async fn registration(
         return Err(Error::BadRequest("password is empty"));
     }
 
+    // get the latest client_id
+    let ctl: Result<Client, Error> = match services::client::get_client_count(&state.postgres).await {
+        Ok(client) => {
+            Ok(client)
+        }
+        Err(err) => {
+            Err(err.into())
+        }
+    };
+
+    let client_ = ctl.unwrap();
+    // let curr_client_id = services
+
     let mut payload = UserPayload::new();
     payload.email = Some(params.email);
     payload.password = Some(params.password);
+    payload.last_seq_num = Some(0);
+    payload.last_order_id = Some(0);
+    payload.trading_client_id = Some(client_.next_id);
 
     let res = services::users::register(
         payload,
         &state.postgres
     ).await;
+
+    services::client::increase_client_count(&state.postgres).await;
 
     match res {
         Ok(user) => {

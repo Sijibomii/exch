@@ -15,10 +15,11 @@ namespace Exchange {
             // work with JSON here. decode JSON data comming in and return
           std::string messageBody(reinterpret_cast<const char *>(message.body()), message.bodySize());
           json jsonData = json::parse(messageBody);
+          // add trade modify
           ClientRequestType req = (jsonData["op"] == "TRADE-NEW") ? ClientRequestType::NEW : (jsonData["op"] == "TRADE-CANCEL") ? ClientRequestType::CANCEL : ClientRequestType::INVALID;
           size_t seq_num = jsonData["data"]["seq_num"];
           uint32_t client_id = jsonData["data"]["client_id"];
-          uint32_t ticker_id = jsonData["data"]["ticker_id"];
+          uint32_t ticker_id = jsonData["data"]["ticker_id"]; 
           uint64_t order_id = jsonData["data"]["order_id"];
           Side side = (jsonData["data"]["side"] == "BUY") ? Side::BUY : Side::SELL;
           int64_t price = jsonData["data"]["price"];

@@ -93,8 +93,8 @@ namespace Exchange {
   /// It will check to see if this new order matches an existing passive order with opposite side, and perform the matching if that is the case.
   auto MEOrderBook::add(ClientId client_id, OrderId client_order_id, TickerId ticker_id, Side side, Price price, Qty qty) noexcept -> void {
     const auto new_market_order_id = generateNewMarketOrderId();
-    client_response_ = {ClientResponseType::ACCEPTED, client_id, ticker_id, client_order_id, new_market_order_id, side, price, 0, qty};
-    matching_engine_->sendClientResponse(&client_response_);
+    client_response_ = { ClientResponseType::ACCEPTED, client_id, ticker_id, client_order_id, new_market_order_id, side, price, 0, qty};
+    matching_engine_-> sendClientResponse(&client_response_);
 
     // START_MEASURE(Exchange_MEOrderBook_checkForMatch);
     const auto leaves_qty = checkForMatch(client_id, client_order_id, ticker_id, side, price, qty, new_market_order_id);

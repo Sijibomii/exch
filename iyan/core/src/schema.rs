@@ -9,7 +9,7 @@ diesel::table! {
         user_id -> Uuid,
     }
 }
-
+ 
 // customer account
 diesel::table! {
     users (id) {
@@ -26,6 +26,9 @@ diesel::table! {
         reset_token_expires_at -> Nullable<Timestamptz>,
         last_login_time -> Nullable<Timestamptz>,
         last_login_ip -> Nullable<VarChar>,
+        trading_client_id -> BigInt,
+        last_order_id -> BigInt,
+        last_seq_num -> BigInt,
     }
 } 
 
@@ -52,6 +55,15 @@ diesel::table! {
         wallet_id -> Uuid,
     }
 }
+
+diesel::table! {
+    client(id) {
+        id -> Uuid,
+        next_id -> BigInt
+    }
+}
+
+// last client id given
 
 
 allow_tables_to_appear_in_same_query!(

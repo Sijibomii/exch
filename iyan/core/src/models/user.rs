@@ -28,6 +28,9 @@ pub struct UserPayload {
     pub reset_token_expires_at: Option<Option<DateTime<Utc>>>,
     pub last_login_time: Option<Option<DateTime<Utc>>>,
     pub last_login_ip: Option<Option<String>>,
+    pub trading_client_id: Option<i64>,
+    pub last_order_id: Option<i64>,
+    pub last_seq_num: Option<i64>,
 }
 
 impl UserPayload {
@@ -44,7 +47,10 @@ impl UserPayload {
             reset_token: None,
             reset_token_expires_at: None,
             last_login_time: None,
-            last_login_ip: None
+            last_login_ip: None,
+            trading_client_id: None,
+            last_order_id: None,
+            last_seq_num: None,
         }
     }
 
@@ -89,6 +95,9 @@ pub struct User {
     pub reset_token_expires_at: Option<DateTime<Utc>>,
     pub last_login_time: Option<DateTime<Utc>>,
     pub last_login_ip: Option<String>,
+    pub trading_client_id: i64,
+    pub last_order_id: i64,
+    pub last_seq_num: i64
 }
 
 impl From<User> for UserPayload {
@@ -106,6 +115,9 @@ impl From<User> for UserPayload {
             reset_token_expires_at: Some(user.reset_token_expires_at),
             last_login_time: Some(user.last_login_time),
             last_login_ip: Some(user.last_login_ip),
+            trading_client_id: Some(user.trading_client_id),
+            last_order_id: Some(user.last_order_id),
+            last_seq_num: Some(user.last_seq_num),
         }
     }
 }
