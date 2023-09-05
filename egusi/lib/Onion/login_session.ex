@@ -12,7 +12,7 @@ defmodule Onion.LoginSession do
               balance: nil
   end
 
-  defmodule Users do
+  defmodule User do
     @type t :: %{
           user_id: String.t(),
           trading_client_id: Integer.t(),
@@ -33,7 +33,7 @@ defmodule Onion.LoginSession do
 
   defmodule State do
     @type t :: %__MODULE__{
-            users: [Users.t()],
+            users: [User.t()],
             chan: map()
           }
     defstruct users: [], nil
@@ -86,6 +86,8 @@ defmodule Onion.LoginSession do
     {:reply, user, state}
   end
 
+  defp add_user(data, )
+
   def handle_call({:get_user_info, user_id}, reply, state), do: user_info_impl(reply, user_id, state)
 
   def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
@@ -114,13 +116,21 @@ defmodule Onion.LoginSession do
     data = Jason.decode!(payload)
 
     case data do
-      # map on the data here
+      %{"op" => "USER-LOGIN"} ->
+        {:noreply, %{state | users: [ %User{
+          user_id: data["user_id"],
+          email: data["email"],
+          trading_client_id:: data["trading_client_id"],
+          last_order_number: data["last_order_number"],
+          last_seq_num: data["last_seq_num"],
+          wallet: %Wallet{
+            id: data["wallet"]["id"],
+            balance: data["wallet"]["balance"],
+          }
+        } | state.users ]}}
 
+      _ -> {:noreply, state}
     end
-
-    # You might want to run payload consumption in separate Tasks in production
-    # consume(chan, tag, redelivered, payload)
-    {:noreply, state}
   end
 
   defp setup_queue(chan) do

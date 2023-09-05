@@ -8,7 +8,8 @@ defmodule Onion.TickerSession do
             side: String.t(),
             operation: String.t(),
             time: String.t(),
-            volume: number()
+            volume: number(),
+            seq_num: number()
           }
 
     defstruct id: nil,
@@ -18,17 +19,38 @@ defmodule Onion.TickerSession do
               volume: nil
   end
 
+  defmodule Node do
+    @type t :: %{
+      order: Order.t(),
+      prev: Order.t(),
+      next: Order.t()
+    }
+
+    defstruct order: nil,
+              prev: nil,
+              next: nil
+  end
+
+  defmodule Queue do
+    @type t :: %{
+      head: Node.t(),
+      tail: Node.t()
+    }
+    defstruct head nil,
+              tail: nil,
+  end
+
   defmodule State do
     @type t :: %__MODULE__{
             ticker_id: String.t(),
-            trading_id: String.t(),
-            order_book: [Order.t()]
+            order_book: Queue.t()
           }
 
     defstruct ticker_id: "",
-              trading_id: "",
-              order_book: []
+              order_book: %Queue{ head: nil, tail: nil },
   end
+
+  #TODO: send cast message to start a task after ticker session is started
 
 
   #################################################################################
@@ -72,10 +94,94 @@ defmodule Onion.TickerSession do
    ########################################################################
   ## API
 
+  defp get_orderbook_impl(_reply, state) do
+    # let the caller take care of encoding
+    {:reply, to_list(state.order_book), state}
+  end
+
+  #########################################################################
+  ##list impl
+  defp empty?(%Queue{head: nil, tail: nil}), do: true
+
+  defp empty?(_), do: false
+
+  defp append(list, value) when is_nil(list.head) do
+    node = %Node{order: value, prev: nil, next: nil}
+    %Queue{list | head: node, tail: node}
+  end
+
+  defp append(list, value) do
+    new_node = %Node{order: value, prev: list.tail, next: nil}
+    old_tail = list.tail
+    updated_old_tail = %{old_tail | next: new_node}
+    %Queue{list | tail: new_node}
+  end
+
+  defp prepend(list, value) when is_nil(list.head) do
+    node = %Node{order: value, prev: nil, next: nil}
+    %Queue{list | head: node, tail: node}
+  end
+
+  defp prepend(list, value) do
+    new_node = %Node{order: value, prev: nil, next: list.head}
+    old_head = list.head
+    updated_old_head = %{old_head | prev: new_node}
+    %Queue{list | head: new_node}
+  end
+
+  defp pop_head(list) when is_nil(list.head) do
+    list
+  end
+
+  defp pop_head(list) do
+    new_head = list.head.next
+    prev_head = list.head
+    case new_head do
+      nil -> %Queue{tail: nil }
+      _ ->
+        updated_new_head = %{new_head | prev: nil}
+        {prev_head, %Queue{list | head: updated_new_head}}
+    end
+  end
+
+  defp pop_tail(list) when is_nil(list.tail) do
+    list
+  end
+
+  defp pop_tail(list) do
+    new_tail = list.tail.prev
+    case new_tail do
+      nil -> %Queue{head: nil}
+      _ ->
+        updated_new_tail = %{new_tail | next: nil}
+        %Queue{list | tail: updated_new_tail}
+    end
+  end
+
+  defp to_list(queue) when is_nil(queue.head) do
+    []
+  end
+
+  defp to_list(queue) do
+    {value, rest } = pop_head(queue)
+    [value | to_list(rest)]
+  end
+
 
   ########################################################################
   ## ROUTER
 
+  def handle_cast({:incremental, message}, state) do
+    {:noreply, %{state | order_book: append(state.order_book, %Order{
+      id: message["id"],
+      side: message["side"],
+      operation: message["op"],
+      time: System.system_time(:millisecond),
+      volume: message["qty"],
+      seq_num: message["seq_num"]
+    })}}
 
+    def handle_call(:get_orderbook, reply, state), do: get_orderbook_impl(reply, state)
+  end
 
 end

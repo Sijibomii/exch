@@ -46,7 +46,7 @@ int main(int, char **) {
 
   logger->log("%:% %() % Starting Matching Engine...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
   matching_engine = new Exchange::MatchingEngine(&client_requests, &client_responses, &market_updates);
-  matching_engine->start();
+  matching_engine->start(); 
 
   logger->log("%:% %() % Starting Market Data Publisher...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
   market_data_publisher = new Exchange::MarketDataPublisher(&market_updates);

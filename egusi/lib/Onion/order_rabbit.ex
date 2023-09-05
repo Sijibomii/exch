@@ -1,4 +1,4 @@
-defmodule Onion.Rabbit do
+defmodule Onion.OrderRabbit do
   use GenServer
   use AMQP
 
@@ -14,7 +14,7 @@ defmodule Onion.Rabbit do
 
   def start_supervised(id) do
     DynamicSupervisor.start_child(
-      Onion.RabbitClientDynamicSupervisor,
+      Onion.OrderRabbitClientDynamicSupervisor,
       {__MODULE__, id}
     )
   end
@@ -27,12 +27,10 @@ defmodule Onion.Rabbit do
     )
   end
 
-  defp via(id), do: {:via, Registry, {Onion.RabbitClientRegistry, id}}
+  defp via(id), do: {:via, Registry, {Onion.OrderRabbitClientRegistry, id}}
 
   @send_queue "order"
   @receive_exchange "exch"
-  @receive_queue_1 "snapshot"
-  @receive_queue_2 "incremental"
 
   def init(id) do
     {:ok, conn} =
@@ -41,12 +39,6 @@ defmodule Onion.Rabbit do
     {:ok, chan} = Channel.open(conn)
     setup_queue(id, chan)
 
-    queue_to_consume_1 = @receive_queue_1
-    queue_to_consume_2 = @receive_queue_2
-    IO.puts("queue_to_consume: " <> queue_to_consume)
-    # Register the GenServer process as a consumer
-    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_1, nil, no_ack: true)
-    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_2, nil, no_ack: true)
     {:ok, %State{chan: chan, id: id}}
   end
 
@@ -79,9 +71,9 @@ defmodule Onion.Rabbit do
         %State{} = state
       ) do
     data = Jason.decode!(payload)
-
+    # how to make sure that each ticker is up to date
     case data do
-      #types of message that can come in
+      _ - :ok
     end
 
     # You might want to run payload consumption in separate Tasks in production
@@ -90,10 +82,6 @@ defmodule Onion.Rabbit do
   end
 
   defp setup_queue(id, chan) do
-    {:ok, _} = Queue.declare(chan, @send_queue_1, durable: true)
-    {:ok, _} = Queue.declare(chan, @receive_queue_1, durable: true)
-    {:ok, _} = Queue.declare(chan, @receive_queue_2, durable: true)
-
-    :ok = Queue.bind(chan, @receive_queue, @receive_exchange)
+    :ok
   end
 end

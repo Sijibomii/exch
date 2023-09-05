@@ -41,7 +41,7 @@ namespace Exchange {
   }
 
   /// Process an incremental market update and update the limit order book snapshot.
-  auto SnapshotSynthesizer::addToSnapshot(const MDPMarketUpdate *market_update) {
+  auto SnapshotSynthesizer::addToSnapshot(const MDPMarketUpdate *market_update) { 
     const auto &me_market_update = market_update->me_market_update_;
     auto *orders = &ticker_orders_.at(me_market_update.ticker_id_);
     switch (me_market_update.type_) {
