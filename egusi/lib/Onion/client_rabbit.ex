@@ -1,8 +1,8 @@
-defmodule Onion.SnapshotRabbit do
+defmodule Onion.ClientRabbit do
   use GenServer
   use AMQP
 
-  # this will act as a dispatcher for order rabbit. ticker session will collect orders from usersession and send to order_rabbit who will dispatch to rabbit
+  # listen for order responses
   defmodule State do
     @type t :: %{
             id: String.t(),
@@ -14,7 +14,7 @@ defmodule Onion.SnapshotRabbit do
 
   def start_supervised(id) do
     DynamicSupervisor.start_child(
-      Onion.SnapshotRabbitClientDynamicSupervisor,
+      Onion.ClientRabbitClientDynamicSupervisor,
       {__MODULE__, id}
     )
   end
@@ -27,11 +27,11 @@ defmodule Onion.SnapshotRabbit do
     )
   end
 
-  defp via(id), do: {:via, Registry, {Onion.SnapshotRabbitClientRegistry, id}}
+  defp via(id), do: {:via, Registry, {Onion.ClientRabbitClientRegistry, id}}
 
   # @send_queue "order"
   @receive_exchange "exch"
-  @receive_queue "snapshot"
+  @receive_queue "responses"
   # @receive_queue_2 "incremental"
 
   def init(id) do
@@ -78,6 +78,7 @@ defmodule Onion.SnapshotRabbit do
     data = Jason.decode!(payload)
     # how to make sure that each ticker is up to date
     case data do
+      # listen for specific client responses. notify each client after message receipt
       %{"op" => _ } -> :ok
     end
 

@@ -8,7 +8,7 @@
 using namespace Common;
 
 namespace Exchange {
-  /// Type of the order response sent by the exchange to the trading client.
+  /// Type of the order response sent by the exchange to the trading client. 
   enum class ClientResponseType : uint8_t {
     INVALID = 0,
     ACCEPTED = 1,

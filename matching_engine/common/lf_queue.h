@@ -14,7 +14,7 @@ namespace Common {
     }
 
     auto getNextToWriteTo() noexcept {
-      return &store_[next_write_index_];
+      return &store_[next_write_index_]; 
     }
 
     auto updateWriteIndex() noexcept {

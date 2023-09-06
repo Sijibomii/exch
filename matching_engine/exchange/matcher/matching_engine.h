@@ -105,7 +105,7 @@ namespace Exchange {
     /// Lock free queues.
     /// One to consume incoming client requests sent by the order server.
     /// Second to publish outgoing client responses to be consumed by the order server.
-    /// Third to publish outgoing market updates to be consumed by the market data publisher.
+    /// Third to publish outgoing market updates to be consumed by the market data publisher. 
     ClientRequestLFQueue *incoming_requests_ = nullptr;
     ClientResponseLFQueue *outgoing_ogw_responses_ = nullptr;
     MEMarketUpdateLFQueue *outgoing_md_updates_ = nullptr;

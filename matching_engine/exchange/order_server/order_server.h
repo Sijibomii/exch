@@ -27,7 +27,7 @@ namespace Exchange {
       /// Main run loop for this thread - accepts new client connections, receives client requests from them and sends client responses to them.
       auto run() noexcept;
       
-
+      void publish(const char *message, size_t len);
     /// Deleted default, copy & move constructors and assignment-operators.
     OrderServer() = delete;
 
@@ -38,6 +38,7 @@ namespace Exchange {
     OrderServer &operator=(const OrderServer &) = delete;
 
     OrderServer &operator=(const OrderServer &&) = delete;
+
 
       private:
         /// Lock free queue of outgoing client responses to be sent out to connected clients.

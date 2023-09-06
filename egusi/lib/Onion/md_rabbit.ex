@@ -77,6 +77,8 @@ defmodule Onion.MDRabbit do
     case data do
       %{"op" => "MARKET-UPDATE-CLEAR"} -> :ok
 
+      # order filled, rejected,..
+
       # publish order types depending on ticker_id
       %{"op" => _} -> Onion.TickerSession.add_order(data["data"]["ticker_id"], %{ data["data"] | "operation" => data["op"]})
     end

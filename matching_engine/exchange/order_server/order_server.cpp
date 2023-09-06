@@ -61,7 +61,44 @@ namespace Exchange {
 
   auto OrderServer::run() noexcept {
     logger_.log("%:% %() %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_));
-    while (run_) {}
+
+
+    while (run_) {
+
+      for (auto client_response = outgoing_responses_->getNextToRead(); outgoing_responses_->size() && client_response; client_response = outgoing_responses_->getNextToRead()) {
+        auto &next_outgoing_seq_num = cid_next_outgoing_seq_num_[client_response->client_id_];
+        logger_.log("%:% %() % Processing cid:% seq:% %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
+                    client_response->client_id_, next_outgoing_seq_num, client_response->toString());
+
+        // dispatch response to rabbitmq
+        json jsonData;
+        jsonData["refId"] = NULL;
+        jsonData["op"] = "CLIENT-RESPONSE-" + clientResponseTypeToString(client_response->type_);
+        jsonData["data"]["seq_num"] = next_outgoing_seq_num;
+        jsonData["data"]["ticker_id"] = client_response->ticker_id_;
+        jsonData["data"]["side"] = (client_response->side_ == Side::BUY) ? "BUY" : "SELL";
+        jsonData["data"]["price"] = client_response->price_;
+        // publish(&next_inc_seq_num_, sizeof(next_inc_seq_num_));
+        std::string json_str = jsonData.dump();
+        const char* message = json_str.c_str();
+        publish(message, strlen(message) + 1);
+
+        outgoing_responses_->updateReadIndex();
+
+        ++next_outgoing_seq_num;
+      }
+    }
+  }
+
+  void OrderServer::publish(const char *message, size_t len) {
+    // send rabbit mq messag
+    std::string exchange = "exch";
+    std::string_view exch_view = exchange;
+    std::string key = "responses";
+    std::string_view key_view = key;
+
+    // create a json message here 
+    this->channel.publish(exch_view, key_view, message, len);
   }
 
   /// Start and stop the order server main thread.

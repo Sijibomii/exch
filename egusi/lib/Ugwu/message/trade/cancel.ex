@@ -1,20 +1,17 @@
-defmodule Ugwu.Message.Trade.Modify do
+defmodule Ugwu.Message.Trade.Cancel do
   use Ugwu.Message.Call,
   needs_auth: true
 
   @primary_key false
   embedded_schema do
     field(:ticker_id, :integer)
-    field(:side, :string)
-    field(:price, :integer)
-    field(:qty, :integer)
   end
 
   @impl true
   def changeset(initializer \\ %__MODULE__{}, data) do
     initializer
-    |> cast(data, [:ticker_id, :side, :price, :qty])
-    |> validate_required([:ticker_id, :side, :price, :qty])
+    |> cast(data, [:ticker_id])
+    |> validate_required([:ticker_id])
   end
 
   defmodule Reply do
@@ -22,17 +19,11 @@ defmodule Ugwu.Message.Trade.Modify do
 
     @derive {Jason.Encoder, only: ~w(
       ticker_id
-      side
-      price
-      qty
       success
     )a}
 
     schema "trades" do
       field(:ticker_id, :integer)
-      field(:side, :string)
-      field(:price, :integer)
-      field(:qty, :integer)
       field(:success, :boolean)
     end
   end
@@ -43,12 +34,9 @@ defmodule Ugwu.Message.Trade.Modify do
 
     with {:ok, trade_spec} <- apply_action(changeset!, :validation),
          {:ok, %{trade: trade}} <-
-          Egusi.Trade.create(
+          Egusi.Trade.cancel(
             state.user.id,
-            trade_spec.ticker_id,
-            trade_spec.side,
-            trade_spec.price,
-            trade_spec.qty
+            trade_spec.ticker_id
           ) do
       {:reply, struct(__MODULE__,  Map.from_struct(trade) |> Map.update!(:success, fn _ -> true end)), state}
           else

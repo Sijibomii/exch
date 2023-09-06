@@ -30,7 +30,7 @@ defmodule Onion.UserSession do
               email: nil,
               wallet: nil,
               last_order_number: nil,
-              last_seq_num: nil
+              last_seq_num: nil,
   end
 
    #################################################################################
@@ -120,7 +120,6 @@ defmodule Onion.UserSession do
       new_balance = state.balace - (price*qty)
       random_id = :rand.uniform(3)
       Onion.Rabbit.send(random_id, %{
-        # error here
         refId: :uuid.uuid4(),
         op: "TRADE-NEW",
         data: %{
@@ -133,7 +132,28 @@ defmodule Onion.UserSession do
           qty: qty
         }
       })
-      {:reply, {:ok}, %{state | last_seq_num: last_seq_num+1, last_order_number: last_order_number+1, wallet: %Wallet{ id: state.wallet.id, balance: state.wallet.balance }}}
+      {:reply, {:ok }, %{state | last_seq_num: last_seq_num+1, last_order_number: last_order_number+1, wallet: %Wallet{ id: state.wallet.id, balance: state.wallet.balance }}}
+    end
+  end
+
+  defp cancel_trade_impl(ticker_id, order_id, _reply, state) do
+    # keep list of all orders by this client in state
+    # check balance
+    if  do
+      {:reply, {:error, "insufficient balance in wallet"}, state}
+    else
+      random_id = :rand.uniform(3)
+      Onion.Rabbit.send(random_id, %{
+        refId: :uuid.uuid4(),
+        op: "TRADE-CANCEL",
+        data: %{
+          seq_num: state.last_seq_num + 1,
+          client_id: state.trading_client_id,
+          ticker_id: ticker_id,
+          order_id: state.last_order_number+1,
+        }
+      })
+      {:reply, {:ok }, %{state | last_seq_num: last_seq_num+1, }}
     end
   end
 
@@ -162,6 +182,7 @@ defmodule Onion.UserSession do
   def handle_call({:get, key}, reply, state), do: get_impl(key, reply, state)
   def handle_call({:set_active_ws, pid}, reply, state), do: set_active_ws(pid, reply, state)
   def handle_call({:new_trade, %{ ticker_id: ticker_id, side: side, price: price, qty: qty }}, reply, state),  do: new_trade_impl(ticker_id, side, price, qty, reply, state)
+  def handle_call({:cancel_trade, %{ ticker_id: ticker_id }}, reply, state),  do: cancel_trade_impl(ticker_id, reply, state)
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state), do: handle_disconnect(pid, state)
 
   # WHEN REQUESTING ORDERBOOK FROM TICKER MAKE SURE TO FILTER ONLY TRADES AND RETURN TO CLIENT
