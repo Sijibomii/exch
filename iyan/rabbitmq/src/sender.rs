@@ -1,4 +1,7 @@
+
+
+
 pub struct RabbitSender {
-    connection: Connection,
+    // connection: Connection,
     queue_name: String
 }

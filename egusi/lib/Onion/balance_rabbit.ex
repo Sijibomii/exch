@@ -1,8 +1,9 @@
-defmodule Onion.OrderRabbit do
+
+defmodule Onion.BalanceRabbit do
   use GenServer
   use AMQP
 
-  # this will act as a dispatcher for order rabbit. ticker session will collect orders from usersession and send to order_rabbit who will dispatch to rabbit
+  # responsible for letting  rust know when there is a balance change
   defmodule State do
     @type t :: %{
             id: String.t(),
@@ -14,7 +15,7 @@ defmodule Onion.OrderRabbit do
 
   def start_supervised(id) do
     DynamicSupervisor.start_child(
-      Onion.OrderRabbitClientDynamicSupervisor,
+      Onion.BalanceRabbitClientDynamicSupervisor,
       {__MODULE__, id}
     )
   end
@@ -27,9 +28,9 @@ defmodule Onion.OrderRabbit do
     )
   end
 
-  defp via(id), do: {:via, Registry, {Onion.OrderRabbitClientRegistry, id}}
+  defp via(id), do: {:via, Registry, {Onion.BalanceRabbitClientRegistry, id}}
 
-  @send_queue "order"
+  @send_queue "balance"
   @receive_exchange "exch"
 
   def init(id) do
@@ -82,6 +83,9 @@ defmodule Onion.OrderRabbit do
   end
 
   defp setup_queue(id, chan) do
-    :ok
+    {:ok, _} = Queue.declare(chan, @send_queue, durable: false)
+    :ok = Exchange.direct(chan, @receive_exchange, durable: true)
+
+    :ok = Queue.bind(chan, @receive_queue, @receive_exchange, routing_key: @receive_queue)
   end
 end
