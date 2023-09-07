@@ -3,6 +3,11 @@ use uuid::Uuid;
 use actix_web::{web, App, middleware, HttpResponse, HttpServer};
 use core::client::{Client, ClientPayload};
 
+// use lapin::{
+//     options::*, types::FieldTable, BasicProperties, Connection, ConnectionProperties, Result,
+// };
+
+
 use std::{fs};
 use config::Config; 
 use core::db::postgres;
@@ -12,14 +17,23 @@ mod services;
 mod state;
 mod auth;
 
-use services::{ errors::Error };
+// use services::{ errors::Error };
 
 async fn index() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
 }
 
 pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io::Result<()> {
-    
+
+    // rabbitmq connection
+    // let addr = "amqp://localhost:5672";  // Replace with your RabbitMQ cluster connection URL
+    // let conn = Connection::connect(
+    //     addr,
+    //     ConnectionProperties::default()
+    // )
+    // .await;
+
+
     let app_state = state::AppState{
         postgres: postgres.clone(),
         config: config.server.clone(),

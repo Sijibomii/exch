@@ -17,6 +17,7 @@ config = { path = "./config" }
 types = { path = "./types" }
 core = { path = "./core" }
 logger =  { path = "./logger" }
+rabbitmq = { path = "./rabbitmq" }
 
 [[bin]]
 path = "iyan/main.rs"

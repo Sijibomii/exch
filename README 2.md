@@ -49,7 +49,7 @@ USER-LOGIN
     last_order_number:
     last_seq_num:
     wallet:{
-      id:
+      id: 
       balance
     }
   }

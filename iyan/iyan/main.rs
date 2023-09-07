@@ -42,10 +42,4 @@ fn main() {
     log::info!("Server up and running");
     let _ = system.run();
 
-    // export LDFLAGS="-L/opt/homebrew/opt/postgresql@15/lib"
-//   export CPPFLAGS="-I/opt/homebrew/opt/postgresql@15/include"
-// Or, if you don't want/need a background service you can just run:
-//   LC_ALL="C" /opt/homebrew/opt/postgresql@15/bin/postgres -D /opt/homebrew/var/postgresql@15
-
-// /opt/homebrew/Cellar/postgresql@15/15.4  export LIBRARY_PATH=/opt/homebrew/opt/postgresql@15/lib:$LIBRARY_PATH
 }
