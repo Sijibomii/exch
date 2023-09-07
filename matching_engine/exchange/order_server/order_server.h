@@ -31,7 +31,7 @@ namespace Exchange {
     /// Deleted default, copy & move constructors and assignment-operators.
     OrderServer() = delete;
 
-    OrderServer(const OrderServer &) = delete;
+    OrderServer(const OrderServer &) = delete; 
 
     OrderServer(const OrderServer &&) = delete;
 
@@ -48,8 +48,13 @@ namespace Exchange {
 
         std::string time_str_;
         Logger logger_;
-        AMQP::Channel channel = NULL;
+        AMQP::Channel channelOrder = NULL;
+        AMQP::Channel channelResponses = NULL;
         FIFOSequencer fifo_sequencer_;
+
+        // rabbit handlers
+        RabbitHandler orderRabbit;
+        RabbitHandler responsesRabbit;
 
         /// Hash map from ClientId -> the next sequence number to be sent on outgoing client responses.
         std::array<size_t, ME_MAX_NUM_CLIENTS> cid_next_outgoing_seq_num_;

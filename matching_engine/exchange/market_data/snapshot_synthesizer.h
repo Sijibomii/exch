@@ -59,6 +59,8 @@ namespace Exchange {
 
     std::string time_str_;
 
+    RabbitHandler snapshotRabbit;
+
     /// Hash map from TickerId -> Full limit order book snapshot containing information for every live order.
     std::array<std::array<MEMarketUpdate *, ME_MAX_ORDER_IDS>, ME_MAX_TICKERS> ticker_orders_;
     size_t last_inc_seq_num_ = 0;

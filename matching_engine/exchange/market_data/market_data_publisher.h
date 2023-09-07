@@ -66,6 +66,7 @@ namespace Exchange {
     std::string time_str_;
     Logger logger_;
 
+    RabbitHandler incrementalRabbit;
    
     /// Snapshot synthesizer which synthesizes and publishes limit order book snapshots on the snapshot multicast stream.
     SnapshotSynthesizer *snapshot_synthesizer_ = nullptr;

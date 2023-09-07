@@ -4,25 +4,24 @@
 namespace Exchange {
   using json = nlohmann::json;
   SnapshotSynthesizer::SnapshotSynthesizer(MDPMarketUpdateLFQueue *market_updates)
-      : snapshot_md_updates_(market_updates), logger_("exchange_snapshot_synthesizer.log"), order_pool_(ME_MAX_ORDER_IDS) {
+      : snapshot_md_updates_(market_updates), logger_("exchange_snapshot_synthesizer.log"), order_pool_(ME_MAX_ORDER_IDS),
+      snapshotRabbit("snapshot", "exch", "exchange_SnapshotSynthesizer_rabbitmq.log", 
+      [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
+        logger_.log("%:% %() % Received % % redeliverd: %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message.body(), deliveryTag, redelivered);   
+      },
+      [this](const std::string &consumertag) {
+        logger_.log("%:% %() % consume operation started % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);   
+      },
+      [this](const std::string &consumertag) {
+        logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);  
+      },
+      [this](const char *message) {
+        logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
+      }
+    ) {
     for(auto& orders : ticker_orders_){
       orders.fill(nullptr);
     }
-
-      RabbitHandler incrementalRabbit("snapshot", "exch", "exchange_SnapshotSynthesizer_rabbitmq.log", 
-    [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
-       logger_.log("%:% %() % Received % % redeliverd: %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message.body(), deliveryTag, redelivered);   
-    },
-    [this](const std::string &consumertag) {
-      logger_.log("%:% %() % consume operation started % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);   
-    },
-    [this](const std::string &consumertag) {
-       logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);  
-    },
-    [this](const char *message) {
-       logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
-    }
-    );
   }
 
   SnapshotSynthesizer::~SnapshotSynthesizer() {
@@ -208,6 +207,6 @@ namespace Exchange {
     std::string_view exch_view = exchange;
     std::string key = "snapshot";
     std::string_view key_view = key;
-    this->channel.publish(exch_view, key_view, message, len);
+    this->snapshotRabbit.chanel.publish(exch_view, key_view, message, len);
   }
 }

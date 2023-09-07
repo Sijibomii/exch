@@ -7,10 +7,8 @@ namespace Exchange {
   using json = nlohmann::json;
 
   OrderServer::OrderServer(ClientRequestLFQueue *client_requests, ClientResponseLFQueue *client_responses)
-      :outgoing_responses_(client_responses), logger_("exchange_order_server.log"), fifo_sequencer_(client_requests, &logger_) {
-      
-      // rabbitmq
-      RabbitHandler incrementalRabbit("order", "exch", "exchange_order_server_rabbitmq.log", 
+      :outgoing_responses_(client_responses), logger_("exchange_order_server.log"), fifo_sequencer_(client_requests, &logger_),
+      orderRabbit("order", "exch", "exchange_order_server_rabbitmq.log", 
         [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
             // work with JSON here. decode JSON data comming in and return
           std::string messageBody(reinterpret_cast<const char *>(message.body()), message.bodySize());
@@ -35,7 +33,7 @@ namespace Exchange {
             logger_.log("%:% %() % Received % % \n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), request.seq_num_, redelivered);
             fifo_sequencer_.addClientRequest(getCurrentNanos(), me_request);
             // acknowledge the message
-            this->channel.ack(deliveryTag);
+            this->orderRabbit.chanel.ack(deliveryTag);
             fifo_sequencer_.sequenceAndPublish();
             next_exp_seq_num++;
           }
@@ -49,8 +47,21 @@ namespace Exchange {
         [this](const char *message) {
           logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
         }
-        );
-  }
+        ),
+        responsesRabbit("responses", "exch", "exchange_order_server_response_rabbitmq.log", 
+        [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
+          logger_.log("%:% %() % Received % % redeliverd: %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message.body(), deliveryTag, redelivered);   
+        },
+        [this](const std::string &consumertag) {
+          logger_.log("%:% %() % consume operation started % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);   
+        },
+        [this](const std::string &consumertag) {
+          logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);  
+        },
+        [this](const char *message) {
+          logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
+        }
+        ){}
 
   OrderServer::~OrderServer() {
     stop();
@@ -98,7 +109,7 @@ namespace Exchange {
     std::string_view key_view = key;
 
     // create a json message here 
-    this->channel.publish(exch_view, key_view, message, len);
+    this->responsesRabbit.chanel.publish(exch_view, key_view, message, len);
   }
 
   /// Start and stop the order server main thread.

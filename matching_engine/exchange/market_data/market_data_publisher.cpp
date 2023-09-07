@@ -3,24 +3,24 @@
 
 namespace Exchange {
   using json = nlohmann::json;
+
   MarketDataPublisher::MarketDataPublisher(MEMarketUpdateLFQueue *market_updates)
       : outgoing_md_updates_(market_updates), snapshot_md_updates_(ME_MAX_MARKET_UPDATES),
-        run_(false), logger_("exchange_market_data_publisher.log") {
-          
-    RabbitHandler incrementalRabbit("incremental", "exch", "exchange_market_data_publisher_rabbitmq.log", 
-    [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
-       logger_.log("%:% %() % Received % % redeliverd: %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message.body(), deliveryTag, redelivered);   
-    },
-    [this](const std::string &consumertag) {
-      logger_.log("%:% %() % consume operation started % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);   
-    },
-    [this](const std::string &consumertag) {
-       logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);  
-    },
-    [this](const char *message) {
-       logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
-    }
-    );
+        run_(false), logger_("exchange_market_data_publisher.log"),
+        incrementalRabbit("incremental", "exch", "exchange_market_data_publisher_rabbitmq.log", 
+        [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered) {
+          logger_.log("%:% %() % Received % % redeliverd: %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message.body(), deliveryTag, redelivered);   
+        },
+        [this](const std::string &consumertag) {
+          logger_.log("%:% %() % consume operation started % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);   
+        },
+        [this](const std::string &consumertag) {
+          logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), consumertag);  
+        },
+        [this](const char *message) {
+          logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
+        }
+        ) {
     snapshot_synthesizer_ = new SnapshotSynthesizer(&snapshot_md_updates_);
   }
 
@@ -41,7 +41,7 @@ namespace Exchange {
         json jsonData;
         jsonData["refId"] = NULL;
         jsonData["op"] = "MARKET-UPDATE-" + marketUpdateTypeToString(market_update->type_);
-        jsonData["data"]["seq_num"] = next_inc_seq_num_;
+        jsonData["data"]["seq_num"] = next_inc_seq_num_; 
         jsonData["data"]["ticker_id"] = market_update->ticker_id_;
         jsonData["data"]["order_id"] = market_update->order_id_;
         jsonData["data"]["side"] = (market_update->side_ == Side::BUY) ? "BUY" : "SELL";
@@ -75,7 +75,7 @@ namespace Exchange {
     std::string_view key_view = key;
 
     // create a json message here 
-    this->channel.publish(exch_view, key_view, message, len);
+    this->incrementalRabbit.chanel.publish(exch_view, key_view, message, len);
   }
 }
 
