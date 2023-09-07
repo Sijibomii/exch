@@ -5,10 +5,12 @@ defmodule Egusi.Trade do
 
   def cancel(
     user_trading_id,
-    ticker_id
+    ticker_id,
+    order_id
     ) do
 
     case UserSession.cancel_trade(user_trading_id, {:cancel_trade, %{
+      order_id: order_id,
       ticker_id: ticker_id,
     }}) do
 

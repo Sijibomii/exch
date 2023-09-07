@@ -97,11 +97,13 @@ defmodule Onion.TickerSession do
   ## API
   def add_order(ticker_id, msg), do: cast(ticker_id, {:incremental, msg})
 
+  def request_orderbook(ticker_id), do: call(ticker_id, :request_orders)
+
   ########################################################################
   ## impl
   defp get_orderbook_impl(_reply, state) do
     # let the caller take care of encoding
-    {:reply, to_list(state.order_book), state}
+    {:reply, {:ok, to_list(state.order_book)}, state}
   end
 
   #########################################################################
@@ -187,7 +189,8 @@ defmodule Onion.TickerSession do
       price: message["price"],
     })}}
 
-    def handle_call(:get_orderbook, reply, state), do: get_orderbook_impl(reply, state)
+    def handle_call(:request_orders, reply, state), do: get_orderbook_impl(reply, state)
+
   end
 
 end

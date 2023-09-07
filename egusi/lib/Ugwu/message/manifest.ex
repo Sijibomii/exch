@@ -8,10 +8,8 @@ defmodule Ugwu.Message.Manifest do
     "trade:new" => Trade.New,
     "trade:modify" => Trade.Modify,
     "trade:cancel" => Trade.Cancel,
-    # join a ticker session to start receiving incremental updates. once you join, in the reply the order book is sent back
-    "request:join" => Request.Join,
-    # request the current orderbook status of a ticker
-    "request:snapshot" => Request.Snapshot
+
+    "orders:all" => Request.Orderbook,
   }
 
   # verify that all of the actions are accounted for in the

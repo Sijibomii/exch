@@ -1,10 +1,13 @@
-defmodule Ugwu.Translator do
+defmodule Ugwu.Translator.V0_1_0 do
 
   ############################################################################
   ## INBOUND MESSAGES
 
   @operator_translations %{
     "add_new_trade" => "trade:new",
+    "cancel_trade" => "trade:cancel",
+    "all_orders" => "orders:all",
+    "auth" => "auth:request",
   }
 
   @operators Map.keys(@operator_translations)

@@ -152,7 +152,7 @@ defmodule Onion.UserSession do
         seq_num: state.last_seq_num + 1,
         client_id: state.trading_client_id,
         ticker_id: ticker_id,
-        order_id: state.last_order_number+1,
+        order_id: order_id,
       }
     })
     {:reply, {:ok }, %{state | last_seq_num: last_seq_num+1, }}
@@ -203,7 +203,7 @@ defmodule Onion.UserSession do
   def handle_call({:get, key}, reply, state), do: get_impl(key, reply, state)
   def handle_call({:set_active_ws, pid}, reply, state), do: set_active_ws(pid, reply, state)
   def handle_call({:new_trade, %{ ticker_id: ticker_id, side: side, price: price, qty: qty }}, reply, state),  do: new_trade_impl(ticker_id, side, price, qty, reply, state)
-  def handle_call({:cancel_trade, %{ ticker_id: ticker_id }}, reply, state),  do: cancel_trade_impl(ticker_id, reply, state)
+  def handle_call({:cancel_trade, %{ ticker_id: ticker_id, order_id: order_id }}, reply, state),  do: cancel_trade_impl(ticker_id, order_id, reply, state)
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state), do: handle_disconnect(pid, state)
 
   # WHEN REQUESTING ORDERBOOK FROM TICKER MAKE SURE TO FILTER ONLY TRADES AND RETURN TO CLIENT
