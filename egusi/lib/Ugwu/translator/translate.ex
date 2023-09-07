@@ -1,10 +1,10 @@
-defmodule Ugwu.Translator.V0_1_0 do
+defmodule Ugwu.Translator do
 
   ############################################################################
   ## INBOUND MESSAGES
 
   @operator_translations %{
-
+    "add_new_trade" => "trade:new",
   }
 
   @operators Map.keys(@operator_translations)
@@ -22,24 +22,9 @@ defmodule Ugwu.Translator.V0_1_0 do
     put_in(message, ["op"], @operator_translations[operator])
   end
 
-  # translate in body
-  # def translate_in_body(message, "o") do
-  #   put_in(message, ["", ""], get_in(message, ["", ""]))
-  # end
-
   def translate_in_body(message, _op), do: message
-
-  # these casts need to be instrumented with fetchId in order to be treated
-  # as a cast.
-  @casts_to_calls ~w()
-
-  def add_in_ref(message, op) when op in @casts_to_calls do
-    Map.put(message, "fetchId", UUID.uuid4())
-  end
-
   def add_in_ref(message, _op), do: message
 
-  def add_version(message), do: Map.put(message, "version", ~v(0.1.0))
 
   ############################################################################
   ## OUTBOUND MESSAGES

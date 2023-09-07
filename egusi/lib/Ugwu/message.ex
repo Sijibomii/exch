@@ -11,6 +11,7 @@ defmodule Ugwu.Message do
     field(:payload, :map)
     field(:reference, :binary_id)
     field(:inbound_operator, :string)
+
     # reply messages only
     field(:errors, :map)
   end
@@ -45,9 +46,9 @@ defmodule Ugwu.Message do
   #########################################################################
 
   @valid_forms %{
-    operator: ~w(operator),
-    payload: ~w(payload),
-    reference: ~w(reference)
+    operator: ~w(operator op),
+    payload: ~w(payload p),
+    reference: ~w(reference ref)
   }
 
   defp find(changeset, field, optional \\ false)
