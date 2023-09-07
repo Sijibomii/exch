@@ -54,6 +54,7 @@ defmodule Egusi do
   end
 
   defp start_rabbits() do
+    # start rabbits with ids 0, 1
     IO.puts("about to start_rabbits")
 
     # start the rabbit supervised

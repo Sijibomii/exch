@@ -12,6 +12,7 @@ defmodule Onion.OrderRabbit do
     defstruct id: "", chan: nil
   end
 
+
   def start_supervised(id) do
     DynamicSupervisor.start_child(
       Onion.OrderRabbitClientDynamicSupervisor,

@@ -123,8 +123,17 @@ defmodule Onion.UserSession do
       {:reply, {:error, "insufficient balance in wallet"}, state}
     else
       new_balance = state.balace - (price*qty)
-      random_id = :rand.uniform(3)
-      Onion.Rabbit.send(random_id, %{
+
+      random_id = :rand.uniform(2)
+      Onion.BalanceRabbit.send(random_id, %{
+        refId: :uuid.uuid4(),
+        op: "WALLET-BALANCE-CHANGE",
+        data: %{
+          client_id: state.trading_client_id,
+          balance: new_balance
+        }
+      })
+      Onion.OrderRabbit.send(random_id, %{
         refId: :uuid.uuid4(),
         op: "TRADE-NEW",
         data: %{
@@ -145,7 +154,7 @@ defmodule Onion.UserSession do
 
   defp cancel_trade_impl(ticker_id, order_id, _reply, state) do
     random_id = :rand.uniform(3)
-    Onion.Rabbit.send(random_id, %{
+    Onion.OrderRabbit.send(random_id, %{
       refId: :uuid.uuid4(),
       op: "TRADE-CANCEL",
       data: %{
@@ -166,6 +175,14 @@ defmodule Onion.UserSession do
 
       true ->
         # String.to_integer(string_number) ??
+        Onion.BalanceRabbit.send(random_id, %{
+          refId: :uuid.uuid4(),
+          op: "WALLET-BALANCE-CHANGE",
+          data: %{
+            client_id: state.trading_client_id,
+            balance: state.wallet.balance + response["data"]["price"]
+          }
+        })
         send_ws(response["data"]["client_id"], msg)
         {:noreply, %{state | balance: state.wallet.balance + response["data"]["price"] }}
 
