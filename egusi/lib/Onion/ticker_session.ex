@@ -45,11 +45,13 @@ defmodule Onion.TickerSession do
   defmodule State do
     @type t :: %__MODULE__{
             ticker_id: String.t(),
-            order_book: Queue.t()
+            order_book: Queue.t(),
+            listeners: [any()]
           }
 
     defstruct ticker_id: "",
               order_book: %Queue{ head: nil, tail: nil },
+              listeners: []
   end
 
   #TODO: send cast message to start a task after ticker session is started
@@ -99,12 +101,18 @@ defmodule Onion.TickerSession do
 
   def request_orderbook(ticker_id), do: call(ticker_id, :request_orders)
 
+  def join_ticker_updates(user_trading_id, ticker_id), do: cast(ticker_id, {:listen, user_trading_id})
   ########################################################################
   ## impl
   defp get_orderbook_impl(_reply, state) do
     # let the caller take care of encoding
     {:reply, {:ok, to_list(state.order_book)}, state}
   end
+
+  defp add_listener_impl(user_trading_id, state) do
+    {:noreply, %{state | listeners: [user_trading_id | state.listeners]}}
+  end
+
 
   #########################################################################
   ##list impl
@@ -179,6 +187,23 @@ defmodule Onion.TickerSession do
   ## ROUTER
 
   def handle_cast({:incremental, message}, state) do
+    # if op is trading send ws message to all listeners
+    if message["op"] == "MARKET-UPDATE-TRADE" do
+      Enum.each(state.listeners, fn tid ->
+        Onion.UserSession.send_ws(tid, %{
+          ref: :uuid.uuid4(),
+          op: "MARKET-UPDATE--NEW-TRADE",
+          data: %{
+            side: message["side"],
+            operation: message["op"],
+            volume: message["qty"],
+            seq_num: message["seq_num"],
+            price: message["price"]
+          }
+        })
+      end)
+    end
+
     {:noreply, %{state | order_book: append(state.order_book, %Order{
       id: message["id"],
       side: message["side"],
@@ -188,6 +213,8 @@ defmodule Onion.TickerSession do
       seq_num: message["seq_num"],
       price: message["price"],
     })}}
+
+    def handle_cast({:listen, user_trading_id}, state), do: add_listener_impl(user_trading_id, state)
 
     def handle_call(:request_orders, reply, state), do: get_orderbook_impl(reply, state)
 

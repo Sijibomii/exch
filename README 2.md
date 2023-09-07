@@ -55,5 +55,22 @@ USER-LOGIN
   }
 }
 
+When there's a new trade, all lister get a ws message
+{
+ ref: :uuid.uuid4(),
+  op: "MARKET-UPDATE--NEW-TRADE",
+  data: {
+    side:
+    operation: 
+    volume: 
+    seq_num:
+    price: 
+  }
+}
+
 
 write login for listening to udate for a ticker. i.e user session can send its id to ticker session so it get sent update from tickersession
+
+TODO:
+CONNECT RUST TO RABBITMQ AND LISTEN OR SEND MESSAGES AS APPROPRATE
+HOW DOES BALANCE GET REDUCED ON CANCLE?
