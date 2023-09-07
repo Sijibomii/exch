@@ -76,10 +76,13 @@ defmodule Onion.ClientRabbit do
         %State{} = state
       ) do
     data = Jason.decode!(payload)
-    # how to make sure that each ticker is up to date
+    # send response back to user
+
     case data do
       # listen for specific client responses. notify each client after message receipt
-      %{"op" => _ } -> :ok
+      %{ "op" => ^"CLIENT-RESPONSE-" <> _} -> Onion.UserSession.response(data["client_id"], data)
+
+      _ -> :ok
     end
 
     # You might want to run payload consumption in separate Tasks in production

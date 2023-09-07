@@ -21,13 +21,13 @@ defmodule Egusi.Auth do
       {:reply, user} -> UserSession.start_supervised(
           user_id: user.id,
           ip: ip,
-          username: user.username,
           email: user.email,
           wallet: user.wallet,
           ip: ip,
           trading_client_id: user.trading_client_id
         )
         UserSession.set_active_ws(user.id, self())
+
         {:ok, user}
       _ -> {:close, 4001, "invalid_authentication"}
     end

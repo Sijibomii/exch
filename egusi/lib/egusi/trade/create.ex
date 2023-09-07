@@ -4,14 +4,14 @@ defmodule Egusi.Trade do
   alias Onion.TickerSession
 
   def create(
-    user_id,
+    user_trading_id,
     ticker_id,
     side,
     price,
     qty
   ) do
 
-    case UserSession.call(user_id, {:new_trade, %{
+    case UserSession.new_trade(user_trading_id, {:new_trade, %{
       ticker_id: ticker_id,
       side: side,
       price: price,

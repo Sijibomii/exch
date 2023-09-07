@@ -4,13 +4,15 @@ defmodule Ugwu.SocketHandler do
   defstruct email: nil,
             id: nil,
             ip: nil,
+            trading_id: nil,
             encoding: nil,
             compression: nil,
             callers: [],
 
   @type state :: %__MODULE__{
           email: nil | String.t(),
-          id: nil | String.t(),
+          trading_id: nil | Integer.t(),
+          id: nil | String.t()
           ip: String.t(),
           encoding: :etf | :json,
           compression: nil | :zlib,
@@ -44,6 +46,7 @@ defmodule Ugwu.SocketHandler do
 
     ip = request.headers["x-forwarded-for"]
 
+    # state init
     state = %__MODULE__{
       ip: ip,
       encoding: encoding,
@@ -86,15 +89,6 @@ defmodule Ugwu.SocketHandler do
     end
   end
 
-  # unsub from PubSub topic
-  def unsub(socket, topic), do: send(socket, {:unsub, topic})
-
-  alias Onion.PubSub
-
-  defp unsub_impl(topic, state) do
-    PubSub.unsubscribe(topic)
-    ws_push(nil, state)
-  end
 
   # transitional remote_send message
   def remote_send(socket, message), do: send(socket, {:remote_send, message})
@@ -107,6 +101,7 @@ defmodule Ugwu.SocketHandler do
   ##########################################################################
   ## WEBSOCKET API
 
+  ## LOOK HERE TO BE SURE WE ALL GOOD
   @impl true
   def websocket_handle({:text, "ping"}, state), do: {[text: "pong"], state}
 
@@ -162,6 +157,7 @@ defmodule Ugwu.SocketHandler do
   def auth_check(%{operator: op}, state), do: op.auth_check(state)
 
   def dispatch(message, state) do
+    # called from here
     case message.operator.execute(message.payload, state) do
       close when elem(close, 0) == :close ->
         ws_push(close, state)

@@ -4,11 +4,11 @@ defmodule Egusi.Trade do
   alias Onion.TickerSession
 
   def cancel(
-    user_id,
+    user_trading_id,
     ticker_id
     ) do
 
-    case UserSession.call(user_id, {:modify_trade, %{
+    case UserSession.cancel_trade(user_trading_id, {:cancel_trade, %{
       ticker_id: ticker_id,
     }}) do
 

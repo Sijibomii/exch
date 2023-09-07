@@ -44,7 +44,7 @@ defmodule Ugwu.Message.Trade.New do
     with {:ok, trade_spec} <- apply_action(changeset!, :validation),
          {:ok, %{trade: trade}} <-
           Egusi.Trade.create(
-            state.user.id,
+            state.user.trading_id,
             trade_spec.ticker_id,
             trade_spec.side,
             trade_spec.price,

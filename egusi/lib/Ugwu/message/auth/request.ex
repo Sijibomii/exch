@@ -35,7 +35,7 @@ defmodule Ugwu.Message.Auth.Request do
     with {:ok, request} <- apply_action(changeset, :validate),
          {:ok, user} <- Egusi.Auth.authenticate(request, state.ip) do
 
-      {:reply, user, %{state | user: user }}
+      {:reply, user, %{ state | trading_id: user.trading_client_id, email: user.email, id: user.id }}
     else
       # don't tolerate malformed requests with any response besides closing
       # out websocket.

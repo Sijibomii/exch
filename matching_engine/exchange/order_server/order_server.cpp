@@ -89,6 +89,7 @@ namespace Exchange {
         jsonData["data"]["ticker_id"] = client_response->ticker_id_;
         jsonData["data"]["side"] = (client_response->side_ == Side::BUY) ? "BUY" : "SELL";
         jsonData["data"]["price"] = client_response->price_;
+        jsonData["data"]["client_id"] = client_response->client_id_;
         // publish(&next_inc_seq_num_, sizeof(next_inc_seq_num_));
         std::string json_str = jsonData.dump();
         const char* message = json_str.c_str();
