@@ -17,6 +17,8 @@ pub enum Error {
     IoError(#[cause] IoError),
     #[fail(display = "{}", _0)]
     LapinError(#[cause] LapinError),
+    #[fail(display =  "unable to get channels to publish: {}", _0)]
+    ChannelError(String),
 }
 
 impl From<ModelError> for Error {
