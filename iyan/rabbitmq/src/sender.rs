@@ -1,7 +1,9 @@
-use std::cell::RefCell;
+// use std::cell::RefCell;
+use std::borrow::BorrowMut;
+use std::sync::{Arc, RwLock};
 use serde::{Deserialize, Serialize};
 use lapin::{
-    options::*, types::FieldTable, Connection, Channel, BasicProperties
+    options::*, types::FieldTable, Channel, BasicProperties, ConnectionProperties,
 };
 use actix::prelude::*;
 use uuid::Uuid;
@@ -10,21 +12,27 @@ use lapin::publisher_confirm::PublisherConfirm;
 use std::default::Default;
 use tokio::runtime::Runtime;
 
+use deadpool_lapin::{Manager, Pool, PoolError};
+
 // send events when user logs in
+
+pub type RabbitSenderAddr = Addr<RabbitSender>;
+
+#[derive()]
 pub struct RabbitSender {
-    pub connection: Connection,
+    pub pool: Pool,
     pub queue_name: String,
-    pub channel: RefCell<Option<Channel>>
+    pub channel: RwLock<Option<Channel>>
 }
 
 impl RabbitSender {
-    pub fn new(connection: Connection, queue_name: String) -> Self {
-        Self { connection, queue_name, channel: RefCell::new(None) }
+    pub fn new(pool: Pool, queue_name: String,) -> RabbitSender {
+        RabbitSender { pool, queue_name, channel: RwLock::new(None) }
     }
 }
 
 impl Actor for RabbitSender {
-    type Context = Context<Self>;
+    type Context = SyncContext<Self>;
 
     fn started(&mut self, _: &mut Self::Context) {
         // Attempt to create a channel when the actor starts
@@ -61,7 +69,10 @@ impl RabbitSender {
     // Function to create a channel and return a Result
     async fn create_channel(&self, queue_name: &str) -> Result<(), Error>  {
         // Create a channel for message consumption.
-        let channel = self.connection.create_channel()
+        let channel = self.pool.get().await.
+        map_err(Error::from)
+        .unwrap()
+        .create_channel()
         .await
         .map_err(Error::from)
         .and_then(|res| {
@@ -92,8 +103,10 @@ impl RabbitSender {
         )
         .await?;
         
-        let mut chan = self.channel.borrow_mut();
-        *chan = Some(channel);
+        // let mut chan = self.channel.borrow_mut();
+        let mut channel_lock = self.channel.write().unwrap();
+        // Assign the new channel to the Option<Channel>
+        *channel_lock = Some(channel);
 
         Ok(())
     }
@@ -141,35 +154,41 @@ impl Handler<PublishLoginData> for RabbitSender {
          }: PublishLoginData,
         _: &mut Self::Context,
     ) -> Self::Result {
-
         let channel = self.channel.borrow_mut();
-        if let Some(channel) = &*channel {
 
-            let response = Response{
-                refId: Uuid::new_v4(),
-                op:  "USER-LOGIN".to_string(),
-                data: data
-            };
-            // Serialize the struct to a JSON string
-            let json_string = serde_json::to_string(&response).expect("Failed to serialize to JSON");
-            // Convert the JSON string to a &[u8]
-            let bytes: &[u8] = json_string.as_bytes();
-            // Publish a message to the queue
-            // Create a Tokio runtime
-            let rt = Runtime::new()?;
-            rt.block_on(async {
-                let result = publish(&channel, self.queue_name.to_string(), bytes).await;
-        
-                match result {
-                    Ok(_) => println!("Message published successfully"),
-                    Err(e) => eprintln!("Error publishing message: {:?}", e),
-                }
-            });
-            
-            Ok(())
-        } else {
-           Err(Error::ChannelError("publish login data handle".to_string()))
+        if let Ok(lock) = self.channel.read() {
+            if let Some(channel) = &*lock {
+                // Return a clone of the channel wrapped in an Arc for shared ownership
+               
+                let response = Response{
+                            refId: Uuid::new_v4(),
+                            op:  "USER-LOGIN".to_string(),
+                            data: data
+                        };
+                        // Serialize the struct to a JSON string
+                        let json_string = serde_json::to_string(&response).expect("Failed to serialize to JSON");
+                        // Convert the JSON string to a &[u8]
+                        let bytes: &[u8] = json_string.as_bytes();
+                        // Publish a message to the queue
+                        // Create a Tokio runtime
+                        let rt = Runtime::new()?;
+                        rt.block_on(async {
+                            let result = publish(&channel, self.queue_name.to_string(), bytes).await;
+                    
+                            match result {
+                                Ok(_) => println!("Message published successfully"),
+                                Err(e) => eprintln!("Error publishing message: {:?}", e),
+                            }
+                        });
+                        
+                        Ok(())
+            }else{
+                Err(Error::ChannelError("publish login data handle".to_string()))
+            }
+        }else{
+            Err(Error::ChannelError("publish login data handle".to_string()))
         }
+        
     }
 }
 

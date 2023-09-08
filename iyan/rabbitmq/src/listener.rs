@@ -5,8 +5,10 @@ use uuid::Uuid;
 
 use futures::StreamExt;
 use lapin::{
-    options::*, types::FieldTable, Connection,
+    options::*, types::FieldTable, Connection, ConnectionProperties,
 };
+
+use deadpool_lapin::{Manager, Pool, PoolError};
 
 use super::errors::Error;
 
@@ -17,22 +19,23 @@ use core::{
 
 // pub type RabbitClientAddr = Addr<RabbitClient>;
 
-// #[derive(clone)]
+#[derive()]
 pub struct RabbitClient {
-    pub connection: Connection,
+    pub pool: Pool,
     pub queue_name: String,
     pub postgres: PgExecutorAddr,
 }
 
 
 impl RabbitClient {
-    pub fn new(connection: Connection, queue_name: String, postgres: PgExecutorAddr) -> Self {
-        Self { connection, queue_name, postgres }
+    pub fn new(pool: Pool, queue_name: String, postgres: PgExecutorAddr) -> RabbitClient {
+        
+        RabbitClient { pool, queue_name, postgres }
     }
 }
 
 impl Actor for RabbitClient {
-    type Context = Context<Self>;
+    type Context = SyncContext<Self>;
 } 
 
 impl Supervised for RabbitClient {
@@ -91,7 +94,11 @@ impl RabbitClient {
 
     async fn start_listening(&self, queue_name: &str) -> Result<(), Error> {
         // Create a channel for message consumption.
-        let channel = self.connection.create_channel()
+        let channel = 
+        self.pool.get().await.
+        map_err(Error::from)
+        .unwrap()
+        .create_channel()
         .await
         .map_err(Error::from)
         .and_then(|res| {

@@ -3,14 +3,10 @@ use uuid::Uuid;
 use actix_web::{web, App, middleware, HttpResponse, HttpServer};
 use core::client::{Client, ClientPayload};
 
-// use lapin::{
-//     options::*, types::FieldTable, BasicProperties, Connection, ConnectionProperties, Result,
-// };
-
-
 use std::{fs};
 use config::Config; 
 use core::db::postgres;
+use rabbitmq::sender::RabbitSenderAddr;
 
 mod controllers;
 mod services;
@@ -23,15 +19,7 @@ async fn index() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
 }
 
-pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io::Result<()> {
-
-    // rabbitmq connection
-    // let addr = "amqp://localhost:5672";  // Replace with your RabbitMQ cluster connection URL
-    // let conn = Connection::connect(
-    //     addr,
-    //     ConnectionProperties::default()
-    // )
-    // .await;
+pub async fn run(postgres: postgres::PgExecutorAddr, rabbit_sender: RabbitSenderAddr,config: Config) -> std::io::Result<()> {
 
 
     let app_state = state::AppState{
@@ -41,6 +29,7 @@ pub async fn run(postgres: postgres::PgExecutorAddr, config: Config) -> std::io:
             .expect("failed to open the public key file"),
         jwt_private: fs::read(config.server.private_key.clone())
             .expect("failed to open the private key file"),
+        rabbit_sender: rabbit_sender.clone()
     };
 
     // check for client count. if not insert one.

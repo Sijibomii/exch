@@ -5,7 +5,7 @@ use diesel::{
     pg::PgConnection,
     r2d2::{ConnectionManager, Pool},
 };
-use r2d2;
+use r2d2; 
 
 pub type PgExecutorAddr = Addr<PgExecutor>;
 
