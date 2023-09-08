@@ -7,14 +7,13 @@ use std::io::Read;
 use actix::prelude::*; 
 use std::{env, fs::File};
 
-use std::sync::Arc;
 use logger::{init_elasticsearch_logger};
 
 use core::db::postgres;
 use rabbitmq::listener::RabbitClient;
 use rabbitmq::sender::RabbitSender;
-use deadpool_lapin::{Manager, Pool, PoolError};
-use lapin::{options::*, types::FieldTable, BasicProperties, ConnectionProperties};
+use deadpool_lapin::{Manager, Pool};
+use lapin::{ConnectionProperties};
 use tokio_amqp::*;
 
 #[tokio::main]
@@ -50,7 +49,7 @@ async fn main() {
 
     let addr =
         std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://rmq:rmq@127.0.0.1:5672/%2f".into());
-    let manager = Manager::new(addr, ConnectionProperties::default().with_tokio());
+    let manager = Manager::new(addr, ConnectionProperties::default());
     let pool: Pool = deadpool::managed::Pool::builder(manager)
         .max_size(10)
         .build()

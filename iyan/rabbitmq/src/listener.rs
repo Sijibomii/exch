@@ -5,10 +5,10 @@ use uuid::Uuid;
 
 use futures::StreamExt;
 use lapin::{
-    options::*, types::FieldTable, Connection, ConnectionProperties,
+    options::*, types::FieldTable,
 };
 
-use deadpool_lapin::{Manager, Pool, PoolError};
+use deadpool_lapin::{Pool};
 
 use super::errors::Error;
 

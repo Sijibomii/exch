@@ -12,7 +12,7 @@ use lapin::publisher_confirm::PublisherConfirm;
 use std::default::Default;
 use tokio::runtime::Runtime;
 
-use deadpool_lapin::{Manager, Pool, PoolError};
+use deadpool_lapin::{Pool};
 
 // send events when user logs in
 
