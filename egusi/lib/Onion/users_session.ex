@@ -180,6 +180,7 @@ defmodule Onion.UserSession do
           op: "WALLET-BALANCE-CHANGE",
           data: %{
             client_id: state.trading_client_id,
+            wallet_id: stae.wallet.id,
             balance: state.wallet.balance + response["data"]["price"]
           }
         })

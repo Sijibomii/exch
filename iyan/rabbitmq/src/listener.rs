@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use actix::prelude::*;
+use uuid::Uuid;
 
 use futures::StreamExt;
 use lapin::{
@@ -9,18 +10,24 @@ use lapin::{
 
 use super::errors::Error;
 
+use core::{
+    wallet::{Wallet, WalletPayload},
+    db::postgres::PgExecutorAddr,
+};
+
 // pub type RabbitClientAddr = Addr<RabbitClient>;
 
 // #[derive(clone)]
 pub struct RabbitClient {
-    connection: Connection,
-    queue_name: String
+    pub connection: Connection,
+    pub queue_name: String,
+    pub postgres: PgExecutorAddr,
 }
 
 
 impl RabbitClient {
-    pub fn new(connection: Connection, queue_name: String) -> Self {
-        Self { connection, queue_name }
+    pub fn new(connection: Connection, queue_name: String, postgres: PgExecutorAddr) -> Self {
+        Self { connection, queue_name, postgres }
     }
 }
 
@@ -65,26 +72,18 @@ impl Handler<StartListening> for RabbitClient {
         Ok(())
     }
 }
- // for all queues connect. when it get info about trade sent out by elixir deduct balance. if it get cancel incr balance and send msg to db
-
-        // listen to order for when orders are sent out and deduct balance accordingly. if you get cancel: don't do anything
-
-        // listen to responses find cancel-accepted add balance
+ 
 #[derive(Debug, Deserialize, Serialize)]
 struct Response {
-    refId: String,
+    refId: Uuid,
     op: String,
     data: Data,
 }
 #[derive(Debug, Deserialize, Serialize)]
 struct Data {
-    seq_num: u32,
     client_id: u32,
-    ticker_id: u32,
-    order_id: u32,
-    side: String,
-    price: u32,
-    qty: u32,
+    balance: i64,
+    wallet_id: uuid::Uuid
 }
 
 
@@ -157,12 +156,29 @@ impl RabbitClient {
                                 print!("Error ----->>>> {} \n ", e);
                                 panic!("failed to deserialize data from rabbitmq")
                             });
-                        if queue_name == "response" {
-                            if jsn.op == "CLIENT-RESPONSE-CANCELED" {
-                                // add price back to balance
+                        if queue_name == "balance" {
+                            if jsn.op == "WALLET-BALANCE-CHANGE" {
+                                // change balance price back to balance
+                                let postgres = self.postgres.clone();
+                                match Wallet::find_by_id(jsn.data.wallet_id, &postgres).await {
+                                    Ok(wallet) => {
+                                        let mut payload = WalletPayload::from(wallet);
+                                        payload.balance = Some(jsn.data.balance);
+                                        match Wallet::update(jsn.data.wallet_id, payload, &postgres).await {
+                                            Ok(p) => {
+
+                                            }
+                                            Err(_) => {
+                                                println!("unable to update wallet of id: {:?}", jsn.data.wallet_id);
+                                            }
+                                        }
+                                    }
+                                    Err(_) => {
+                                        println!("unable to find wallet of id: {:?}", jsn.data.wallet_id);
+                                    }
+                                }
+                                
                             }
-                        }else{
-                            //order
                         }
                         
                         // Acknowledge the message to remove it from the queue
