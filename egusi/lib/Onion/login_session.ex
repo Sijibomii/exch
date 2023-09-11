@@ -42,7 +42,7 @@ defmodule Onion.LoginSession do
 
   def start_supervised() do
     DynamicSupervisor.start_child(
-      Onion.LoginDynamicSupervisor,
+      Onion.LoginSessionDynamicSupervisor,
       {__MODULE__}
     )
   end
