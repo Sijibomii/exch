@@ -118,15 +118,25 @@ defmodule Onion.LoginSession do
     case data do
       %{"op" => "USER-LOGIN"} ->
         {:noreply, %{state | users: [ %User{
-          user_id: data["user_id"],
-          email: data["email"],
-          trading_client_id:: data["trading_client_id"],
-          last_order_number: data["last_order_number"],
-          last_seq_num: data["last_seq_num"],
+
+          user_id: data["data"]["user_id"],
+          email: data["data"]["email"],
+          trading_client_id:: data["data"]["trading_client_id"],
+          last_order_number: data["data"]["last_order_number"],
+          last_seq_num: data["data"]["last_seq_num"],
           wallet: %Wallet{
-            id: data["wallet"]["id"],
-            balance: data["wallet"]["balance"],
+            id: data["data"]["wallet"]["id"],
+            balance: data["data"]["wallet"]["balance"],
           }
+        } | state.users ]}}
+
+        %{"op" => "USER-LOGIN-NO-WALLET"} -> {:noreply, %{state | users: [ %User{
+          user_id: data["data"]["user_id"],
+          email: data["data"]["email"],
+          trading_client_id:: data["data"]["trading_client_id"],
+          last_order_number: data["data"]["last_order_number"],
+          last_seq_num: data["data"]["last_seq_num"],
+          wallet: nil
         } | state.users ]}}
 
       _ -> {:noreply, state}

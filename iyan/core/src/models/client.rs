@@ -31,7 +31,7 @@ impl From<Client> for ClientPayload {
             id: Some(client.id),
             next_id: Some(client.next_id)
         }
-    }
+    } 
 }
 
 // Associations,

@@ -29,6 +29,8 @@ defmodule Egusi.Auth do
         UserSession.set_active_ws(user.id, self())
 
         {:ok, user}
+
+        # else if there is none: treat that. i.e before user creates wallet. maybe rust should sent a message with wallet nil
       _ -> {:close, 4001, "invalid_authentication"}
     end
   end

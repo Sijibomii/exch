@@ -115,7 +115,7 @@ defmodule Onion.UserSession do
     {:reply, :ok, %{state | pid: pid}}
   end
 
-  def new_trade(user_trading_id, trade), do: call(user_trading_id, trade)
+  def new_trade(user_trading_id, trade), do: call(user_trading_id, {:new_trade, trade})
 
   defp new_trade_impl(ticker_id, side, price, qty, _reply, state) do
     # check balance
@@ -150,7 +150,7 @@ defmodule Onion.UserSession do
     end
   end
 
-  def cancel_trade(user_trading_id, trade), do: call(user_trading_id, trade)
+  def cancel_trade(user_trading_id, trade), do: call(user_trading_id, {:cancel_trade, trade})
 
   defp cancel_trade_impl(ticker_id, order_id, _reply, state) do
     random_id = :rand.uniform(3)
@@ -167,9 +167,9 @@ defmodule Onion.UserSession do
     {:reply, {:ok }, %{state | last_seq_num: last_seq_num+1, }}
   end
 
-  def client_response(user_trading_id, trade), do: cast(user_trading_id, trade)
+  def client_response(user_trading_id, trade), do: cast(user_trading_id, {:response, trade})
 
-  def client_response_impl(response, state) do
+  defp client_response_impl(response, state) do
     # check if cancel accepted add balance back
     case response["op"] == "CLIENT-RESPONSE-CANCELED" do
 
@@ -193,6 +193,25 @@ defmodule Onion.UserSession do
     end
   end
 
+  def new_wallet(user_trading_id, wallet), do: cast(user_trading_id, {:new_wallet, wallet})
+
+  defp new_wallet_impl(wallet, state) do
+    {:noreply, %{ state | wallet: %Wallet{
+      id: data["wallet_id"],
+      balance: 0
+    }}}
+  end
+
+  def wallet_deposit(user_trading_id, details), do: cast(user_trading_id, {:wallet_deposit, details})
+
+  def wallet_deposit_impl(details, state) do
+    {:noreply, %{ state | wallet: %Wallet{
+      id: data["wallet_id"],
+      balance: state.wallet.balance + data["amount"]
+    }}}
+  end
+
+
   # convert all user_id to trading client id
 
   ##############################################################################
@@ -214,8 +233,9 @@ defmodule Onion.UserSession do
     do: send_ws_impl(msg, state)
 
   def handle_cast({:set_state, info}, state), do: set_state_impl(info, state)
-
   def handle_cast({:response, response}, state), do: client_response_impl(response, state)
+  def handle_cast({:new_wallet, wallet}, state), do: new_wallet_impl(wallet, state)
+  def handle_cast({:wallet_deposit, details}, state), do: wallet_deposit_impl(details, state)
 
   def handle_call(:get_info_for_msg, reply, state), do: get_info_for_msg_impl(reply, state)
   def handle_call({:get, key}, reply, state), do: get_impl(key, reply, state)

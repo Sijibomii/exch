@@ -14,7 +14,6 @@ use rabbitmq::listener::RabbitClient;
 use rabbitmq::sender::RabbitSender;
 use deadpool_lapin::{Manager, Pool};
 use lapin::{ConnectionProperties};
-use tokio_amqp::*;
 
 #[tokio::main]
 async fn main() {
@@ -56,15 +55,16 @@ async fn main() {
         .expect("can create pool");
 
     let p0 = pool.clone();
-
+    let p1 = pool.clone();
     // start listener
-    let rabbit_listener = SyncArbiter::start(1, move || RabbitClient::new(pool.clone(), "balance".to_string(), p.clone()));
+    let _ = SyncArbiter::start(1, move || RabbitClient::new(pool.clone(), "balance".to_string(), p.clone()));
    
     // start sender
     let rabbit_sender = SyncArbiter::start(1, move || RabbitSender::new(p0.clone(), "authentication".to_string()));
     
+    let balance_sender = SyncArbiter::start(1, move || RabbitSender::new(p1.clone(), "balance".to_string()));
     log::info!("Running server");
-    run(postgres, rabbit_sender, config);
+    let _ = run(postgres, rabbit_sender, balance_sender, config).await;
     log::info!("Server up and running");
     let _ = system.run();
 

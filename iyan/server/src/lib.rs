@@ -13,14 +13,17 @@ mod services;
 mod state;
 mod auth;
 
-// use services::{ errors::Error };
 
 async fn index() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
 }
 
-pub async fn run(postgres: postgres::PgExecutorAddr, rabbit_sender: RabbitSenderAddr,config: Config) -> std::io::Result<()> {
-
+pub async fn run(
+    postgres: postgres::PgExecutorAddr, 
+    rabbit_sender: RabbitSenderAddr, 
+    balance_sender: RabbitSenderAddr, 
+    config: Config
+) -> std::io::Result<()> {
 
     let app_state = state::AppState{
         postgres: postgres.clone(),
@@ -29,11 +32,12 @@ pub async fn run(postgres: postgres::PgExecutorAddr, rabbit_sender: RabbitSender
             .expect("failed to open the public key file"),
         jwt_private: fs::read(config.server.private_key.clone())
             .expect("failed to open the private key file"),
-        rabbit_sender: rabbit_sender.clone()
+        rabbit_sender: rabbit_sender.clone(),
+        balance_sender: balance_sender.clone()
     };
 
     // check for client count. if not insert one.
-    let ctl: Client = match services::client::get_client_count(&postgres).await {
+    let _: Client = match services::client::get_client_count(&postgres).await {
         Ok(client) => {
             client
         }

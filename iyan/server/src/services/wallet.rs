@@ -43,7 +43,7 @@ pub async fn fund_wallet(
             Err(err.into())
         }
     }
-}
+} 
 
 // get all wallet by user
 pub async fn all_wallet_by_user(

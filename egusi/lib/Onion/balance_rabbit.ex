@@ -28,6 +28,8 @@ defmodule Onion.BalanceRabbit do
     )
   end
 
+  # RECIEVE -> WALLET-DEPOSIT, WALLET-CREATED
+
   defp via(id), do: {:via, Registry, {Onion.BalanceRabbitClientRegistry, id}}
 
   @send_queue "balance"
@@ -74,6 +76,10 @@ defmodule Onion.BalanceRabbit do
     data = Jason.decode!(payload)
     # how to make sure that each ticker is up to date
     case data do
+      %{ "op" => "WALLET-DEPOSIT" } -> Onion.UserSession.new_wallet(data["data"]["client_id"], data["data"])
+
+      %{ "op" => " WALLET-CREATED"} -> Onion.UserSession.wallet_deposit(data["data"]["client_id"], data["data"])
+
       _ - :ok
     end
 

@@ -10,7 +10,8 @@ use core::wallet::WalletPayload;
 use super::super::auth::AuthUser;
 use uuid::Uuid;
 
-
+use rabbitmq::sender::{Sender, WalletCreationData, BalanceData};
+// send event 
 // create a wallet
 pub async fn create_wallet(
     state: web::Data<AppState>,
@@ -22,15 +23,32 @@ pub async fn create_wallet(
     payload.balance = Some(0);
     payload.last_activity_time = Some(Utc::now());
 
-
+    
     let res = services::wallet::create(
         payload,
         &state.postgres
     ).await;
 
+    // get user by id
+    let resUser = services::users::get(user.id, &state.postgres).await;
+
     match res {
         Ok(wallet) => {
-            return Ok(Json(json!({ "wallet" : wallet })))
+            //  SEND EVENT
+            match resUser {
+                Ok(user) => {
+                    let payload = WalletCreationData{
+                        client_id: user.trading_client_id,
+                        amount: 0,
+                        wallet_id: wallet.id
+                    };
+                    Sender::wallet_creation(payload, &state.rabbit_sender).await;
+                    return Ok(Json(json!({ "wallet" : wallet })))
+                }
+                Err(error) => {
+                    return Err(Error::from(error))
+                }
+            } 
         }
         Err(error) => {
             return Err(Error::from(error))
@@ -45,11 +63,15 @@ pub struct FundWalletParams {
     pub id: Uuid
 }
 // fund wallet
+// send event
 pub async fn fund_wallet(
     data: web::Json<FundWalletParams>,
     state: web::Data<AppState>,
     user: AuthUser
 ) -> Result<Json<Value>, Error> {
+
+    // get user by id
+    let resUser = services::users::get(user.id, &state.postgres).await;
      
     match services::wallet::get(data.id, &state.postgres).await {
         Ok(wallet) => {
@@ -58,7 +80,21 @@ pub async fn fund_wallet(
             }
             match services::wallet::fund_wallet(wallet.id, data.deposit, &state.postgres).await {
                 Ok(new_wallet) => {
-                    return Ok(Json(json!({ "wallet" : new_wallet })))
+                    match resUser {
+                        Ok(user) => {
+                            let payload = BalanceData{
+                                client_id: user.trading_client_id,
+                                amount: data.deposit,
+                                wallet_id: wallet.id
+                            };
+                            Sender::publish_balance(payload, &state.rabbit_sender).await;
+                            return Ok(Json(json!({ "wallet" : new_wallet })))
+                        }
+                        Err(error) => {
+                            return Err(Error::from(error))
+                        }
+                    }
+                    
                 }
                 Err(error) => {
                     return Err(Error::from(error))

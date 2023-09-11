@@ -80,7 +80,7 @@ defmodule Onion.ClientRabbit do
 
     case data do
       # listen for specific client responses. notify each client after message receipt
-      %{ "op" => ^"CLIENT-RESPONSE-" <> _} -> Onion.UserSession.response(data["client_id"], data)
+      %{ "op" => ^"CLIENT-RESPONSE-" <> _} -> Onion.UserSession.client_response(data["data"]["client_id"], data)
 
       _ -> :ok
     end

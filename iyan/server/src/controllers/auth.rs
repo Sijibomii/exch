@@ -9,12 +9,19 @@ use core::user::{UserPayload};
 use core::client::Client;
 use super::super::auth::AuthUser;
 use uuid::Uuid;
+
+use rabbitmq::sender::{Sender, Data, Wallet, DataNoWallet};
+
 #[derive(Deserialize)]
 pub struct LoginParams {
     pub email: String,
     pub password: String,
 }
 
+const LIMIT: i64 = 1;
+const OFFSET: i64 = 0;
+
+// take care of user login without wallet
 // login 
 pub async fn authentication(
     data: web::Json<LoginParams>,
@@ -31,13 +38,55 @@ pub async fn authentication(
 
     match res {
         Ok((token, user)) => {
-            return Ok(Json(json!({ "token": token, "user": user.export() })))
+            let wallets = services::wallet::all_wallet_by_user(LIMIT, OFFSET, user.id, &state.postgres).await;
+            match wallets {
+                Ok(wallets) => {
+                    match wallets.first() {
+
+                        Some(wallet) => {
+                            let u = user.clone();
+                            let payload = Data{
+                                user_id: u.id,
+                                email: u.email,
+                                trading_client_id: u.trading_client_id,
+                                last_order_number: u.last_order_id,
+                                last_seq_num: u.last_seq_num,
+                                wallet: Wallet{
+                                    id: wallet.id,
+                                    balance: wallet.balance
+                                }
+                            };
+                            Sender::publish_login(payload, &state.rabbit_sender).await;
+                            return Ok(Json(json!({ "token": token, "user": user.export() })));
+                        }
+                        None => {
+                            // still publish but set wallet to nil -> 
+                            let u = user.clone();
+                            let payload = DataNoWallet{
+                                user_id: u.id,
+                                email: u.email,
+                                trading_client_id: u.trading_client_id,
+                                last_order_number: u.last_order_id,
+                                last_seq_num: u.last_seq_num,
+                            };
+                            Sender::publish_login_no_wallet(payload, &state.rabbit_sender).await;
+                            return Ok(Json(json!({ "token": token, "user": user.export() })));
+                        }
+                    }
+
+                }
+                Err(error) => {
+                    return Err(Error::from(error))
+                }
+            }
         }
         Err(error) => {
             return Err(Error::from(error))
         }
     };
 }
+
+
 
 #[derive(Debug, Deserialize)]
 pub struct RegistrationParams {
