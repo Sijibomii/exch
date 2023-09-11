@@ -1,9 +1,7 @@
 version: '3.7'
 
-# todo: remove all passwords from elk
 services:
   
-# app stuff
   postgres:
     image: postgres
     environment:
@@ -22,27 +20,32 @@ services:
       driver: json-file
 
   turkey:
-    build: ./mactching_engine
+    build: ./turkey
     
-  # iyan:
-  # depends on me and rabbit
-  #   build: ./iyan
-  #   environment: 
-  #     - PORT=4001
-  #   ports: 
-  #     - 4001:4001
-  #   volumes:
-  #     - shared_keys:/keys
+  iyan:
+    depends_on:
+      - turkey
+      - rabbits
+    build: ./iyan
+    environment: 
+      - PORT=4001
+    ports: 
+      - 4001:4001
+    volumes:
+      - shared_keys:/keys
 
-  # egusi:
-  # depends on me and rabbit
-  #   build: ./egusi
-  #   environment:
-  #     - PORT=6000
-  #   ports:
-  #     - 6000:6000
-  #   volumes:
-  #     - shared_keys:/keys
+  egusi:
+    depends_on:
+      - turkey
+      - rabbits
+    build: ./egusi
+    environment:
+      - PORT=6000
+    ports:
+      - 6000:6000
+    volumes:
+      - shared_keys:/keys
+
   rabbits:
     container_name: rabbits
     image: rabbitmq:3-management-alpine
@@ -54,6 +57,3 @@ services:
       driver: json-file
 volumes:
   shared_keys:
-networks:
-  elknet:
-    driver: bridge
