@@ -2,11 +2,13 @@ use actix_cors::Cors;
 use uuid::Uuid;
 use actix_web::{web, App, middleware, HttpResponse, HttpServer};
 use core::client::{Client, ClientPayload};
-
+use core::{db::postgres::{PgExecutorAddr}};
 use std::{fs};
 use config::Config; 
 use core::db::postgres;
 use rabbitmq::sender::RabbitSenderAddr;
+use std::fs::File;
+use std::io::Write;
 
 mod controllers;
 mod services;
@@ -35,6 +37,9 @@ pub async fn run(
         rabbit_sender: rabbit_sender.clone(),
         balance_sender: balance_sender.clone()
     };
+
+    // write the tokens to file
+    setup(&app_state.postgres).await;
 
     // check for client count. if not insert one.
     let _: Client = match services::client::get_client_count(&postgres).await {
@@ -92,4 +97,18 @@ pub async fn run(
     .expect(&format!("can not bind {}:{}", host, port))
     .run()
     .await
+}
+
+pub async fn setup(postgres: &PgExecutorAddr) {
+    let file_path = "/tokens/ticker.txt";
+    let res = services::tokens::get_all_tokens(100, 0, postgres).await;
+    match res {
+        Ok(tokens) => {
+            let json_data = serde_json::to_string(&tokens).unwrap();
+            let mut file = File::create(file_path).unwrap();
+            file.write_all(json_data.as_bytes()).unwrap();
+        }
+         _ => {}
+    }
+    
 }

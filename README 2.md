@@ -74,3 +74,14 @@ write login for listening to udate for a ticker. i.e user session can send its i
 TODO:
 CONNECT RUST TO RABBITMQ AND LISTEN OR SEND MESSAGES AS APPROPRATE
 HOW DOES BALANCE GET REDUCED ON CANCLE?
+
+[
+  {
+    id: dnidjodjojd,
+    ticker: "APPL"
+  },
+  {
+    id: dnidjodjojd,
+    ticker: "APPL"
+  }
+]

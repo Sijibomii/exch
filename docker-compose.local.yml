@@ -33,6 +33,7 @@ services:
       - 4001:4001
     volumes:
       - shared_keys:/keys
+      - shared_tokens:/tokens
 
   egusi:
     depends_on:
@@ -45,6 +46,7 @@ services:
       - 6000:6000
     volumes:
       - shared_keys:/keys
+      - shared_tokens:/tokens
 
   rabbits:
     container_name: rabbits
@@ -57,3 +59,14 @@ services:
       driver: json-file
 volumes:
   shared_keys:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./keys
+      o: bind
+  shared_tokens:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./tokens
+      o: bind

@@ -4,14 +4,19 @@ defmodule Egusi do
   def start(_type, _args) do
     import Supervisor.Spec, warn: false
 
-    Egusi.Metric.PrometheusExporter.setup()
-    Egusi.Metric.PipelineInstrumenter.setup()
-    Egusi.Metric.UserSessions.setup()
+    # Egusi.Metric.PrometheusExporter.setup()
+    # Egusi.Metric.PipelineInstrumenter.setup()
+    # Egusi.Metric.UserSessions.setup()
 
     children = [
-      # top-level supervisor for UserSession group
-
-      Onion.Telemetry,
+      Onion.Supervisors.UserSession,
+      Onion.Supervisors.TickerSession,
+      Onion.Supervisors.LoginSession,
+      Onion.Supervisors.BalanceRabbit,
+      Onion.Supervisors.ClientRabbit,
+      Onion.Supervisors.MDRabbit,
+      Onion.Supervisors.OrderRabbit,
+      # Onion.Telemetry,
       Plug.Cowboy.child_spec(
         scheme: :http,
         plug: Ugwu,
@@ -47,10 +52,26 @@ defmodule Egusi do
     ]
   end
 
-  #each token will have a running trading session that listed to rabbitmq for messages on that token. It then broadcasts it using pubsub to all subscribed users
-  # each usersession should keep track of the running user trades, on every price update, the user subscribes to,  it calc the profit and loss and sends back.
   defp start_trading_sessions() do
     # get the list of all tokens and start a trading session
+    # read from file and start all tickers
+    file_path = "/tokens/ticker.txt"
+    case File.read(file_path) do
+      {:ok, content} ->
+        # Successfully read the file
+        data = Jason.decode!(payload)
+        Enum.each(data, &start_session/1)
+
+      {:error, reason} ->
+        # Failed to read the file
+        IO.puts("Error reading the file: #{reason}")
+    end
+  end
+  alias Onion.TickerSession
+  defp staert_session(data) do
+    TickerSession.start_supervised(
+      ticker_id: data["id"]
+    )
   end
 
   defp start_rabbits() do
