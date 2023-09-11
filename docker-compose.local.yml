@@ -21,10 +21,9 @@ services:
     logging:
       driver: json-file
 
-  me:
+  turkey:
     build: ./mactching_engine
     
-  
   # iyan:
   # depends on me and rabbit
   #   build: ./iyan
