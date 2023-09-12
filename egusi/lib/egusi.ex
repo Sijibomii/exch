@@ -34,6 +34,10 @@ defmodule Egusi do
 
     case Supervisor.start_link(children, opts) do
       {:ok, pid} ->
+        # sleep for 5 secs
+        :timer.sleep(5000)
+        start_trading_sessions()
+        start_rabbits()
 
         {:ok, pid}
 
@@ -77,10 +81,13 @@ defmodule Egusi do
   defp start_rabbits() do
     # start rabbits with ids 0, 1
     IO.puts("about to start_rabbits")
-
-    # start the rabbit supervised
-    # start the online rabbit supervised
-
+    # start all rabbit client both senders and listeners
+    # TODO: WHEN THIS ARE CALLED WHAT ID IS USED??
+    Onion.BalanceRabbit.start_supervised(0)
+    Onion.ClientRabbit.start_supervised(0)
+    Onion.LoginSession.start_supervised(0)
+    Onion.MDRabbit.start_supervised(0)
+    Onion.OrderRabbit.start_supervised(0)
     IO.puts("finished rabbits")
   end
 end

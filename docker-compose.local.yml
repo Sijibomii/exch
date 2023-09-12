@@ -39,6 +39,7 @@ services:
     depends_on:
       - turkey
       - rabbits
+      - iyan
     build: ./egusi
     environment:
       - PORT=6000

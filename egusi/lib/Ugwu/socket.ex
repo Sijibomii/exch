@@ -7,12 +7,12 @@ defmodule Ugwu.SocketHandler do
             trading_id: nil,
             encoding: nil,
             compression: nil,
-            callers: [],
+            callers: []
 
   @type state :: %__MODULE__{
           email: nil | String.t(),
           trading_id: nil | Integer.t(),
-          id: nil | String.t()
+          id: nil | String.t(),
           ip: String.t(),
           encoding: :etf | :json,
           compression: nil | :zlib,

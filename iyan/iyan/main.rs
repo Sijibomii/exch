@@ -47,7 +47,7 @@ async fn main() {
     let p = postgres.clone();
 
     let addr =
-        std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://rmq:rmq@127.0.0.1:5672/%2f".into());
+        std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://guest:guest@rabbitmq:5672/%2f".into());
     let manager = Manager::new(addr, ConnectionProperties::default());
     let pool: Pool = deadpool::managed::Pool::builder(manager)
         .max_size(10)

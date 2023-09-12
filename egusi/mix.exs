@@ -5,7 +5,7 @@ defmodule Egusi.MixProject do
     [
       app: :egusi,
       version: "0.1.0",
-      elixir: "~> 1.15",
+      elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
@@ -14,7 +14,7 @@ defmodule Egusi.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:amqp, :logger,:crypto]
     ]
   end
 

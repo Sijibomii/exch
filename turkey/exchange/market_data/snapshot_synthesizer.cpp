@@ -19,7 +19,7 @@ namespace Exchange {
         logger_.log("%:% %() % consume operation cancelled by the RabbitMQ server % ", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), message);  
       }
     ) {
-    for(auto& orders : ticker_orders_){
+    for(auto& orders : ticker_orders_){ 
       orders.fill(nullptr);
     }
   }
@@ -203,7 +203,7 @@ namespace Exchange {
   
   void SnapshotSynthesizer::publish(const char *message, size_t len) {
     // send rabbit mq messag
-    std::string exchange = "exch";
+    std::string exchange = "exch"; 
     std::string_view exch_view = exchange;
     std::string key = "snapshot";
     std::string_view key_view = key;

@@ -14,7 +14,7 @@ namespace Common {
       RabbitHandler(std::string QUEUE_NAME, std::string EXCHANGE_NAME, std::string log_file, 
       AMQP::MessageCallback &&message_callback, AMQP::ConsumeCallback &&consume_callback, 
       AMQP::CancelCallback &&cancel_callback, AMQP::ErrorCallback &&error_callback): logger_(log_file) {
-        AMQP::Address address("localhost", 5672, AMQP::Login("guest", "guest"), "/");
+        AMQP::Address address("rabbitmq", 5672, AMQP::Login("guest", "guest"), "/");
         AMQP::Connection connection(this, address);
         logger_.log("%:% %() Exchange connection successful.\n ", __FILE__, __LINE__, __FUNCTION__);
         // create a channel

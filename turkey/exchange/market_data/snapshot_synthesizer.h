@@ -54,10 +54,9 @@ namespace Exchange {
     MDPMarketUpdateLFQueue *snapshot_md_updates_ = nullptr; 
 
     Logger logger_;
-
-    volatile bool run_ = false;
-
-    std::string time_str_;
+    /// Memory pool to manage MEMarketUpdate messages for the orders in the snapshot limit order books.
+    MemPool<MEMarketUpdate> order_pool_;
+    
 
     RabbitHandler snapshotRabbit;
 
@@ -66,8 +65,9 @@ namespace Exchange {
     size_t last_inc_seq_num_ = 0;
     Nanos last_snapshot_time_ = 0;
 
-    /// Memory pool to manage MEMarketUpdate messages for the orders in the snapshot limit order books.
-    MemPool<MEMarketUpdate> order_pool_;
+    volatile bool run_ = false;
+
+    std::string time_str_;
 
     AMQP::Channel channel = NULL;
   };
