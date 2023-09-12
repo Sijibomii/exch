@@ -1,4 +1,4 @@
-defmodule Egusi.Trade do
+defmodule Egusi.Trade.Cancel do
 
   alias Onion.UserSession
   alias Onion.TickerSession

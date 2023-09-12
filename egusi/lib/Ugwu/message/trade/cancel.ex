@@ -37,7 +37,7 @@ defmodule Ugwu.Message.Trade.Cancel do
 
     with {:ok, trade_spec} <- apply_action(changeset!, :validation),
          {:ok, %{trade: trade}} <-
-          Egusi.Trade.cancel(
+          Egusi.Trade.Cancel.cancel(
             state.user.trading_id,
             trade_spec.ticker_id,
             trade_spec.order_id
