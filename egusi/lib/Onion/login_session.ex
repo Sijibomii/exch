@@ -17,14 +17,14 @@ defmodule Onion.LoginSession do
           user_id: String.t(),
           trading_client_id: Integer.t(),
           last_order_number: Integer.t(),
-          last_seq_num: Integer.t()
+          last_seq_num: Integer.t(),
           email: String.t(),
           wallet: Wallet.t(),
           }
 
     defstruct user_id: nil,
               email: nil,
-              wallets: nil,
+              wallet: nil,
               trading_client_id: nil,
               last_order_number: nil,
               last_seq_num: nil
@@ -36,7 +36,7 @@ defmodule Onion.LoginSession do
             users: [User.t()],
             chan: map()
           }
-    defstruct users: [], nil
+    defstruct users: [], chan: nil
   end
 
 
@@ -77,8 +77,8 @@ defmodule Onion.LoginSession do
     GenServer.cast(via(), {:send, msg})
   end
 
-  def call(id, msg) do
-    GenServer.call(via(id), msg)
+  def call(_id, msg) do
+    GenServer.call(via(), msg)
   end
 
   defp user_info_impl(_reply, user_id, state) do
@@ -86,11 +86,11 @@ defmodule Onion.LoginSession do
     {:reply, user, state}
   end
 
-  defp add_user(data, )
+  # defp add_user(data, )
 
   def handle_call({:get_user_info, user_id}, reply, state), do: user_info_impl(reply, user_id, state)
 
-  def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
+  def handle_cast({:send, msg}, %State{chan: chan} = state) do
     AMQP.Basic.publish(chan, "", @recieve_queue, Jason.encode!(msg))
     {:noreply, state}
   end
@@ -121,7 +121,7 @@ defmodule Onion.LoginSession do
 
           user_id: data["data"]["user_id"],
           email: data["data"]["email"],
-          trading_client_id:: data["data"]["trading_client_id"],
+          trading_client_id: data["data"]["trading_client_id"],
           last_order_number: data["data"]["last_order_number"],
           last_seq_num: data["data"]["last_seq_num"],
           wallet: %Wallet{
@@ -133,7 +133,7 @@ defmodule Onion.LoginSession do
         %{"op" => "USER-LOGIN-NO-WALLET"} -> {:noreply, %{state | users: [ %User{
           user_id: data["data"]["user_id"],
           email: data["data"]["email"],
-          trading_client_id:: data["data"]["trading_client_id"],
+          trading_client_id: data["data"]["trading_client_id"],
           last_order_number: data["data"]["last_order_number"],
           last_seq_num: data["data"]["last_seq_num"],
           wallet: nil

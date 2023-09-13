@@ -1,5 +1,5 @@
 defmodule Ugwu.Translator do
-  import Egusi.Utils.Version
+
   alias Ugwu.Translator.V0_1_0
   require V0_1_0
 
@@ -7,7 +7,7 @@ defmodule Ugwu.Translator do
     V0_1_0.translate_inbound(message)
   end
 
-  def translate_outbound(message, original = %{version: ~v(0.1.0)}) do
+  def translate_outbound(message, original = %{}) do
     V0_1_0.translate_outbound(message, original)
   end
 

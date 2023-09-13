@@ -34,9 +34,10 @@ defmodule Onion.UserSession do
               wallet: nil,
               last_order_number: nil,
               last_seq_num: nil,
+              last_incoming_seq_num: nil
   end
 
-   #################################################################################
+  #################################################################################
   # REGISTRY AND SUPERVISION BOILERPLATE
 
   defp via(user_trading_id), do: {:via, Registry, {Onion.UserSessionRegistry, user_trading_id}}
@@ -146,7 +147,7 @@ defmodule Onion.UserSession do
           qty: qty
         }
       })
-      {:reply, {:ok }, %{state | last_seq_num: last_seq_num+1, last_order_number: last_order_number+1, wallet: %Wallet{ id: state.wallet.id, balance: new_balance }}}
+      {:reply, {:ok }, %{state | last_seq_num: state.last_seq_num+1, last_order_number: state.last_order_number+1, wallet: %Wallet{ id: state.wallet.id, balance: new_balance }}}
     end
   end
 
@@ -164,7 +165,7 @@ defmodule Onion.UserSession do
         order_id: order_id,
       }
     })
-    {:reply, {:ok }, %{state | last_seq_num: last_seq_num+1, }}
+    {:reply, {:ok }, %{state | last_seq_num: state.last_seq_num+1, }}
   end
 
   def client_response(user_trading_id, trade), do: cast(user_trading_id, {:response, trade})
@@ -175,20 +176,20 @@ defmodule Onion.UserSession do
 
       true ->
         # String.to_integer(string_number) ??
-        Onion.BalanceRabbit.send(random_id, %{
+        Onion.BalanceRabbit.send(0, %{
           refId: :uuid.uuid4(),
           op: "WALLET-BALANCE-CHANGE",
           data: %{
             client_id: state.trading_client_id,
-            wallet_id: stae.wallet.id,
+            wallet_id: state.wallet.id,
             balance: state.wallet.balance + response["data"]["price"]
           }
         })
-        send_ws(response["data"]["client_id"], msg)
+        send_ws(state.trading_client_id,response["data"]["client_id"])
         {:noreply, %{state | balance: state.wallet.balance + response["data"]["price"] }}
 
 
-      false -> send_ws(response["data"]["client_id"], msg)
+      false -> send_ws(state.trading_client_id,response["data"]["client_id"])
       {:noreply, state}
     end
   end
@@ -197,14 +198,14 @@ defmodule Onion.UserSession do
 
   defp new_wallet_impl(wallet, state) do
     {:noreply, %{ state | wallet: %Wallet{
-      id: data["wallet_id"],
+      id: wallet["wallet_id"],
       balance: 0
     }}}
   end
 
   def wallet_deposit(user_trading_id, details), do: cast(user_trading_id, {:wallet_deposit, details})
 
-  def wallet_deposit_impl(details, state) do
+  def wallet_deposit_impl(data, state) do
     {:noreply, %{ state | wallet: %Wallet{
       id: data["wallet_id"],
       balance: state.wallet.balance + data["amount"]
@@ -237,7 +238,6 @@ defmodule Onion.UserSession do
   def handle_cast({:new_wallet, wallet}, state), do: new_wallet_impl(wallet, state)
   def handle_cast({:wallet_deposit, details}, state), do: wallet_deposit_impl(details, state)
 
-  def handle_call(:get_info_for_msg, reply, state), do: get_info_for_msg_impl(reply, state)
   def handle_call({:get, key}, reply, state), do: get_impl(key, reply, state)
   def handle_call({:set_active_ws, pid}, reply, state), do: set_active_ws(pid, reply, state)
   def handle_call({:new_trade, %{ ticker_id: ticker_id, side: side, price: price, qty: qty }}, reply, state),  do: new_trade_impl(ticker_id, side, price, qty, reply, state)

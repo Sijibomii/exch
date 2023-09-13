@@ -42,7 +42,7 @@ defmodule Onion.ClientRabbit do
     setup_queue(id, chan)
 
     queue_to_consume_1 = @receive_queue
-    IO.puts("queue_to_consume: " <> queue_to_consume)
+    IO.puts("queue_to_consume: " <> queue_to_consume_1)
     # Register the GenServer process as a consumer
     {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_1, nil, no_ack: true)
     {:ok, %State{chan: chan, id: id}}
@@ -80,7 +80,7 @@ defmodule Onion.ClientRabbit do
 
     case data do
       # listen for specific client responses. notify each client after message receipt
-      %{ "op" => ^"CLIENT-RESPONSE-" <> _} -> Onion.UserSession.client_response(data["data"]["client_id"], data)
+      %{ "op" => "CLIENT-RESPONSE-" <> _} -> Onion.UserSession.client_response(data["data"]["client_id"], data)
 
       _ -> :ok
     end

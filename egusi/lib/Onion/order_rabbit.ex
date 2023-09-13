@@ -74,7 +74,7 @@ defmodule Onion.OrderRabbit do
     data = Jason.decode!(payload)
     # how to make sure that each ticker is up to date
     case data do
-      _ - :ok
+      _ -> :ok
     end
 
     # You might want to run payload consumption in separate Tasks in production

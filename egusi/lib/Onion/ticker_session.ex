@@ -18,6 +18,7 @@ defmodule Onion.TickerSession do
               operation: nil,
               time: nil,
               volume: nil,
+              seq_num: nil,
               price: nil
   end
 
@@ -38,8 +39,8 @@ defmodule Onion.TickerSession do
       head: Node.t(),
       tail: Node.t()
     }
-    defstruct head nil,
-              tail: nil,
+    defstruct head: nil,
+              tail: nil
   end
 
   defmodule State do
@@ -104,6 +105,7 @@ defmodule Onion.TickerSession do
   def join_ticker_updates(user_trading_id, ticker_id), do: cast(ticker_id, {:listen, user_trading_id})
   ########################################################################
   ## impl
+
   defp get_orderbook_impl(_reply, state) do
     # let the caller take care of encoding
     {:reply, {:ok, to_list(state.order_book)}, state}
@@ -213,11 +215,11 @@ defmodule Onion.TickerSession do
       seq_num: message["seq_num"],
       price: message["price"],
     })}}
-
-    def handle_cast({:listen, user_trading_id}, state), do: add_listener_impl(user_trading_id, state)
-
-    def handle_call(:request_orders, reply, state), do: get_orderbook_impl(reply, state)
-
   end
+
+  def handle_cast({:listen, user_trading_id}, state), do: add_listener_impl(user_trading_id, state)
+
+  def handle_call(:request_orders, reply, state), do: get_orderbook_impl(reply, state)
+
 
 end

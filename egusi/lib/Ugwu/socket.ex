@@ -271,7 +271,6 @@ defmodule Ugwu.SocketHandler do
   def websocket_info(:exit, state), do: exit_impl(state)
   def websocket_info(:auth_timeout, state), do: auth_timeout_impl(state)
   def websocket_info({:remote_send, message}, state), do: remote_send_impl(message, state)
-  def websocket_info({:unsub, topic}, state), do: unsub_impl(topic, state)
 
 
   # throw out all other messages

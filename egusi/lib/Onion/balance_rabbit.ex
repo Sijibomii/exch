@@ -80,7 +80,7 @@ defmodule Onion.BalanceRabbit do
 
       %{ "op" => " WALLET-CREATED"} -> Onion.UserSession.wallet_deposit(data["data"]["client_id"], data["data"])
 
-      _ - :ok
+      _ ->:ok
     end
 
     # You might want to run payload consumption in separate Tasks in production

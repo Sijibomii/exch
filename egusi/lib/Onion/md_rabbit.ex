@@ -39,7 +39,7 @@ defmodule Onion.MDRabbit do
     setup_queue(id, chan)
 
     queue_to_consume_1 = @receive_queue
-    IO.puts("queue_to_consume: " <> queue_to_consume)
+
     # Register the GenServer process as a consumer
     {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_1, nil, no_ack: true)
     {:ok, %State{chan: chan, id: id}}

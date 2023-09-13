@@ -7,7 +7,7 @@ defmodule Ugwu.Message do
   # structure of a websocket message
   @primary_key false
   embedded_schema do
-    field(:operator, Ugwu.Message.Types.Operator, null: false)
+    field(:operator, Ugwu.Message.Types.Operator)
     field(:payload, :map)
     field(:reference, :binary_id)
     field(:inbound_operator, :string)

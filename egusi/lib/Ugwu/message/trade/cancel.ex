@@ -12,7 +12,7 @@ defmodule Ugwu.Message.Trade.Cancel do
   def changeset(initializer \\ %__MODULE__{}, data) do
     initializer
     |> cast(data, [:ticker_id, :order_id])
-    |> validate_required([:ticker_id, :order_id]])
+    |> validate_required([:ticker_id, :order_id])
   end
 
   defmodule Reply do

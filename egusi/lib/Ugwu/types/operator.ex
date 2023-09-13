@@ -16,7 +16,8 @@ defenum(
     {Trade.Cancel, 13},
 
     # request 21..30
-    {Request.Join, 21},
-    {Request.Snapshot, 22}
+    {Request.Orderbook, 21},
+    {Request.Join, 22},
+    {Request.Snapshot, 23}
   ]
 )

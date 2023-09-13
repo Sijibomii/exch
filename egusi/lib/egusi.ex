@@ -63,7 +63,7 @@ defmodule Egusi do
     case File.read(file_path) do
       {:ok, content} ->
         # Successfully read the file
-        data = Jason.decode!(payload)
+        data = Jason.decode!(content)
         Enum.each(data, &start_session/1)
 
       {:error, reason} ->
@@ -72,7 +72,7 @@ defmodule Egusi do
     end
   end
   alias Onion.TickerSession
-  defp staert_session(data) do
+  defp start_session(data) do
     TickerSession.start_supervised(
       ticker_id: data["id"]
     )
