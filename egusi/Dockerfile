@@ -1,6 +1,3 @@
-# STEP 1 - BUILD RELEASE 
-# FROM hexpm/elixir:1.13.4-erlang-25.3.2.6-alpine-3.18.2 AS build
-
 FROM hexpm/elixir:1.11.3-erlang-23.2.7-alpine-3.13.2 AS build
 
 # Install build dependencies
@@ -34,7 +31,8 @@ RUN mix do compile, release
 ####################################################################################################
 # STEP 2 - FINAL
 FROM alpine:3.18.3 as app
-RUN apk add --no-cache openssl ncurses-libs
+
+RUN apk add --no-cache openssl ncurses-libs libssl1.1
 
 WORKDIR /app
 
@@ -46,4 +44,4 @@ COPY --from=build --chown=nobody:nobody /app/_build/prod/rel/egusi ./
 
 ENV HOME=/app
 
-CMD bin/egusi eval "Egusi.Release.migrate" && bin/egusi start
+CMD bin/egusi start

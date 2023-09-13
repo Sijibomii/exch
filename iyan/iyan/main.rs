@@ -3,9 +3,8 @@ extern crate server;
 extern crate core;
 extern crate config;
 use server::run;
-use std::io::Read;
 use actix::prelude::*; 
-use std::{env, fs::File};
+use std::{env};
 
 use logger::{init_elasticsearch_logger};
 
@@ -15,8 +14,8 @@ use rabbitmq::sender::RabbitSender;
 use deadpool_lapin::{Manager, Pool};
 use lapin::{ConnectionProperties};
 
-#[tokio::main]
-async fn main() {
+
+fn main() {
     env::set_var(
         "RUST_LOG",
         "info,error,debug,actix_web=info,tokio_reactor=info",
@@ -27,16 +26,18 @@ async fn main() {
     log::info!("This is an info log message.");
     log::error!("This is an error log message.");
 
-    // empty strings
-    let mut settings = String::new();
-
-    log::info!("reading iyan.toml");
-
-    File::open(
-        format!("./iyan/iyan.toml").as_str(),
-    ) .and_then(|mut f| f.read_to_string(&mut settings)).unwrap();
-
-    let config: config::Config = toml::from_str(&settings).unwrap();
+    let config: config::Config  = config::Config{
+        postgres: "postgres://postgres:postgres@localhost:5432/exch".to_string(),
+        server: config::ServerConfig{
+            host: "localhost".to_string(),
+            port: 4001,
+            mail_sender:"noreply@example.com".to_string(),
+            web_client_url:"https://example.com".to_string(),
+            public_key:"/keys/private_key.pem".to_string(),
+            private_key:"/keys/public_key.pem".to_string()
+        },
+        smtp: config::SmtpConfig { host: "smtp.example.com".to_string(), port: 587, user: "smtpuser".to_string(), pass: "smtppassword".to_string() }
+    };
 
     let system = System::new();
 
@@ -64,7 +65,7 @@ async fn main() {
     
     let balance_sender = SyncArbiter::start(1, move || RabbitSender::new(p1.clone(), "balance".to_string()));
     log::info!("Running server");
-    let _ = run(postgres, rabbit_sender, balance_sender, config).await;
+    let _ = run(postgres, rabbit_sender, balance_sender, config);
     log::info!("Server up and running");
     let _ = system.run();
 

@@ -35,5 +35,7 @@ COPY scripts/build.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/build.sh
 RUN /usr/local/bin/build.sh
 
+RUN chmod +x ./scripts/run_exchange.sh
+
 CMD ["./scripts/run_exchange.sh"]
 

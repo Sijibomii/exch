@@ -1,4 +1,4 @@
-postgres= "postgres://postgres:postgres@localhost:5433/exch"
+postgres= "postgres://postgres:postgres@postgres:5432/exch"
 
 [server]
 host = "localhost"
