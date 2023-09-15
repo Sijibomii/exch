@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use actix::prelude::*;
 use diesel::{
-    pg::PgConnection,
+    pg::{PgConnection},
     r2d2::{ConnectionManager, Pool},
 };
 use r2d2; 
@@ -33,3 +33,4 @@ impl Deref for PgExecutor {
         &self.0 
     }
 }
+

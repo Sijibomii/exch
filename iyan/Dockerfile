@@ -28,7 +28,7 @@ RUN cargo install --path .
 
 EXPOSE 4001
 
-CMD ["iyan"]
+CMD ["diesel migration run  && iyan"]
 
 # Use a smaller image for the final runtime
 # FROM debian:bookworm

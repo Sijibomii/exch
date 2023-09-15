@@ -9,7 +9,7 @@ diesel::table! {
         user_id -> Uuid,
     }
 }
- 
+  
 // customer account
 diesel::table! {
     users (id) {

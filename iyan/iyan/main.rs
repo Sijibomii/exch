@@ -3,12 +3,18 @@ extern crate server;
 extern crate core;
 extern crate config;
 use server::run;
-use actix::prelude::*; 
+
 use std::{env};
-use logger::{init_elasticsearch_logger};
-// use core::db::postgres::{self};
 
+extern crate diesel_migrations;
+use diesel::{PgConnection, Connection};
+use diesel_migrations::{embed_migrations, MigrationHarness, EmbeddedMigrations};
 
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
+
+pub fn run_db_migrations(conn: &mut PgConnection) {
+    conn.run_pending_migrations(MIGRATIONS).expect("Could not run migrations");
+}
 
 #[actix_web::main]
 async fn main() {
@@ -17,16 +23,8 @@ async fn main() {
         "info,error,debug,actix_web=info,tokio_reactor=info",
     );
 
-    init_elasticsearch_logger("http://logstash:5000").unwrap();
-
-    log::info!("This is an info log message.");
-    log::error!("This is an error log message.");
-
-
-    log::info!("reading iyan.toml");
-
     let config: config::Config  = config::Config{
-        postgres: "postgresql://exch:exch@localhost:5433/exch".to_string(),
+        postgres: "postgresql://exch:exch@postgres:5432/exch".to_string(),
         server: config::ServerConfig{
             host: "localhost".to_string(),
             port: 4001,
@@ -37,12 +35,13 @@ async fn main() {
         },
         smtp: config::SmtpConfig { host: "smtp.example.com".to_string(), port: 587, user: "smtpuser".to_string(), pass: "smtppassword".to_string() }
     };
+    
+    let mut connection = PgConnection::establish("postgresql://exch:exch@postgres:5432/exch").expect(&format!("Error connecting to {}", "postgresql://exch:exch@postgres:5432/exch".to_string()));
+    
+    run_db_migrations(&mut connection);
 
-    let system = System::new();
-    log::info!("Running server");
+   
     let _ = run(config).await;
-    log::info!("Server up and running");
-    let _ = system.run();
 
 }
 

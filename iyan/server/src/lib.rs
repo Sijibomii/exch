@@ -24,6 +24,8 @@ async fn index() -> HttpResponse {
     HttpResponse::Ok().body("Hello, world!")
 }
 
+
+
 pub async fn run(
     config: Config
 ) -> std::io::Result<()> {
@@ -31,7 +33,7 @@ pub async fn run(
     let postgres_url = config.postgres.clone();
     let pg_pool = postgres::init_pool(&postgres_url);
     let postgres = postgres::PgExecutor::start(postgres::PgExecutor(pg_pool.clone()));
-
+    
     let p = postgres.clone();
 
     let addr =
