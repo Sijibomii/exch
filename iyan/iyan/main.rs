@@ -36,7 +36,8 @@ async fn main() {
         smtp: config::SmtpConfig { host: "smtp.example.com".to_string(), port: 587, user: "smtpuser".to_string(), pass: "smtppassword".to_string() }
     };
     
-    let mut connection = PgConnection::establish("postgresql://exch:exch@postgres:5432/exch").expect(&format!("Error connecting to {}", "postgresql://exch:exch@postgres:5432/exch".to_string()));
+    let mut connection = PgConnection::establish("postgresql://exch:exch@postgres:5432/exch")
+    .expect(&format!("Error connecting to {}", "postgresql://exch:exch@postgres:5432/exch".to_string()));
     
     run_db_migrations(&mut connection);
 

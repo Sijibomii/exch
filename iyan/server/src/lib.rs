@@ -120,12 +120,10 @@ pub async fn run(
                     .route("/wallet/{id}/fund", web::post().to(controllers::wallet::fund_wallet))
         )      
     })
-    .bind(format!("{}:{}", "localhost", 4001))
-    .expect(&format!("can not bind {}:{}", "localhost", 4001))
+    .bind(format!("{}:{}", "0.0.0.0", 4001))
+    .expect(&format!("can not bind {}:{}", "0.0.0.0", 4001))
     .run()
     .await
-
-    
 }
 
 pub async fn setup(postgres: &PgExecutorAddr) {
