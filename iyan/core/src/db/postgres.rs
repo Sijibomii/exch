@@ -24,7 +24,7 @@ pub fn init_pool(url: &str) -> PgPool {
 pub struct PgExecutor(pub PgPool); 
 
 impl Actor for PgExecutor {
-    type Context = SyncContext<Self>;
+    type Context = Context<Self>;
 }
 
 impl Deref for PgExecutor {

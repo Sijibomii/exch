@@ -35,7 +35,7 @@ impl RabbitClient {
 }
 
 impl Actor for RabbitClient {
-    type Context = SyncContext<Self>;
+    type Context = Context<Self>;
 } 
 
 impl Supervised for RabbitClient {

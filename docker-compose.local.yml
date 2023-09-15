@@ -1,15 +1,15 @@
 version: '3.7'
 
 services:
-  
   postgres:
-    image: postgres
+    image: postgres:13-alpine
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=exch  
+      - POSTGRES_PASSWORD=exch
       - POSTGRES_DB=exch
-    logging:
-      driver: json-file
+    ports:
+      - 5433:5432
+
   adminer:
     image: adminer
     ports:
@@ -20,24 +20,24 @@ services:
   turkey:
     build: ./turkey
     
-  iyan:
-    depends_on:
-      - turkey
-      - rabbits
-    build: ./iyan
-    environment: 
-      - PORT=4001
-    ports: 
-      - 4001:4001
-    volumes:
-      - shared_keys:/keys
-      - shared_tokens:/tokens
+  # iyan:
+  #   depends_on:
+  #     - turkey
+  #     - rabbits
+  #   build: ./iyan
+  #   environment: 
+  #     - PORT=4001
+  #   ports: 
+  #     - 4001:4001
+  #   volumes:
+  #     - shared_keys:/keys
+  #     - shared_tokens:/tokens
 
   egusi:
     depends_on:
       - turkey
       - rabbits
-      - iyan
+      # - iyan
     build: ./egusi
     environment:
       - PORT=6000

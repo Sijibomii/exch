@@ -29,4 +29,4 @@ path = "iyan/main.rs"
 name = "iyan"
 
 [workspace]
-members = ["server"]
+members = ["server", "config", "core", "types", "rabbitmq", "logger"]

@@ -6,9 +6,13 @@ use core::{db::postgres::{PgExecutorAddr}};
 use std::{fs};
 use config::Config; 
 use core::db::postgres;
-use rabbitmq::sender::RabbitSenderAddr;
+use rabbitmq::listener::RabbitClient;
+use rabbitmq::sender::RabbitSender;
 use std::fs::File;
 use std::io::Write;
+use actix::prelude::*; 
+use deadpool_lapin::{Manager, Pool};
+use lapin::{ConnectionProperties};
 
 mod controllers;
 mod services;
@@ -21,11 +25,33 @@ async fn index() -> HttpResponse {
 }
 
 pub async fn run(
-    postgres: postgres::PgExecutorAddr, 
-    rabbit_sender: RabbitSenderAddr, 
-    balance_sender: RabbitSenderAddr, 
     config: Config
 ) -> std::io::Result<()> {
+    
+    let postgres_url = config.postgres.clone();
+    let pg_pool = postgres::init_pool(&postgres_url);
+    let postgres = postgres::PgExecutor::start(postgres::PgExecutor(pg_pool.clone()));
+
+    let p = postgres.clone();
+
+    let addr =
+        std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://guest:guest@rabbitmq:5672/%2f".into());
+    let manager = Manager::new(addr, ConnectionProperties::default());
+    let pool: Pool = deadpool::managed::Pool::builder(manager)
+        .max_size(10)
+        .build()
+        .expect("can create pool");
+
+    let p0 = pool.clone();
+    let p1 = pool.clone();
+    // start listener
+    let _ = RabbitClient::start(RabbitClient::new(pool.clone(), "balance".to_string(), p.clone()));
+   
+    // start sender
+    
+    let rabbit_sender = RabbitSender::start(RabbitSender::new(p0.clone(), "authentication".to_string()));
+    
+    let balance_sender = RabbitSender::start(RabbitSender::new(p1.clone(), "balance".to_string()));
 
     let app_state = state::AppState{
         postgres: postgres.clone(),
@@ -37,7 +63,6 @@ pub async fn run(
         rabbit_sender: rabbit_sender.clone(),
         balance_sender: balance_sender.clone()
     };
-
     // write the tokens to file
     setup(&app_state.postgres).await;
 
@@ -60,12 +85,12 @@ pub async fn run(
         }
     };
 
-    let host = config.server.host.clone();
-    let port = config.server.port.clone();
-
+    let _ = config.server.host.clone();
+    let _ = config.server.port.clone();
+    
     HttpServer::new(move || {
         App::new()
-        .app_data(app_state.clone())
+        // .app_data(app_state.clone())
         .wrap(middleware::Logger::default())
         .wrap(
             Cors::default()
@@ -93,10 +118,12 @@ pub async fn run(
                     .route("/wallet/{id}/fund", web::post().to(controllers::wallet::fund_wallet))
         )      
     })
-    .bind(format!("{}:{}", host, port))
-    .expect(&format!("can not bind {}:{}", host, port))
+    .bind(format!("{}:{}", "localhost", 4001))
+    .expect(&format!("can not bind {}:{}", "localhost", 4001))
     .run()
     .await
+
+    
 }
 
 pub async fn setup(postgres: &PgExecutorAddr) {

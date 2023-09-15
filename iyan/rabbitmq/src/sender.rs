@@ -26,13 +26,13 @@ pub struct RabbitSender {
 }
  
 impl RabbitSender {
-    pub fn new(pool: Pool, queue_name: String,) -> RabbitSender {
+    pub fn new(pool: Pool, queue_name: String,) -> Self {
         RabbitSender { pool, queue_name, channel: RwLock::new(None) }
     }
 }
 
 impl Actor for RabbitSender {
-    type Context = SyncContext<Self>;
+    type Context = Context<Self>;
 
     fn started(&mut self, _: &mut Self::Context) {
         // Attempt to create a channel when the actor starts
