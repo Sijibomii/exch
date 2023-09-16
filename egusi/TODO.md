@@ -11,7 +11,7 @@ websocket messages are ansered by the user session. If it's a message making a t
 possible rabbit msgs
 
 new ticker
-incemental
+incemental...
 snapshot
 new order
 new login
