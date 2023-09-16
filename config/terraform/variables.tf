@@ -52,5 +52,5 @@ variable "machine_type" {
 variable "machine_image" {
     type = string
     description = "Machine image for jenkins host"
-    default = "jenkins-master-v22041"
+    default = ".."
 }
