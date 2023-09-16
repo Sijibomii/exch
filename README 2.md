@@ -85,3 +85,8 @@ HOW DOES BALANCE GET REDUCED ON CANCLE?
     ticker: "APPL"
   }
 ]
+
+clone github
+install docker and docker-compose
+compile c++
+run c++ to see 

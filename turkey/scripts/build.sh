@@ -15,3 +15,7 @@ $CMAKE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=$NINJA -G Ninja -S . -B ./c
 
 $CMAKE --build ./cmake-build-debug --target clean -j 4
 $CMAKE --build ./cmake-build-debug --target all -j 4
+
+
+
+
