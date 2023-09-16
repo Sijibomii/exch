@@ -1,0 +1,27 @@
+name: egusi:image
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'egusi/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'egusi/**'
+jobs:
+  test:
+    name: image-egusi
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./egusi
+    steps:
+      - uses: actions/checkout@v2
+      - run: docker build -t sijibomi242/egusi:latest -t sijibomi242/egusi:${GITHUB_SHA::7}-${GITHUB_RUN_ID::5} .
+      - run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      - run: docker push sijibomi242/egusi --all-tags

@@ -18,15 +18,15 @@ services:
     logging:
       driver: json-file
 
-  turkey:
-    build: ./turkey
+  # turkey:
+  #   build: ./turkey
     
   iyan:
     depends_on:
       - turkey
       - rabbits
       - postgres
-    build: ./iyan
+    image: sijibomi242/iyan:latest
     ports: 
       - "4001:4001"
     volumes:
@@ -38,7 +38,7 @@ services:
       - turkey
       - rabbits
       - iyan
-    build: ./egusi
+    image: sijibomi242/egusi:latest
     environment:
       - PORT=6000
     ports:
