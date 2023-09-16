@@ -1,9 +1,9 @@
 {
     "variables" : {
-        "service_account" : "../../../../secrets/eventer-jenkins-cluster-27450e212bcd.json",
-        "project": "eventer-jenkins-cluster",
+        "service_account" : "../secrets/winged-ratio-399207-9c8ec20121c8.json",
+        "project": "winged-ratio-399207",
         "zone": "us-central1-a",
-        "ssh_key" : "../../../../secrets/id_rsa"
+        "ssh_key" : "../secrets/id_rsa"
     },
     "builders" : [
         {
@@ -22,6 +22,12 @@
             "source" : "{{user `ssh_key`}}",
             "destination" : "/tmp/id_rsa"
         },
+        {
+            "type": "shell",
+            "inline": [
+              "cp -r ../../turkey /home/exch"
+            ]
+        },    
         {
             "type" : "shell",
             "script" : "./setup.sh",

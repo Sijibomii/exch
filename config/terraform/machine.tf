@@ -7,9 +7,14 @@ resource "google_compute_firewall" "allow_ssh_to_jenkins" {
     protocol = "tcp"
     ports    = ["22"]
   }
-
+  source_ranges = ["0.0.0.0/0"]
   source_tags = ["ssh-allowed"]
 }
+
+resource "google_compute_address" "static" {
+  name = "ipv4-address"
+}
+
 
 resource "google_compute_firewall" "allow_access_to_api" {
   project = var.project
@@ -51,7 +56,6 @@ resource "google_compute_instance" "worker_machine" {
 
   tags = ["ssh-allowed", "exch-api", "exch-websocket"]
 
-  depends_on = []
 
   boot_disk {
     initialize_params {
@@ -61,6 +65,9 @@ resource "google_compute_instance" "worker_machine" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.public_subnets[0].self_link 
+    access_config {
+      nat_ip = google_compute_address.static.address
+    }
   }
 
   metadata = {
