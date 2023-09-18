@@ -17,7 +17,6 @@ namespace Exchange {
   }
 
   auto OrderServer::run() noexcept {
-    publish("responses");
     while (run_) {
      
       for (auto client_response = outgoing_responses_->getNextToRead(); outgoing_responses_->size() && client_response; client_response = outgoing_responses_->getNextToRead()) {

@@ -13,7 +13,6 @@
 | [turkey](turkey)      | Event persiting service   |
 | [nginx](ngnix)        |       Gateway             |
 | [ewedu](ewedu)        |   React Native App        |
-| [amala](amala)        |   Next.js frontend        |
-| [beef](beef)          |      API Client           |
+| [beef](beef)          |      Client               |
 
 

@@ -14,7 +14,6 @@ namespace Exchange {
 
   /// Main run loop for this thread - consumes market updates from the lock free queue from the matching engine, publishes them on the incremental multicast stream and forwards them to the snapshot synthesizer.
   auto MarketDataPublisher::run() noexcept -> void {
-    publish("hello incremental..");
     while (run_) {
       for (auto market_update = outgoing_md_updates_->getNextToRead();
            outgoing_md_updates_->size() && market_update; market_update = outgoing_md_updates_->getNextToRead()) {

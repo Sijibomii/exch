@@ -37,7 +37,7 @@ defmodule Onion.BalanceRabbit do
 
   def init(id) do
     {:ok, conn} =
-      Connection.open(Application.get_env(:egusi, :rabbit_url, "amqp://guest:guest@localhost"))
+      Connection.open(Application.get_env(:egusi, :rabbit_url, "amqp://guest:guest@rabbits:5672/exch"))
 
     {:ok, chan} = Channel.open(conn)
     setup_queue(id, chan)
@@ -90,7 +90,7 @@ defmodule Onion.BalanceRabbit do
 
   defp setup_queue(id, chan) do
     {:ok, _} = Queue.declare(chan, @send_queue, durable: false)
-    :ok = Exchange.direct(chan, @receive_exchange, durable: true)
+    :ok = Exchange.direct(chan, @receive_exchange, durable: false)
 
     :ok = Queue.bind(chan, @receive_queue, @receive_exchange, routing_key: @receive_queue)
   end
