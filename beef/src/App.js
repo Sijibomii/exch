@@ -1,11 +1,19 @@
-
+import { BrowserRouter as Router, Route, Switch,Redirect} from 'react-router-dom';
+import Navbar from './components/Navbar';
 
 function App() {
   return (
-    <h1 className="text-3xl font-bold underline">
-      Hello world!
-    </h1>
+    <Router>
+      <Navbar />
+      <Switch>
+        {/* login page */}
+        {/* register page */}
+        {/* all tokens page/home page */}
+        {/* trade token(for a particular token) */}
+      </Switch>
+    </Router>
   );
 }
 
 export default App;
+ 
