@@ -11,72 +11,82 @@ RUN apt-get update && apt-get install -y \
     make \
     libpthread-stubs0-dev \
     git \ 
+    openssl \
+    libssl-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && \
     apt-get install -y ninja-build && \
     rm -rf /var/lib/apt/lists/*
+    
 # Create a directory for the app
 WORKDIR /app
 
 # Copy your CMake project files into the container
-COPY . /app
-
-# # Clone and build amqpcpp
-RUN git clone https://github.com/CopernicaMarketingSoftware/AMQP-CPP.git \
-    && cd AMQP-CPP \
-    && mkdir build && cd build \
-    && cmake .. && cmake --build . --target install && make && make install
+COPY . .
 
 RUN cd /app
 
-COPY scripts/build.sh /usr/local/bin/
+# # cd amqpcpp and build amqpcpp
+RUN cd amqpcpp \
+    && mkdir build && cd build \
+    && cmake .. && cmake --build . --target install  && make && make install
 
-RUN chmod +x /usr/local/bin/build.sh
-RUN /usr/local/bin/build.sh
+RUN cd /app 
 
-RUN chmod +x ./scripts/run_exchange.sh
+WORKDIR /app/build
 
-CMD ["./scripts/run_exchange.sh"]
+RUN cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    cmake --build . --parallel 8
 
-#!/bin/bash
+ENTRYPOINT [ "/app/build/exchange_main" ]
 
-# Check if the user has sudo privileges
-if [ "$EUID" -ne 0 ]; then
-  echo "Please run this script with sudo or as the root user."
-  exit 1
-fi
+# FROM alpine:3.17.0 AS build
 
-# Define the CMake version and download URL
-CMAKE_VERSION="3.27.5"
-DOWNLOAD_URL="https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION-linux-x86_64.tar.gz"
+# RUN apk update && \
+#     apk add --no-cache \
+#     build-base \
+#     cmake \
+#     git \
+#     openssl \
+#     openssl-dev \
+#     boost1.80-dev=1.80.0-r3
 
-# Define the installation directory (change this if needed)
-INSTALL_DIR="/usr/local"
+# WORKDIR /turkey
 
-# Create a temporary directory for downloading and extracting CMake
-TMP_DIR=$(mktemp -d)
-cd "$TMP_DIR" || exit 1
+# COPY . .
 
-# Download CMake tar.gz archive
-echo "Downloading CMake $CMAKE_VERSION..."
-wget "$DOWNLOAD_URL" || { echo "Failed to download CMake."; exit 1; }
+# RUN cd common/rabbitmq-c-0.13.0 \
+#     && mkdir build && cd build \
+#     && cmake .. && cmake --build . --target install  && make && make install
 
-# Extract the archive
-tar -xzf "cmake-$CMAKE_VERSION-linux-x86_64.tar.gz"
+# WORKDIR /turkey
 
-# Copy CMake binaries to the installation directory
-cp -r "cmake-$CMAKE_VERSION-linux-x86_64/." "$INSTALL_DIR/"
+# RUN cd amqpcpp \
+#     && mkdir build && cd build \
+#     && cmake .. && cmake --build . --target install  && make && make install
 
-# Add the CMake binary directory to the system's PATH
-echo "export PATH=$INSTALL_DIR/bin:\$PATH" >> /etc/profile
+# WORKDIR /turkey/build
 
-# Verify the installation
-source /etc/profile
-cmake --version
+# RUN cmake -DCMAKE_BUILD_TYPE=Release .. && \
+#     cmake --build . --parallel 8
 
-# Clean up
-cd "$TMP_DIR"
-rm -rf "$TMP_DIR"
+# ########################################################################################################################
+# # turkey
+# ########################################################################################################################
 
-echo "CMake $CMAKE_VERSION has been successfully installed to $INSTALL_DIR."
+# FROM alpine:3.17.0
+
+# RUN apk update && \
+#     apk add --no-cache \
+#     libstdc++ \
+#     boost1.80-program_options=1.80.0-r3
+
+# RUN addgroup -S turkey && adduser -S turkey -G turkey
+# USER turkey
+
+# COPY --chown=turkey:turkey --from=build \
+#     /turkey/build \
+#     /turkey
+
+# ENTRYPOINT [ "./turkey/exchange_main" ]

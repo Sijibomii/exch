@@ -12,11 +12,5 @@ add_library(libcommon STATIC ${SOURCES})
 list(APPEND LIBS libcommon)
 list(APPEND LIBS pthread)
 
-# add_executable(rabbitmq rabbitmq.cpp)
-# add_dependencies(rabbitmq amqpcpp)
-# target_link_libraries(rabbitmq amqpcpp)
-
-
-# target_link_libraries(rabbitmq PRIVATE AMQP-CPP::AMQP-CPP)
 
 

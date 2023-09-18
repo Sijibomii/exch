@@ -15,7 +15,7 @@ namespace Exchange {
 
   class MEOrderBook final {
   public:
-    explicit MEOrderBook(TickerId ticker_id, Logger *logger, MatchingEngine *matching_engine);
+    explicit MEOrderBook(TickerId ticker_id, MatchingEngine *matching_engine);
 
     ~MEOrderBook();
 

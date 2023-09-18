@@ -89,10 +89,10 @@ namespace Common {
 
     explicit Logger(const std::string &file_name)
         : file_name_(file_name), queue_(LOG_QUEUE_SIZE) {
-      file_.open(file_name);
-      ASSERT(file_.is_open(), "Could not open log file:" + file_name);
-      logger_thread_ = createAndStartThread(-1, "Common/Logger " + file_name_, [this]() { flushQueue(); });
-      ASSERT(logger_thread_ != nullptr, "Failed to start Logger thread.");
+      // file_.open(file_name);
+      // ASSERT(file_.is_open(), "Could not open log file:" + file_name);
+      // logger_thread_ = createAndStartThread(-1, "Common/Logger " + file_name_, [this]() { flushQueue(); });
+      // ASSERT(logger_thread_ != nullptr, "Failed to start Logger thread.");
     }
 
     ~Logger() {

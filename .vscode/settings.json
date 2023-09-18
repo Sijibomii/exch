@@ -86,6 +86,11 @@
         "numeric": "cpp",
         "queue": "cpp",
         "random": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "valarray": "cpp",
+        "any": "cpp",
+        "forward_list": "cpp",
+        "ranges": "cpp",
+        "span": "cpp"
     }
 }

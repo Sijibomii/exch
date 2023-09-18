@@ -11,7 +11,6 @@
 #include "market_data/market_update.h"
 #include "matcher/me_order.h"
 
-#include "common/rabbitmq.h"
 
 using namespace Common;
 
@@ -58,7 +57,7 @@ namespace Exchange {
     MemPool<MEMarketUpdate> order_pool_;
     
 
-    RabbitHandler snapshotRabbit;
+    // RabbitHandler snapshotRabbit;
 
     /// Hash map from TickerId -> Full limit order book snapshot containing information for every live order.
     std::array<std::array<MEMarketUpdate *, ME_MAX_ORDER_IDS>, ME_MAX_TICKERS> ticker_orders_;
@@ -69,6 +68,5 @@ namespace Exchange {
 
     std::string time_str_;
 
-    AMQP::Channel channel = NULL;
   };
 }

@@ -3,14 +3,13 @@
 #include "matcher/matching_engine.h"
 
 namespace Exchange {
-  MEOrderBook::MEOrderBook(TickerId ticker_id, Logger *logger, MatchingEngine *matching_engine)
-      : ticker_id_(ticker_id), matching_engine_(matching_engine), orders_at_price_pool_(ME_MAX_PRICE_LEVELS), order_pool_(ME_MAX_ORDER_IDS),
-        logger_(logger) {
+  MEOrderBook::MEOrderBook(TickerId ticker_id, MatchingEngine *matching_engine)
+      : ticker_id_(ticker_id), matching_engine_(matching_engine), orders_at_price_pool_(ME_MAX_PRICE_LEVELS), order_pool_(ME_MAX_ORDER_IDS) {
   }
 
   MEOrderBook::~MEOrderBook() {
-    logger_->log("%:% %() % OrderBook\n%\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
-                toString(false, true));
+    // logger_->log("%:% %() % OrderBook\n%\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
+    //             toString(false, true));
 
     matching_engine_ = nullptr;
     bids_by_price_ = asks_by_price_ = nullptr;

@@ -2,50 +2,55 @@ version: '3.7'
 
 services:
 
-  postgres:
-    image: postgres:13-alpine
-    environment:
-      - POSTGRES_USER=exch  
-      - POSTGRES_PASSWORD=exch
-      - POSTGRES_DB=exch
-    ports:
-      - 5433:5432
+  # postgres:
+  #   image: postgres:13-alpine
+  #   environment:
+  #     - POSTGRES_USER=exch  
+  #     - POSTGRES_PASSWORD=exch
+  #     - POSTGRES_DB=exch
+  #   ports:
+  #     - 5433:5432
 
-  adminer:
-    image: adminer
-    ports:
-      - "8080:8080"
-    logging:
-      driver: json-file
+  # adminer:
+  #   image: adminer
+  #   ports:
+  #     - "8080:8080"
+  #   logging:
+  #     driver: json-file
 
-  # turkey:
-  #   build: ./turkey
+  turkey:
+    depends_on:
+      rabbits:
+        condition: service_healthy
+    build: ./turkey
     
-  iyan:
-    depends_on:
-      - turkey
-      - rabbits
-      - postgres
-    image: sijibomi242/iyan:latest
-    ports: 
-      - "4001:4001"
-    volumes:
-      - shared_keys:/keys
-      - shared_tokens:/tokens
+#   iyan:
+#     depends_on:
+#       - turkey
+#       - rabbits
+#       - postgres
+#     build: ./iyan
+#     # image: sijibomi242/iyan:latest
+#     ports: 
+#       - "4001:4001"
+#     volumes:
+#       - shared_keys:/keys
+#       - shared_tokens:/tokens
 
-  egusi:
-    depends_on:
-      - turkey
-      - rabbits
-      - iyan
-    image: sijibomi242/egusi:latest
-    environment:
-      - PORT=6000
-    ports:
-      - 6000:6000
-    volumes:
-      - shared_keys:/keys
-      - shared_tokens:/tokens
+#   egusi:
+#     depends_on:
+#       - turkey
+#       - rabbits
+#       - iyan
+#     build: ./egusi
+#     # image: sijibomi242/egusi:latest
+#     environment:
+#       - PORT=6000
+#     ports:
+#       - 6000:6000
+#     volumes:
+#       - shared_keys:/keys
+#       - shared_tokens:/tokens
 
   rabbits:
     container_name: rabbits
@@ -54,17 +59,22 @@ services:
       RABBITMQ_ERLANG_COOKIE: erlang_dev_only_cookie
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_VHOST: exch
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      retries: 20 
 
-volumes:
-  shared_keys:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./keys
-      o: bind
-  shared_tokens:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./tokens
-      o: bind
+# volumes:
+#   shared_keys:
+#     driver: local
+#     driver_opts:
+#       type: none
+#       device: ./keys
+#       o: bind
+#   shared_tokens:
+#     driver: local
+#     driver_opts:
+#       type: none
+#       device: ./tokens
+#       o: bind

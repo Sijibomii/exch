@@ -6,7 +6,6 @@
 #include "common/macros.h"
 // #include "common/tcp_server.h"
 #include "common/logging.h"
-#include "common/rabbitmq.h"
 #include "order_server/client_request.h"
 #include "order_server/client_response.h"
 #include "order_server/fifo_sequencer.h"
@@ -48,13 +47,12 @@ namespace Exchange {
 
         std::string time_str_;
         Logger logger_;
-        AMQP::Channel channelOrder = NULL;
-        AMQP::Channel channelResponses = NULL;
+
         FIFOSequencer fifo_sequencer_;
 
         // rabbit handlers
-        RabbitHandler orderRabbit;
-        RabbitHandler responsesRabbit;
+        // RabbitHandler orderRabbit;
+        // RabbitHandler responsesRabbit;
 
         /// Hash map from ClientId -> the next sequence number to be sent on outgoing client responses.
         std::array<size_t, ME_MAX_NUM_CLIENTS> cid_next_outgoing_seq_num_;
