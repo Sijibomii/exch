@@ -57,6 +57,7 @@ int main(int, char **) {
   // logger->log("%:% %() % Starting Order Server...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
   order_server = new Exchange::OrderServer(&client_requests, &client_responses);
   order_server->start();
+  order_server->start_consumer();
 
   while (true) {
     // logger->log("%:% %() % Sleeping for a few milliseconds..\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));

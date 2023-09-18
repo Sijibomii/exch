@@ -7,43 +7,7 @@ namespace Exchange {
   using json = nlohmann::json;
 
   OrderServer::OrderServer(ClientRequestLFQueue *client_requests, ClientResponseLFQueue *client_responses)
-      :outgoing_responses_(client_responses), fifo_sequencer_(client_requests) {
-
-        std::string conn_str = "guest:guest@rabbits:5672/exch";
-        std::string queue = "responses";
-        std::string exchange = "exch";
-        try {
-            AMQP amqp(conn_str);
-            ex = amqp.createExchange(exchange);
-            ex->Declare(exchange, "direct");
-
-            short my_param = AMQP_AUTODELETE | AMQP_DURABLE;
-            ex->setParam(my_param);
-
-            AMQPQueue * qu2 = amqp.createQueue(queue);
-
-            qu2->Declare();
-            qu2->Bind(exchange, queue);
-
-            ex->setHeader("Delivery-mode", AMQP_DELIVERY_PERSISTENT);
-            ex->setHeader("Content-type", "text/text");
-            ex->setHeader("Content-encoding", "UTF-8");
-
-            // receive from order queue
-            AMQPQueue * order = amqp.createQueue("order");
-            order->Declare();
-            order->Bind(exchange, "order");
-            order->setConsumerTag("matching_engine");
-            std::function<int(AMQPMessage*)> eventCallback = [this](AMQPMessage* message) {
-                    return this->onMessage(message);
-            };
-            order->addEvent(AMQP_MESSAGE, eventCallback);
-            // order->addEvent(AMQP_CANCEL, onCancel);
-            order->Consume(AMQP_NOACK);
-        } catch (AMQPException &ec) {
-            std::cout << ec.getMessage() << std::endl;
-        }
-      }
+      :outgoing_responses_(client_responses), fifo_sequencer_(client_requests) {}
 
   OrderServer::~OrderServer() {
     stop();
@@ -53,13 +17,11 @@ namespace Exchange {
   }
 
   auto OrderServer::run() noexcept {
-    // logger_.log("%:% %() %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_));
-
+    publish("responses");
     while (run_) {
+     
       for (auto client_response = outgoing_responses_->getNextToRead(); outgoing_responses_->size() && client_response; client_response = outgoing_responses_->getNextToRead()) {
         auto &next_outgoing_seq_num = cid_next_outgoing_seq_num_[client_response->client_id_];
-        // logger_.log("%:% %() % Processing cid:% seq:% %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
-        //             client_response->client_id_, next_outgoing_seq_num, client_response->toString());
 
         // dispatch response to rabbitmq
         json jsonData;
@@ -82,9 +44,71 @@ namespace Exchange {
     }
   }
 
+  auto OrderServer::run_consumer() noexcept {
+    std::string conn_str = "guest:guest@rabbits:5672/exch";
+    std::string queue = "responses";
+    std::string exchange = "exch";
+    try {
+      AMQP amqp(conn_str);
+      ex = amqp.createExchange(exchange);
+      ex->Declare(exchange, "direct");
+
+      short my_param = AMQP_AUTODELETE | AMQP_DURABLE;
+      ex->setParam(my_param);
+
+      // // receive from order queue
+      AMQPQueue * order = amqp.createQueue("order");
+      order->Declare();
+      order->Bind(exchange, "order");
+      order->setConsumerTag("matching_engine");
+      std::function<int(AMQPMessage*)> eventCallback = [this](AMQPMessage* message) {
+              return this->onMessage(message);
+      };
+      order->addEvent(AMQP_MESSAGE, eventCallback);
+      order->Consume(AMQP_NOACK);
+
+    } catch (AMQPException &ec) {
+        std::cout << ec.getMessage() << std::endl;
+    }
+  }
+
   void OrderServer::publish(std::string message) {
-    // create a json message here 
-    this->ex->Publish(message, "responses");
+    std::string conn_str = "guest:guest@rabbits:5672/exch";
+    std::string queue = "responses";
+    std::string exchange = "exch";
+    try {
+      AMQP amqp(conn_str);
+      ex = amqp.createExchange(exchange);
+      ex->Declare(exchange, "direct");
+
+      short my_param = AMQP_AUTODELETE | AMQP_DURABLE;
+      ex->setParam(my_param);
+
+      AMQPQueue * qu2 = amqp.createQueue(queue);
+
+      qu2->Declare();
+      qu2->Bind(exchange, queue);
+
+      ex->setHeader("Delivery-mode", AMQP_DELIVERY_PERSISTENT);
+      ex->setHeader("Content-type", "text/text");
+      ex->setHeader("Content-encoding", "UTF-8");
+      ex->Publish(message, "responses");
+      // // receive from order queue
+      // AMQPQueue * order = amqp.createQueue("order");
+      // order->Declare();
+      // order->Bind(exchange, "order");
+      // order->setConsumerTag("matching_engine");
+      // std::function<int(AMQPMessage*)> eventCallback = [this](AMQPMessage* message) {
+      //         return this->onMessage(message);
+      // };
+      // order->addEvent(AMQP_MESSAGE, eventCallback);
+      // order->addEvent(AMQP_CANCEL, onCancel);
+      // order->Consume(AMQP_NOACK);
+
+    } catch (AMQPException &ec) {
+        std::cout << ec.getMessage() << std::endl;
+    }
+    
   }
 
 
@@ -126,10 +150,13 @@ namespace Exchange {
   /// Start and stop the order server main thread.
   auto OrderServer::start() -> void {
     run_ = true;
-    
     ASSERT(Common::createAndStartThread(-1, "Exchange/OrderServer", [this]() { run(); }) != nullptr, "Failed to start OrderServer thread.");
   }
 
+
+  auto OrderServer::start_consumer() -> void {
+    ASSERT(Common::createAndStartThread(-1, "Exchange/OrderServer/counsumer", [this]() { run_consumer(); }) != nullptr, "Failed to start OrderServer thread.");
+  }
   auto OrderServer::stop() -> void {
     run_ = false;
   }

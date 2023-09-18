@@ -21,10 +21,14 @@ namespace Exchange {
       /// Start and stop the order server main thread.
       auto start() -> void;
 
+      auto start_consumer() -> void;
+
       auto stop() -> void; 
 
       /// Main run loop for this thread - accepts new client connections, receives client requests from them and sends client responses to them.
       auto run() noexcept;
+
+      auto run_consumer() noexcept;
       
      void publish(std::string message);
     //  static int onCancel(AMQPMessage * message);

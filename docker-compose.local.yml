@@ -60,6 +60,8 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
       RABBITMQ_DEFAULT_VHOST: exch
+    ports:
+      - 15672:15672
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
