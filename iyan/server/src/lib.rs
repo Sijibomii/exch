@@ -6,8 +6,8 @@ use core::{db::postgres::{PgExecutorAddr}};
 use std::{fs};
 use config::Config; 
 use core::db::postgres;
-use rabbitmq::listener::RabbitClient;
-use rabbitmq::sender::RabbitSender;
+use rabbitmq::listener::{RabbitClient, StartListening};
+use rabbitmq::sender::{RabbitSender, get_channel};
 use std::fs::File;
 use std::io::Write;
 use actix::prelude::*; 
@@ -36,9 +36,9 @@ pub async fn run(
     
     let p = postgres.clone();
 
-    let addr =
-        std::env::var("AMQP_ADDR").unwrap_or_else(|_| "amqp://guest:guest@rabbitmq:5672/%2f".into());
+    let addr = "amqp://guest:guest@rabbits:5672/exch".to_string();
     let manager = Manager::new(addr, ConnectionProperties::default());
+    
     let pool: Pool = deadpool::managed::Pool::builder(manager)
         .max_size(10)
         .build()
@@ -47,14 +47,18 @@ pub async fn run(
     let p0 = pool.clone();
     let p1 = pool.clone();
     // start listener
-    let _ = RabbitClient::start(RabbitClient::new(pool.clone(), "balance".to_string(), p.clone()));
-   
-    // start sender
-    
-    let rabbit_sender = RabbitSender::start(RabbitSender::new(p0.clone(), "authentication".to_string()));
-    
-    let balance_sender = RabbitSender::start(RabbitSender::new(p1.clone(), "balance".to_string()));
+    let rabbits: RabbitClient = RabbitClient::new(pool.clone(), "balance".to_string(), p.clone()).await;
 
+    let rb = RabbitClient::start(rabbits);
+
+    (rb)
+        .send(StartListening)
+        .await
+        .unwrap()
+        .unwrap();
+
+    let rabbits: Vec<Addr<RabbitSender>> = setup_rabbits(p0.clone(), p1.clone()).await;
+    
     let app_state = state::AppState{
         postgres: postgres.clone(),
         config: config.server.clone(),
@@ -62,8 +66,8 @@ pub async fn run(
             .expect("failed to open the public key file"),
         jwt_private: fs::read(config.server.private_key.clone())
             .expect("failed to open the private key file"),
-        rabbit_sender: rabbit_sender.clone(),
-        balance_sender: balance_sender.clone()
+        rabbit_sender: rabbits[0].clone(),
+        balance_sender: rabbits[1].clone()
     };
     // write the tokens to file
     setup(&app_state.postgres).await;
@@ -137,5 +141,35 @@ pub async fn setup(postgres: &PgExecutorAddr) {
         }
          _ => {}
     }
+    
+}
+
+
+pub async fn setup_rabbits(p0: Pool, p1: Pool) -> Vec<Addr<RabbitSender>>{
+    match get_channel(p0.clone(), "authentication").await {
+        Ok(channel) => {
+            let rabbit_sender = RabbitSender::start(RabbitSender::new(p0.clone(), "authentication".to_string(), channel));
+            match get_channel(p0.clone(), "balance").await {
+                Ok(channel) => {
+                    let balance_sender = RabbitSender::start(RabbitSender::new(p1.clone(), "balance".to_string(), channel));
+
+                    return vec![rabbit_sender, balance_sender];
+                }
+                Err(err) => {
+                    // Handle the error here
+                    panic!("Error getting channel: {:?}", err);
+                    return vec![];
+                }
+            }
+        }
+        Err(err) => {
+            // Handle the error here
+            panic!("Error getting channel: {:?}", err);
+            return vec![];
+        }
+    }
+    
+    
+
     
 }

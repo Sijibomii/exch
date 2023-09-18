@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use futures::StreamExt;
 use lapin::{
-    options::*, types::FieldTable,
+    options::*, types::FieldTable, Channel,
 };
 
 use deadpool_lapin::{Pool};
@@ -24,13 +24,44 @@ pub struct RabbitClient {
     pub pool: Pool,
     pub queue_name: String,
     pub postgres: PgExecutorAddr,
+    pub channel: Channel
 }
 
 
 impl RabbitClient {
-    pub fn new(pool: Pool, queue_name: String, postgres: PgExecutorAddr) -> RabbitClient {
+    pub async fn new(pool: Pool, queue_name: String, postgres: PgExecutorAddr) -> RabbitClient {
+        let channel = pool.get().await.
+        map_err(Error::from)
+        .unwrap()
+        .create_channel()
+        .await
+        .map_err(Error::from)
+        .and_then(|res| {
+            return Ok(res);
+        }).unwrap_or_else(|e| {
+            panic!("failerd to create channel")
+        });
+        let queue_options = QueueDeclareOptions {
+            passive: false,
+            durable: false, // Adjust to match the existing queue's durability
+            exclusive: false,
+            auto_delete: false,
+            nowait: false
+        };
+        // Declare the queue.
         
-        RabbitClient { pool, queue_name, postgres }
+        channel.queue_declare("balance", queue_options, FieldTable::default()).await;
+
+        channel
+        .queue_bind(
+            "balance",
+            "exch",
+            "balance", // Routing key
+            QueueBindOptions::default(),
+            FieldTable::default(),
+        )
+        .await;
+        RabbitClient { pool, queue_name, postgres, channel }
     }
 }
 
@@ -94,45 +125,9 @@ impl RabbitClient {
 
     async fn start_listening(&self, queue_name: &str) -> Result<(), Error> {
         // Create a channel for message consumption.
-        let channel = 
-        self.pool.get().await.
-        map_err(Error::from)
-        .unwrap()
-        .create_channel()
-        .await
-        .map_err(Error::from)
-        .and_then(|res| {
-            return Ok(res);
-        }).unwrap_or_else(|e| {
-            panic!("failerd to create channel")
-        });
-        let queue_options = QueueDeclareOptions {
-            passive: false,
-            durable: false, // Adjust to match the existing queue's durability
-            exclusive: false,
-            auto_delete: false,
-            nowait: false
-        };
-        // Declare the queue.
-        
-        channel
-            .queue_declare(queue_name, queue_options, FieldTable::default())
-            .await?;
-
-        channel
-        .queue_bind(
-            queue_name,
-            "exch",
-            queue_name, // Routing key
-            QueueBindOptions::default(),
-            FieldTable::default(),
-        )
-        .await?;
-
-        println!("Listening for messages on queue: {}", queue_name);
 
         // Create a consumer.
-        let mut consumer = channel
+        let mut consumer = self.channel
             .basic_consume(
                 queue_name,
                 "my_consumer",
@@ -189,7 +184,7 @@ impl RabbitClient {
                         }
                         
                         // Acknowledge the message to remove it from the queue
-                        channel.basic_ack(delivery_tag, BasicAckOptions::default()).await?;
+                        // self.channel.basic_ack(delivery_tag, BasicAckOptions::default()).await?;
                     }
                     Err(e) => eprintln!("Error receiving message: {:?}", e),
                 }

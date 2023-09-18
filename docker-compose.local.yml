@@ -11,9 +11,10 @@ services:
     ports:
       - 5432:5432
     healthcheck:
-      test: ["CMD", "./wait-10-seconds.sh"]
-      interval: 10s
-      retries: 1
+      test: ["CMD-SHELL", "sleep 5"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
 
   adminer:
     image: adminer
@@ -28,7 +29,12 @@ services:
       rabbits:
         condition: service_healthy
     build: ./turkey
-    
+    healthcheck:
+      test: ["CMD-SHELL", "sleep 10"]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+
   iyan:
     depends_on:
       turkey:
