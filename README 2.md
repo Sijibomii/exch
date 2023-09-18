@@ -91,3 +91,4 @@ install docker and docker-compose
 compile c++
 run c++ to see 
 
+Not sure rabbit client is consuming yet!

@@ -30,6 +30,7 @@ RUN mix do compile, release
 
 ####################################################################################################
 # STEP 2 - FINAL
+
 FROM alpine:3.18.3 as app
 
 RUN apk add --no-cache openssl ncurses-libs libssl1.1

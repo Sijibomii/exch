@@ -100,9 +100,9 @@ impl Handler<StartListening> for RabbitClient {
     type Result = Result<(), Error>;
 
     fn handle(&mut self, _: StartListening, _: &mut Self::Context) -> Self::Result {
-
-        self.start_listening(&self.queue_name);
-
+        async{
+            self.start_listening(&self.queue_name).await;
+        };
         Ok(())
     }
 }
@@ -188,6 +188,103 @@ impl RabbitClient {
                     }
                     Err(e) => eprintln!("Error receiving message: {:?}", e),
                 }
+            }
+        }
+    }
+}
+
+pub async fn start_listening(pool: Pool, queue_name: String, postgres: PgExecutorAddr) -> Result<(), Error> {
+    // Create a channel for message consumption.
+    let channel: Channel = pool.get().await.
+        map_err(Error::from)
+        .unwrap()
+        .create_channel()
+        .await
+        .map_err(Error::from)
+        .and_then(|res| {
+            return Ok(res);
+        }).unwrap_or_else(|e| {
+            panic!("failerd to create channel")
+        });
+        let queue_options = QueueDeclareOptions {
+            passive: false,
+            durable: false, // Adjust to match the existing queue's durability
+            exclusive: false,
+            auto_delete: false,
+            nowait: false
+        };
+        // Declare the queue.
+        
+        let _ = channel.queue_declare("balance", queue_options, FieldTable::default()).await;
+
+        let _ = channel
+        .queue_bind(
+            "balance",
+            "exch",
+            "balance", // Routing key
+            QueueBindOptions::default(),
+            FieldTable::default(),
+        )
+        .await;
+    // Create a consumer.
+    let mut consumer = channel.basic_consume(
+            queue_name.as_str(),
+            "my_consumer",
+            BasicConsumeOptions::default(),
+            FieldTable::default(),
+        )
+        .await.unwrap();
+    
+    loop {
+        if let Some(delivery) = consumer.next().await {
+            match delivery {
+                Ok(delivery) => {
+                    let message = delivery.data;
+                    let delivery_tag = delivery.delivery_tag;
+
+                    // Handle the received message here
+                    println!("Received message: {:?}", message);
+
+                    // parse the message with json first
+                    let data_string = String::from_utf8_lossy(&message).into_owned();
+                    let data_str: &str = data_string.as_str();
+                    // Result<Response, serde_json::Error> 
+                    let jsn: Response = serde_json::from_str(data_str)
+                        .unwrap_or_else(|e| {
+                            print!("UNABLE TO DECODE DATA GOTTEN FROM RABBIT. DATA AS STRING ----->>>> {} \n ", data_string);
+                            print!("UNABLE TO DECODE DATA GOTTEN FROM RABBIT. DATA AS &str ----->>>> {} \n ", data_str);
+                            print!("Error ----->>>> {} \n ", e);
+                            panic!("failed to deserialize data from rabbitmq")
+                        });
+                    if queue_name == "balance" {
+                        if jsn.op == "WALLET-BALANCE-CHANGE" {
+                            // change balance price back to balance
+                            let postgres = postgres.clone();
+                            match Wallet::find_by_id(jsn.data.wallet_id, &postgres).await {
+                                Ok(wallet) => {
+                                    let mut payload = WalletPayload::from(wallet);
+                                    payload.balance = Some(jsn.data.balance);
+                                    match Wallet::update(jsn.data.wallet_id, payload, &postgres).await {
+                                        Ok(p) => {
+
+                                        }
+                                        Err(_) => {
+                                            println!("unable to update wallet of id: {:?}", jsn.data.wallet_id);
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    println!("unable to find wallet of id: {:?}", jsn.data.wallet_id);
+                                }
+                            }
+                            
+                        }
+                    }
+                    
+                    // Acknowledge the message to remove it from the queue
+                    // self.channel.basic_ack(delivery_tag, BasicAckOptions::default()).await?;
+                }
+                Err(e) => eprintln!("Error receiving message: {:?}", e),
             }
         }
     }

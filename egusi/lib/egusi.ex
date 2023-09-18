@@ -34,11 +34,8 @@ defmodule Egusi do
 
     case Supervisor.start_link(children, opts) do
       {:ok, pid} ->
-        # sleep for 5 secs
-        :timer.sleep(5000)
         start_trading_sessions()
         start_rabbits()
-
         {:ok, pid}
 
       error ->

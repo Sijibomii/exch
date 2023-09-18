@@ -6,13 +6,14 @@ use core::{db::postgres::{PgExecutorAddr}};
 use std::{fs};
 use config::Config; 
 use core::db::postgres;
-use rabbitmq::listener::{RabbitClient, StartListening};
+use rabbitmq::listener::{RabbitClient, StartListening, start_listening};
 use rabbitmq::sender::{RabbitSender, get_channel};
 use std::fs::File;
 use std::io::Write;
 use actix::prelude::*; 
 use deadpool_lapin::{Manager, Pool};
 use lapin::{ConnectionProperties};
+use std::thread;
 
 mod controllers;
 mod services;
@@ -47,15 +48,24 @@ pub async fn run(
     let p0 = pool.clone();
     let p1 = pool.clone();
     // start listener
-    let rabbits: RabbitClient = RabbitClient::new(pool.clone(), "balance".to_string(), p.clone()).await;
+    // let rabbits: RabbitClient = RabbitClient::new(pool.clone(), "balance".to_string(), p.clone()).await;
 
-    let rb = RabbitClient::start(rabbits);
+    // let rb = RabbitClient::start(rabbits);
 
-    (rb)
-        .send(StartListening)
-        .await
-        .unwrap()
-        .unwrap();
+    // (rb)
+    //     .send(StartListening)
+    //     .await
+    //     .unwrap()
+    //     .unwrap();
+
+    let p2 = pool.clone();
+    let pos =postgres.clone();
+    // Create a new thread for rabbitmq listener
+    let _ = thread::spawn(move || async { 
+        let _ = start_listening(p2, "balance".to_string(), pos).await;
+    });
+
+
 
     let rabbits: Vec<Addr<RabbitSender>> = setup_rabbits(p0.clone(), p1.clone()).await;
     

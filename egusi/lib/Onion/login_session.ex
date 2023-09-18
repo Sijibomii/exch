@@ -40,10 +40,10 @@ defmodule Onion.LoginSession do
   end
 
 
-  def start_supervised() do
+  def start_supervised(id) do
     DynamicSupervisor.start_child(
       Onion.LoginSessionDynamicSupervisor,
-      {__MODULE__}
+      {__MODULE__, id}
     )
   end
 
@@ -54,7 +54,7 @@ defmodule Onion.LoginSession do
     )
   end
 
-  defp via(), do: {:via, Registry, {Onion.LoginSessionRegistry, 1}}
+  defp via(), do: {:via, Registry, {Onion.LoginSessionRegistry, 0}}
 
 
   @receive_exchange "exch"
