@@ -2,21 +2,26 @@ version: '3.7'
 
 services:
 
-  # postgres:
-  #   image: postgres:13-alpine
-  #   environment:
-  #     - POSTGRES_USER=exch  
-  #     - POSTGRES_PASSWORD=exch
-  #     - POSTGRES_DB=exch
-  #   ports:
-  #     - 5433:5432
+  postgres:
+    image: postgres:13-alpine
+    environment:
+      - POSTGRES_USER=exch  
+      - POSTGRES_PASSWORD=exch
+      - POSTGRES_DB=exch
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "./wait-10-seconds.sh"]
+      interval: 10s
+      retries: 1
 
-  # adminer:
-  #   image: adminer
-  #   ports:
-  #     - "8080:8080"
-  #   logging:
-  #     driver: json-file
+  adminer:
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   turkey:
     depends_on:
@@ -24,33 +29,44 @@ services:
         condition: service_healthy
     build: ./turkey
     
-#   iyan:
-#     depends_on:
-#       - turkey
-#       - rabbits
-#       - postgres
-#     build: ./iyan
-#     # image: sijibomi242/iyan:latest
-#     ports: 
-#       - "4001:4001"
-#     volumes:
-#       - shared_keys:/keys
-#       - shared_tokens:/tokens
+  iyan:
+    depends_on:
+      turkey:
+        condition: service_healthy
+      rabbits:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    build: ./iyan
+    # image: sijibomi242/iyan:latest
+    ports: 
+      - "4001:4001"
+    healthcheck:
+      test: curl --fail http://localhost:4001/api/v1/hello || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - shared_keys:/keys
+      - shared_tokens:/tokens
 
-#   egusi:
-#     depends_on:
-#       - turkey
-#       - rabbits
-#       - iyan
-#     build: ./egusi
-#     # image: sijibomi242/egusi:latest
-#     environment:
-#       - PORT=6000
-#     ports:
-#       - 6000:6000
-#     volumes:
-#       - shared_keys:/keys
-#       - shared_tokens:/tokens
+  egusi:
+    depends_on:
+      iyan:
+        condition: service_healthy
+      rabbits:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    build: ./egusi
+    # image: sijibomi242/egusi:latest
+    environment:
+      - PORT=6000
+    ports:
+      - 6000:6000
+    volumes:
+      - shared_keys:/keys
+      - shared_tokens:/tokens
 
   rabbits:
     container_name: rabbits
@@ -67,16 +83,16 @@ services:
       interval: 10s
       retries: 20 
 
-# volumes:
-#   shared_keys:
-#     driver: local
-#     driver_opts:
-#       type: none
-#       device: ./keys
-#       o: bind
-#   shared_tokens:
-#     driver: local
-#     driver_opts:
-#       type: none
-#       device: ./tokens
-#       o: bind
+volumes:
+  shared_keys:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./keys
+      o: bind
+  shared_tokens:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./tokens
+      o: bind
