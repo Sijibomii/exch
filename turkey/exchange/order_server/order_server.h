@@ -4,14 +4,14 @@
 
 #include "common/thread_utils.h"
 #include "common/macros.h"
-// #include "common/tcp_server.h"
+#include "common/AMQPcpp.h"
 #include "common/logging.h"
 #include "order_server/client_request.h"
 #include "order_server/client_response.h"
 #include "order_server/fifo_sequencer.h"
 
 namespace Exchange {
-  
+  // static FIFOSequencer *fifo_xsequencer_ = nullptr;
   class OrderServer {
     public:
       OrderServer(ClientRequestLFQueue *client_requests, ClientResponseLFQueue *client_responses);
@@ -21,12 +21,14 @@ namespace Exchange {
       /// Start and stop the order server main thread.
       auto start() -> void;
 
-      auto stop() -> void;
+      auto stop() -> void; 
 
       /// Main run loop for this thread - accepts new client connections, receives client requests from them and sends client responses to them.
       auto run() noexcept;
       
-      void publish(const char *message, size_t len);
+     void publish(std::string message);
+    //  static int onCancel(AMQPMessage * message);
+    int onMessage(AMQPMessage * message);
     /// Deleted default, copy & move constructors and assignment-operators.
     OrderServer() = delete;
 
@@ -46,13 +48,10 @@ namespace Exchange {
         volatile bool run_ = false; 
 
         std::string time_str_;
-        Logger logger_;
 
         FIFOSequencer fifo_sequencer_;
 
-        // rabbit handlers
-        // RabbitHandler orderRabbit;
-        // RabbitHandler responsesRabbit;
+        AMQPExchange * ex;
 
         /// Hash map from ClientId -> the next sequence number to be sent on outgoing client responses.
         std::array<size_t, ME_MAX_NUM_CLIENTS> cid_next_outgoing_seq_num_;

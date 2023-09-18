@@ -5,14 +5,13 @@
 
 #include "order_server/client_request.h"
 
-namespace Exchange {
+namespace Exchange { 
   /// Maximum number of unprocessed client request messages across all TCP connections in the order server / FIFO sequencer.
   constexpr size_t ME_MAX_PENDING_REQUESTS = 1024;
-
   class FIFOSequencer {
   public:
-    FIFOSequencer(ClientRequestLFQueue *client_requests, Logger *logger)
-        : incoming_requests_(client_requests), logger_(logger) {
+    FIFOSequencer(ClientRequestLFQueue *client_requests)
+        : incoming_requests_(client_requests) {
     }
 
     ~FIFOSequencer() {
@@ -31,15 +30,15 @@ namespace Exchange {
       if (UNLIKELY(!pending_size_))
         return;
 
-      logger_->log("%:% %() % Processing % requests.\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), pending_size_);
+      // logger_->log("%:% %() % Processing % requests.\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), pending_size_);
 
       std::sort(pending_client_requests_.begin(), pending_client_requests_.begin() + pending_size_);
 
       for (size_t i = 0; i < pending_size_; ++i) {
         const auto &client_request = pending_client_requests_.at(i);
 
-        logger_->log("%:% %() % Writing RX:% Req:% to FIFO.\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
-                     client_request.recv_time_, client_request.request_.toString());
+        // logger_->log("%:% %() % Writing RX:% Req:% to FIFO.\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
+        //              client_request.recv_time_, client_request.request_.toString());
 
         auto next_write = incoming_requests_->getNextToWriteTo();
         *next_write = std::move(client_request.request_);
@@ -66,7 +65,7 @@ namespace Exchange {
     ClientRequestLFQueue *incoming_requests_ = nullptr;
 
     std::string time_str_;
-    Logger *logger_ = nullptr;
+    // Logger *logger_ = nullptr;
 
     /// A structure that encapsulates the software receive time as well as the client request.
     struct RecvTimeClientRequest {
@@ -82,4 +81,5 @@ namespace Exchange {
     std::array<RecvTimeClientRequest, ME_MAX_PENDING_REQUESTS> pending_client_requests_;
     size_t pending_size_ = 0;
   };
+ 
 }

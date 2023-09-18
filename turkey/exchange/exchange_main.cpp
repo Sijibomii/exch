@@ -4,6 +4,7 @@
 #include "market_data/market_data_publisher.h"
 #include "order_server/order_server.h"
 
+
 /// Main components, made global to be accessible from the signal handler.
 Common::Logger *logger = nullptr;
 Exchange::MatchingEngine *matching_engine = nullptr;
@@ -12,22 +13,23 @@ Exchange::OrderServer *order_server = nullptr;
 
 /// Shut down gracefully on external signals to this server.
 void signal_handler(int) {
-  // using namespace std::literals::chrono_literals;
-  // std::this_thread::sleep_for(10s);
+  using namespace std::literals::chrono_literals;
+  std::this_thread::sleep_for(10s);
 
   // delete logger;
   // logger = nullptr;
-  // delete matching_engine;
-  // matching_engine = nullptr;
-  // delete market_data_publisher;
-  // market_data_publisher = nullptr;
-  // delete order_server;
-  // order_server = nullptr;
+  delete matching_engine;
+  matching_engine = nullptr;
+  delete market_data_publisher;
+  market_data_publisher = nullptr;
+  delete order_server;
+  order_server = nullptr;
 
-  // std::this_thread::sleep_for(10s);
+  std::this_thread::sleep_for(10s);
 
   exit(EXIT_SUCCESS);
 }
+
 
 // each of the app run on a thread and each of them connect to a rabbitmq queue
 int main(int, char **) {
@@ -35,7 +37,7 @@ int main(int, char **) {
 
   std::signal(SIGINT, signal_handler);
 
-  // const int sleep_time = 100 * 1;
+  const int sleep_time = 100 * 1;
 
   // The lock free queues to facilitate communication between order server <-> matching engine and matching engine -> market data publisher.
   Exchange::ClientRequestLFQueue client_requests(ME_MAX_CLIENT_UPDATES);
@@ -50,15 +52,14 @@ int main(int, char **) {
 
   // logger->log("%:% %() % Starting Market Data Publisher...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
   market_data_publisher = new Exchange::MarketDataPublisher(&market_updates);
-  // market_data_publisher->start();
+  market_data_publisher->start();
 
   // logger->log("%:% %() % Starting Order Server...\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
-  // order_server = new Exchange::OrderServer(&client_requests, &client_responses);
-  // order_server->start();
+  order_server = new Exchange::OrderServer(&client_requests, &client_responses);
+  order_server->start();
 
   while (true) {
-    // matching_engine->run();
     // logger->log("%:% %() % Sleeping for a few milliseconds..\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str));
-    // usleep(sleep_time * 1);
+    usleep(sleep_time * 1);
   }
 }
