@@ -91,4 +91,7 @@ install docker and docker-compose
 compile c++
 run c++ to see 
 
-Not sure rabbit client is consuming yet!
+// this is how elixir should return orderbook
+time, open, close, high, low
+
+// the incremental socket should also be in this format but close will be the current price at the moment 
