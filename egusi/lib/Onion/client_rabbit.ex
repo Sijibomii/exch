@@ -52,7 +52,7 @@ defmodule Onion.ClientRabbit do
     GenServer.cast(via(id), {:send, msg})
   end
 
-  def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
+  def handle_cast({:send, _msg}, %State{chan: _chan} = state) do
     {:noreply, state}
   end
 

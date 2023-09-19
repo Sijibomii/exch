@@ -1,7 +1,7 @@
 defmodule Egusi.Trade.Create do
 
   alias Onion.UserSession
-  alias Onion.TickerSession
+
 
   def create(
     user_trading_id,

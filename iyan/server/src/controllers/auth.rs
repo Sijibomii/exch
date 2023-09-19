@@ -85,13 +85,13 @@ pub async fn authentication(
         }
     };
 }
-
+ 
 
 
 #[derive(Debug, Deserialize)]
 pub struct RegistrationParams {
     pub email: String, 
-    pub password: String,
+    pub password: String, 
 }
 // registration
 pub async fn registration(

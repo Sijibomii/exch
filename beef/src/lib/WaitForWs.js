@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
-import { WebSocketContext } from "../ws/WebSocketProvider";
-import { useVerifyLoggedIn } from "./useVerifyLoggedIn";
-
+import { WebSocketContext } from "./WebsocketProvider";
+import { useVerifyLoggedIn } from "./useVerifyIsLoggedIn";
 
 
 export const WaitForWsAndAuth = ({

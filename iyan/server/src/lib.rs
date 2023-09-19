@@ -106,7 +106,6 @@ pub async fn run(
     
     HttpServer::new(move || {
         App::new()
-        // .app_data(app_state.clone())
         .wrap(middleware::Logger::default())
         .wrap(
             Cors::default()
@@ -114,6 +113,7 @@ pub async fn run(
                     .send_wildcard()      
                     .max_age(3600),
         )
+        .app_data(web::Data::new(app_state.clone()))
         .service(
             web::scope("/api/v1")
                     .route("/hello", web::get().to(index))

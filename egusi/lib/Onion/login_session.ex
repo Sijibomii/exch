@@ -59,7 +59,9 @@ defmodule Onion.LoginSession do
 
   @receive_exchange "exch"
   @receive_queue "authentication"
-  def init() do
+
+  def init(_) do
+    IO.puts("login rabbits comming up")
     {:ok, conn} =
       Connection.open(Application.get_env(:egusi, :rabbit_url, "amqp://guest:guest@rabbits:5672/exch"))
 
@@ -67,13 +69,13 @@ defmodule Onion.LoginSession do
     setup_queue(chan)
 
     queue_to_consume = @receive_queue
-    IO.puts("queue_to_consume: " <> queue_to_consume)
     # Register the GenServer process as a consumer
     {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume, nil, no_ack: true)
+
     {:ok, %State{chan: chan, users: []}}
   end
 
-  def send(id, msg) do
+  def send(_id, msg) do
     GenServer.cast(via(), {:send, msg})
   end
 
@@ -144,7 +146,8 @@ defmodule Onion.LoginSession do
   end
 
   defp setup_queue(chan) do
-    {:ok, _} = Queue.declare(chan, @receive_queue, durable: false)
+    {:ok, _} = Queue.declare(chan, "authentication", durable: false)
+    :ok = Queue.bind(chan, "authentication", @receive_exchange)
     :ok = Queue.bind(chan, @receive_queue, @receive_exchange)
   end
 

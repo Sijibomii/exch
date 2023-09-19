@@ -34,6 +34,7 @@ defmodule Onion.OrderRabbit do
   @receive_exchange "exch"
 
   def init(id) do
+    IO.puts("order rabbits comming up")
     {:ok, conn} =
       Connection.open(Application.get_env(:egusi, :rabbit_url, "amqp://guest:guest@rabbits:5672/exch"))
 

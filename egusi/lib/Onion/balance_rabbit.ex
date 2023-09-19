@@ -34,13 +34,19 @@ defmodule Onion.BalanceRabbit do
 
   @send_queue "balance"
   @receive_exchange "exch"
+  @receive_queue "balance"
 
   def init(id) do
+    IO.puts("balance rabbits comming up")
     {:ok, conn} =
       Connection.open(Application.get_env(:egusi, :rabbit_url, "amqp://guest:guest@rabbits:5672/exch"))
 
     {:ok, chan} = Channel.open(conn)
+
     setup_queue(id, chan)
+    queue_to_consume_1 = @receive_queue
+    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_1, nil, no_ack: true)
+    IO.puts("balance rabbits done comming up")
 
     {:ok, %State{chan: chan, id: id}}
   end
@@ -49,7 +55,7 @@ defmodule Onion.BalanceRabbit do
     GenServer.cast(via(id), {:send, msg})
   end
 
-  def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
+  def handle_cast({:send, msg}, %State{chan: chan } = state) do
     AMQP.Basic.publish(chan, "exch", @send_queue, Jason.encode!(msg))
     {:noreply, state}
   end
@@ -88,10 +94,8 @@ defmodule Onion.BalanceRabbit do
     {:noreply, state}
   end
 
-  defp setup_queue(id, chan) do
+  defp setup_queue(_id, chan) do
     {:ok, _} = Queue.declare(chan, @send_queue, durable: false)
-    :ok = Exchange.direct(chan, @receive_exchange, durable: false)
-
-    :ok = Queue.bind(chan, @receive_queue, @receive_exchange, routing_key: @receive_queue)
+    :ok = Queue.bind(chan, @receive_queue, @receive_exchange)
   end
 end

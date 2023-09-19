@@ -22,7 +22,7 @@ pub async fn authenticate(
     password: String,
     postgres: &PgExecutorAddr,
     jwt_private: Vec<u8>
-) -> Result<(String, User), Error> {
+) -> Result<(String, User), Error> { 
     match User::find_by_email(email, postgres).await {
         Ok(user) => {
             // Do something with the user...

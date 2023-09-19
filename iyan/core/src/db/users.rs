@@ -6,15 +6,17 @@ use uuid::Uuid;
 use super::{Error, postgres::{PgExecutor, PooledConnection}};
 use super::super::models::user::{User, UserPayload}; 
 
-// uses diesel to insert into the db
+// uses diesel to insert into the db 
 pub fn insert(payload: UserPayload, conn: &mut PooledConnection) -> Result<User, Error> {
     use diesel::insert_into;
     use super::super::schema::users::dsl;
 
     insert_into(dsl::users)
         .values(&payload)
+        
         .get_result(conn)
         .map_err(|e| Error::from(e))
+        // .execute(conn)
 }
 
 pub fn update(id: Uuid, payload: UserPayload, conn: &mut PooledConnection) -> Result<User, Error> {
@@ -29,9 +31,10 @@ pub fn update(id: Uuid, payload: UserPayload, conn: &mut PooledConnection) -> Re
 
 pub fn find_by_email(email: String, conn: &mut PooledConnection) -> Result<User, Error> {
     use super::super::schema::users::dsl;
-
+    // @todo: add this back when the verification is put in place 
+    // .and(dsl::is_verified.ne(false))
     dsl::users
-        .filter(dsl::email.eq(email).and(dsl::is_verified.ne(false)))
+        .filter(dsl::email.eq(email))
         .first::<User>(conn)
         .map_err(|e| Error::from(e))
 }

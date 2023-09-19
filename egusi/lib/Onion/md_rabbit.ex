@@ -32,6 +32,7 @@ defmodule Onion.MDRabbit do
   @receive_queue "incremental"
 
   def init(id) do
+    IO.puts("md rabbits comming up")
     {:ok, conn} =
       Connection.open(Application.get_env(:egusi, :rabbit_url, "amqp://guest:guest@rabbits:5672/exch"))
 
@@ -42,6 +43,7 @@ defmodule Onion.MDRabbit do
 
     # Register the GenServer process as a consumer
     {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_1, nil, no_ack: true)
+    IO.puts("md rabbits done comming up")
     {:ok, %State{chan: chan, id: id}}
   end
 
@@ -49,7 +51,7 @@ defmodule Onion.MDRabbit do
     GenServer.cast(via(id), {:send, msg})
   end
 
-  def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
+  def handle_cast({:send, _msg}, %State{chan: _chan} = state) do
     {:noreply, state}
   end
 
@@ -88,7 +90,7 @@ defmodule Onion.MDRabbit do
     {:noreply, state}
   end
 
-  defp setup_queue(id, chan) do
+  defp setup_queue(_id, chan) do
     {:ok, _} = Queue.declare(chan, @receive_queue, durable: false)
     :ok = Queue.bind(chan, @receive_queue, @receive_exchange)
   end

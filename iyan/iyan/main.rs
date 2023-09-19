@@ -22,7 +22,7 @@ async fn main() {
         "RUST_LOG",
         "info,error,debug,actix_web=info,tokio_reactor=info",
     );
-
+    env_logger::init();
     let config: config::Config  = config::Config{
         postgres: "postgresql://exch:exch@postgres:5432/exch".to_string(),
         server: config::ServerConfig{

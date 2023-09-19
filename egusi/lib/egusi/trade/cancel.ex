@@ -1,7 +1,7 @@
 defmodule Egusi.Trade.Cancel do
 
   alias Onion.UserSession
-  alias Onion.TickerSession
+
 
   def cancel(
     user_trading_id,

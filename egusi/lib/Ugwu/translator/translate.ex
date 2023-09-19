@@ -33,6 +33,12 @@ defmodule Ugwu.Translator.V0_1_0 do
   ## OUTBOUND MESSAGES
 
   # out boubd translations here
+  def translate_outbound(message, original) do
+    %{op: "fetch_done", d: message.p}
+    |> add_out_ref(message)
+    |> add_out_err(message)
+    |> translate_out_body(original.inbound_operator || message.op)
+  end
 
   defp add_out_ref(message, %{ref: ref}), do: Map.put(message, :fetchId, ref)
   defp add_out_ref(message, _), do: message

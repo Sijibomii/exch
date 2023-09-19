@@ -200,7 +200,7 @@ impl User {
     }
 
     pub async fn find_by_email(
-        email: String,
+        email: String, 
         postgres: &PgExecutorAddr,
     ) ->  Result<User, Error> {
         let sum_result= (*postgres)
@@ -209,7 +209,7 @@ impl User {
             .map_err(|e| {
                 eprintln!("Encountered mailbox error: {:?}", e);
                 Error::from(e)
-            });
+            }); 
 
         match sum_result {
             Ok(res) => 

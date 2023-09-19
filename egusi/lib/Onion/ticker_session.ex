@@ -266,7 +266,7 @@ defmodule Onion.TickerSession do
           String.to_integer(state.current_low) < String.to_integer(message["price"]) -> state.current_low
           true -> message["price"]
         end
-        current_low: message["price"]
+        # current_low: message["price"]
         Enum.each(state.listeners, fn tid ->
           Onion.UserSession.send_ws(tid, %{
             ref: :uuid.uuid4(),
