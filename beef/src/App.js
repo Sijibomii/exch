@@ -1,19 +1,35 @@
-import { BrowserRouter as Router, Route, Switch,Redirect} from 'react-router-dom';
+import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider, Outlet } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import Login from './pages/Login';
 
 function App() {
+
+  const router = createBrowserRouter(
+    createRoutesFromElements(
+      <Route path='/' element={<Root />}>
+          <Route index element={<Home />} />
+          <Route path="/login" element={<Login />} />
+      </Route>
+    )
+  )
+
   return (
-    <Router>
-      <Navbar />
-      <Switch>
-        {/* login page */}
-        {/* register page */}
-        {/* all tokens page/home page */}
-        {/* trade token(for a particular token) */}
-      </Switch>
-    </Router>
+    <RouterProvider router={router} />
   );
 }
 
 export default App;
+
+const Root = () => {
+
+    return (
+      <div className='page bg-[#151E2D]'>
+        <Navbar />
+        <div className='body'>
+          <Outlet />
+        </div>
+      </div>
+    )
+}
  
