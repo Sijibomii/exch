@@ -2,7 +2,15 @@ import Chart from "../components/Chart";
 import Input from "../components/Input";
 import { Formik, Form } from "formik";
 import InputErrorMsg from "../components/InputErrorMsg";
+import { WaitForWsAndAuth } from "../lib/WaitForWs";
 
+const TradingPage = () => {
+    return(
+        <WaitForWsAndAuth>
+            <Trade />
+        </WaitForWsAndAuth>
+    );
+}
 
 const Trade = () => {
     
@@ -154,4 +162,4 @@ const Trade = () => {
 };
 
 
-export default Trade;
+export default TradingPage;
