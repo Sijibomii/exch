@@ -9,7 +9,7 @@ use core::user::{UserPayload};
 use core::client::Client;
 use super::super::auth::AuthUser;
 use uuid::Uuid;
-
+use log::{debug};
 use rabbitmq::sender::{Sender, Data, Wallet, DataNoWallet};
 
 #[derive(Deserialize)]
@@ -38,12 +38,15 @@ pub async fn authentication(
 
     match res {
         Ok((token, user)) => {
+            debug!("controller: got user and token successfully");
             let wallets = services::wallet::all_wallet_by_user(LIMIT, OFFSET, user.id, &state.postgres).await;
             match wallets {
                 Ok(wallets) => {
+                    debug!("controller: got wallets successfully");
                     match wallets.first() {
-
+                        
                         Some(wallet) => {
+                            debug!("controller: got wallet successfully");
                             let u = user.clone();
                             let payload = Data{
                                 user_id: u.id,
@@ -56,11 +59,12 @@ pub async fn authentication(
                                     balance: wallet.balance
                                 }
                             };
-                            Sender::publish_login(payload, &state.rabbit_sender).await;
+                            let _ = Sender::publish_login(payload, &state.rabbit_sender).await;
                             return Ok(Json(json!({ "token": token, "user": user.export() })));
                         }
                         None => {
                             // still publish but set wallet to nil -> 
+                            debug!("controller: got no wallet successfully");
                             let u = user.clone();
                             let payload = DataNoWallet{
                                 user_id: u.id,
@@ -69,7 +73,7 @@ pub async fn authentication(
                                 last_order_number: u.last_order_id,
                                 last_seq_num: u.last_seq_num,
                             };
-                            Sender::publish_login_no_wallet(payload, &state.rabbit_sender).await;
+                            let _ = Sender::publish_login_no_wallet(payload, &state.rabbit_sender).await;
                             return Ok(Json(json!({ "token": token, "user": user.export() })));
                         }
                     }
@@ -134,7 +138,7 @@ pub async fn registration(
         &state.postgres
     ).await;
 
-    services::client::increase_client_count(&state.postgres).await;
+    let _ = services::client::increase_client_count(&state.postgres).await;
 
     match res {
         Ok(user) => {

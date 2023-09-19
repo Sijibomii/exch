@@ -11,7 +11,7 @@ use core::{
 };
 use uuid::Uuid;
 use super::errors::Error;
-
+use log::{debug};
 
 const CREDENTIAL_LEN: usize = digest::SHA512_OUTPUT_LEN;
 const N_ITER: NonZeroU32 = unsafe { NonZeroU32::new_unchecked(100000) };
@@ -26,16 +26,17 @@ pub async fn authenticate(
     match User::find_by_email(email, postgres).await {
         Ok(user) => {
             // Do something with the user...
+            debug!("service: got user successfully");
             let salt = BASE64
             .decode(&user.salt.as_bytes())
             .map_err(|e| Error::from(e))?;
-            
+            debug!("service: decoded salt successfully");
             let password_hash = BASE64
             .decode(&user.password.as_bytes())
             // The .map_err(|e| Error::from(e)) method is called on the Result to map any potential base64::DecodeError into the desired Error type. 
             // It converts the base64::DecodeError into the Error type using the Error::from() conversion function or method.
             .map_err(|e| Error::from(e))?;
-            
+            debug!("service: decoded password hash successfully");
             pbkdf2::verify(
                 PBKDF2_ALGORITHM,
                 N_ITER,
@@ -46,7 +47,8 @@ pub async fn authenticate(
             // If the verification fails, it maps the error to the Error::IncorrectPassword variant and converts it into a future.
             .map_err(|_| Error::IncorrectPassword).and_then(move |_| {
                 let expires_at = Utc::now() + Duration::days(1);
-
+                debug!("service: verified successfully");
+                debug!("service: jwt payload: {:?}", jwt_private);
                 JWTPayload::new(Some(AuthUser { id: user.id }), None, expires_at)
                     .encode(&jwt_private)
                     .map_err(|e| Error::from(e))

@@ -72,14 +72,14 @@ pub async fn run(
     let app_state = state::AppState{
         postgres: postgres.clone(),
         config: config.server.clone(),
-        jwt_public: fs::read(config.server.public_key.clone())
+        jwt_public: fs::read("/keys/public_key.pem")
             .expect("failed to open the public key file"),
-        jwt_private: fs::read(config.server.private_key.clone())
+        jwt_private: fs::read("/keys/private_key.pem")
             .expect("failed to open the private key file"),
         rabbit_sender: rabbits[0].clone(),
         balance_sender: rabbits[1].clone()
     };
-    // write the tokens to file
+    // write the tokens to file 
     setup(&app_state.postgres).await;
 
     // check for client count. if not insert one.

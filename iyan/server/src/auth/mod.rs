@@ -5,7 +5,9 @@ use futures::{future::{ready, Ready}};
 use jsonwebtoken::{encode, EncodingKey, DecodingKey};
 use uuid::Uuid;
 use futures::future;
+use log::{debug};
 
+use std::fs;
 
 use super::state::AppState;
 
@@ -25,10 +27,27 @@ impl JWTPayload {
         }
     }
 
-    pub fn encode(&self, jwt_private: &Vec<u8>) -> Result<String, jsonwebtoken::errors::Error> {
+    pub fn encode(&self, _: &Vec<u8>) -> Result<String, jsonwebtoken::errors::Error> {
+        let private_key_data = fs::read("/keys/private_key.pem").expect("Failed to read private key file");
+        debug!("jwt encode: successfully got into the encode func");
         let header = jsonwebtoken::Header::new(jsonwebtoken::Algorithm::RS256);
-        let jwt_private = EncodingKey::from_rsa_pem(jwt_private).expect("Failed to create EncodingKey");
-        encode(&header, &self, &jwt_private)
+        debug!("jwt encode: successfully created header");
+        let jwt_private = EncodingKey::from_rsa_pem(&private_key_data).expect("Failed to create EncodingKey");
+        debug!("jwt encode: successfully created jwt private");
+        
+        let result = encode(&header, &self, &jwt_private);
+        let res = result.clone();
+        match result {
+            Ok(_) => {
+                debug!("jwt encode: got res successfully");
+            }
+            Err(e) => {
+                debug!("jwt encode: errored!!!");
+                // jwt encode error: "RSA key invalid: InvalidEncoding"
+                debug!("jwt encode error: {:?}", e.to_string());
+            }
+        }
+        return res;
     }
 }
 
