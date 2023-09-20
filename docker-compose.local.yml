@@ -35,6 +35,15 @@ services:
       timeout: 15s
       retries: 3
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ssl:/ssl
+
   iyan:
     depends_on:
       turkey:
@@ -73,6 +82,7 @@ services:
     volumes:
       - shared_keys:/keys
       - shared_tokens:/tokens
+      - ssl:/ssl
 
   rabbits:
     container_name: rabbits
@@ -101,4 +111,10 @@ volumes:
     driver_opts:
       type: none
       device: ./tokens
+      o: bind
+  ssl:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./ssl
       o: bind

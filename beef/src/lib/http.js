@@ -17,17 +17,17 @@ export const create = (baseOpts) => {
             method,
             headers: { "Content-Type": "application/json", ...headers},
             data:  body ? body : undefined
-        }).then((res) => res.json())
+        }).then((res) => res)
       },
     };
 };
 
 export const wrap = (http) => {
     return { 
-      login: (email, password) => http.request("POST", "/login", { 
+      login: (email, password) => http.request("POST", "/api/v1/login", { 
           email, password
       }),
-      register: (email, password) => http.request("POST", "/register", { 
+      register: (email, password) => http.request("POST", "/api/v1/register", { 
           email, password
       })
     };

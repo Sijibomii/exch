@@ -14,7 +14,7 @@ const Input = forwardRef(
         {...(props)}
       />
     ) : (
-      <input ref={ref} className={cn} data-testid="input" {...props} type="text" />
+      <input ref={ref} className={cn} data-testid="input" {...props} />
     );
   }
 );

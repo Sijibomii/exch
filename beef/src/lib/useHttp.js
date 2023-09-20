@@ -7,7 +7,7 @@ export const useHttpClient = () => {
 
     if(httpClient === null){
         const client = create({
-            baseUrl: process.env.BASE_API_URL || 'http://localhost:8080'
+            baseUrl: process.env.BASE_API_URL || 'http://localhost:4001'
         })
         setHttp(client);
         return client

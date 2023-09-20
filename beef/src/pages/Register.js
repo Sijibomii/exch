@@ -81,7 +81,8 @@ const Register = () => {
                 
                 onSubmit={async ({ email, password }) => {                    
                   const resp = await wrappedClient.register(email, password)
-                  if(resp.code===200){
+                  
+                  if(resp.status===200){
                     window.location = '/login';
                   }else{
                     alert(resp.message)

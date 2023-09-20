@@ -3,7 +3,7 @@ import ReconnectingWebSocket from "reconnecting-websocket";
 import { v4 as generateUuid } from "uuid";
 
 const heartbeatInterval = 8000;
-const apiUrl = "ws://egusi:6000/socket";
+const apiUrl = "ws://localhost:6000/socket";
 
 const connectionTimeout = 15000;
 
@@ -21,11 +21,12 @@ export const connect = (
     }
   ) =>
     new Promise((resolve, reject) => {
-      const socket = new ReconnectingWebSocket(url, [], {
+      const socket = new ReconnectingWebSocket("ws://localhost:6000/socket", [], {
         connectionTimeout,
         WebSocket,
       });
       const api2Send = (opcode, data, ref=false) => {
+        
         // tmp fix
         // this is to avoid ws events queuing up while socket is closed
         // then it reconnects and fires before auth goes off
@@ -40,10 +41,8 @@ export const connect = (
         logger("out", opcode, data, ref, raw);
       };
       const apiSend = (opcode, data, fetchId) => {
-        // tmp fix
-        // this is to avoid ws events queuing up while socket is closed
-        // then it reconnects and fires before auth goes off
-        // and you get logged out
+        console.log("AUTHHHHHH")
+        
         if (socket.readyState !== socket.OPEN) {
           return;
         }
@@ -191,6 +190,8 @@ export const connect = (
       });
   
       socket.addEventListener("open", () => {
+        console.log("AUTHHHHHH")
+
         const id = setInterval(() => {
           if (socket.readyState === socket.CLOSED) {
             clearInterval(id);

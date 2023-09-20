@@ -108,10 +108,12 @@ pub async fn run(
         App::new()
         .wrap(middleware::Logger::default())
         .wrap(
-            Cors::default()
-                    .allow_any_origin()   
-                    .send_wildcard()      
-                    .max_age(3600),
+            // @todo: change this
+            Cors::permissive()
+            // Cors::default()
+            //         .allow_any_origin()   
+            //         .send_wildcard()      
+            //         .max_age(3600),
         )
         .app_data(web::Data::new(app_state.clone()))
         .service(

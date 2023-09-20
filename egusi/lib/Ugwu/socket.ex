@@ -61,7 +61,7 @@ defmodule Ugwu.SocketHandler do
 
   @impl true
   def websocket_init(state) do
-    Process.send_after(self(), :auth_timeout, @auth_timeout)
+    Process.send_after(self(), :auth_timeout, 10_000)
     Process.put(:"$callers", state.callers)
 
     {:ok, state}
@@ -82,7 +82,7 @@ defmodule Ugwu.SocketHandler do
   # auth timeout
   @spec auth_timeout_impl(state) :: call_result
   defp auth_timeout_impl(state) do
-    if state.user do
+    if state.trading_id do
       ws_push(nil, state)
     else
       ws_push([{:close, 1000, "authorization"}, shutdown: :normal], state)

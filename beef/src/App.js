@@ -1,6 +1,8 @@
 import { createBrowserRouter, createRoutesFromElements, Route, RouterProvider, Outlet } from 'react-router-dom';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
+import WebSocketProvider from './lib/WebsocketProvider';
+import MainWsHandlerProvider from './lib/useWebsocketHandler';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -31,7 +33,11 @@ const Root = () => {
       <div className='page bg-[#151E2D]'>
         <Navbar />
         <div className='body' id="body">
-          <Outlet />
+          <WebSocketProvider shouldConnect={(window.location !== '/login') && (window.location !== '/register')}>
+            <MainWsHandlerProvider>
+              <Outlet />
+            </MainWsHandlerProvider>
+          </WebSocketProvider>
         </div>
         <Footer />
       </div>

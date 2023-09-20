@@ -1,9 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Form, Formik } from "formik";
 import InputErrorMsg from "../components/InputErrorMsg";
 import Input from "../components/Input";
 import { loginNextPathKey } from "../lib/constants";
-
+import { useTokenStore } from "../lib/useTokenStore";
+import { useHttpClient } from "../lib/useHttpClient";
+import { wrap } from "../lib/http"
 
 export const LoginButton= ({
   children,
@@ -42,6 +44,20 @@ export const LoginButton= ({
 
 const Login = () => {
 
+  const [tokensChecked, setTokensChecked] = useState(false);
+  const hasTokens = useTokenStore((s) => !!(s.accessToken));
+  const httpClient = useHttpClient();
+  const wrappedClient = wrap(httpClient.http);
+
+  useEffect(() => {
+    if (hasTokens) {
+      window.location = '/';
+    } else {
+      setTokensChecked(true);
+    }
+  }, [hasTokens]);
+
+  if (!tokensChecked) return null;
     return (
       <div className="h-[87vh]">
         <div className="h-full flex items-center justify-center">
@@ -61,36 +77,19 @@ const Login = () => {
                 validateOnBlur 
 
                 validate={({ email, password }) => {
-
-                  // const errors = {};
-
-                  // const emailNotValid =  (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-                  // if (emailNotValid && email.length !== 0){ 
-                  //   errors.email = "enter a valid email" 
-                  //   return errors
-                  // }
-                  // setIsValid(password)
-                  // if(!isValid && password.length !== 0){
-                  //   errors.password= passwordErrors
-                  //   return errors
-                  // }
-
-                  // had to do this because formik keeps changing my type of errors 
                   return {};
                 }}
                 
-                onSubmit={async ({ email, password, captcha_code }) => {
-                  
-                  
-                    
-                    // const resp = await wrappedClient.login(email, password, captcha_code)
-                    // if(resp.code===200 && resp.message==="SUCCESS"){
-                    //   localStorage.setItem("@task/token", resp.data?.accessToken);
-                    //   localStorage.setItem("@task/refresh-token", resp.data?.refreshToken);
-                    //   push("/projects");
-                    // }else{
-                    //   alert(resp.message)
-                    // }
+                onSubmit={async ({ email, password }) => {
+                  const resp = await wrappedClient.login(email, password)
+                  if(resp.status===200){
+                    localStorage.setItem("@exch/token", resp.data?.accessToken);
+                    localStorage.setItem("@exch/userId", resp.data?.user.id);
+                    localStorage.setItem("@exch/email", resp.data?.user.email);
+                    window.location = '/';;
+                  }else{
+                    alert(resp.message)
+                  }
                 }}
               >
                 {({ isSubmitting, errors, handleChange, handleBlur, setFieldValue }) => (
