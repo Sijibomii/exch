@@ -12,7 +12,7 @@ export const WebSocketContext = createContext({
 const WebSocketProvider = ({ shouldConnect, children }) => {
     const [conn, setConn] = useState(null);
     const isConnecting = useRef(false);
-    const hasTokens = useTokenStore((s) => s.accessToken && s.refreshToken);
+    const hasTokens = useTokenStore((s) => s.accessToken);
 
     useEffect(() =>{
         if (!conn && shouldConnect && hasTokens && !isConnecting.current) {
@@ -21,11 +21,11 @@ const WebSocketProvider = ({ shouldConnect, children }) => {
               waitToReconnect: true,
               url: apiBaseUrl.replace("http", "ws") + "/socket",
               getAuthOptions: () => {
-                const { accessToken, refreshToken } = useTokenStore.getState();
+                const { accessToken } = useTokenStore.getState();
 
                 return {
-                  accessToken,
-                  refreshToken
+                  accessToken
+              
                 };
               },
               onConnectionTaken: () => {
@@ -35,7 +35,7 @@ const WebSocketProvider = ({ shouldConnect, children }) => {
                 console.log("clearing tokens...");
                 useTokenStore
                   .getState()
-                  .setTokens({ accessToken: "", refreshToken: "" });
+                  .setTokens({ accessToken: "" });
                 // replace("/logout");
               },
             })

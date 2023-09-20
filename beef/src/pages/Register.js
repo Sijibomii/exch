@@ -1,9 +1,10 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Form, Formik } from "formik";
 import InputErrorMsg from "../components/InputErrorMsg";
 import Input from "../components/Input";
-
-
+import { useTokenStore } from "../lib/useTokenStore";
+import { useHttpClient } from "../lib/useHttpClient";
+import { wrap } from "../lib/http"
 
 export const RegisterButton= ({
   children,
@@ -40,6 +41,22 @@ export const RegisterButton= ({
 
 const Register = () => {
 
+  const [tokensChecked, setTokensChecked] = useState(false);
+  const hasTokens = useTokenStore((s) => !!(s.accessToken));
+  const httpClient = useHttpClient();
+  const wrappedClient = wrap(httpClient.http);
+
+
+  useEffect(() => {
+    if (hasTokens) {
+      window.location = '/';
+    } else {
+      setTokensChecked(true);
+    }
+  }, [hasTokens]);
+
+  if (!tokensChecked) return null;
+
     return (
       <div className="h-[87vh]">
         <div className="h-full flex items-center justify-center">
@@ -59,40 +76,16 @@ const Register = () => {
                 validateOnBlur 
 
                 validate={({ email, password }) => {
-
-                  // const errors = {};
-
-                  // const emailNotValid =  (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-                  // if (emailNotValid && email.length !== 0){ 
-                  //   errors.email = "enter a valid email" 
-                  //   return errors
-                  // }
-                  // setIsValid(password)
-                  // if(!isValid && password.length !== 0){
-                  //   errors.password= passwordErrors
-                  //   return errors
-                  // }
-
-                  // had to do this because formik keeps changing my type of errors 
-                  return {};
+                  //@todo: error validation
                 }}
                 
-                onSubmit={async ({ email, password, captcha_code }) => {
-                  
-                  if (email.length === 0 || password.length ===0) return
-
-                  if (captcha_code.length === 0){
-                    alert('generate captcha with the link in the form')
+                onSubmit={async ({ email, password }) => {                    
+                  const resp = await wrappedClient.register(email, password)
+                  if(resp.code===200){
+                    window.location = '/login';
+                  }else{
+                    alert(resp.message)
                   }
-                    
-                    // const resp = await wrappedClient.login(email, password, captcha_code)
-                    // if(resp.code===200 && resp.message==="SUCCESS"){
-                    //   localStorage.setItem("@task/token", resp.data?.accessToken);
-                    //   localStorage.setItem("@task/refresh-token", resp.data?.refreshToken);
-                    //   push("/projects");
-                    // }else{
-                    //   alert(resp.message)
-                    // }
                 }}
               >
                 {({ isSubmitting, errors, handleChange, handleBlur, setFieldValue }) => (

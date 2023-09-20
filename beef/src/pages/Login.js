@@ -81,11 +81,7 @@ const Login = () => {
                 
                 onSubmit={async ({ email, password, captcha_code }) => {
                   
-                  if (email.length === 0 || password.length ===0) return
-
-                  if (captcha_code.length === 0){
-                    alert('generate captcha with the link in the form')
-                  }
+                  
                     
                     // const resp = await wrappedClient.login(email, password, captcha_code)
                     // if(resp.code===200 && resp.message==="SUCCESS"){

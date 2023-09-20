@@ -5,14 +5,13 @@ defmodule Ugwu.Message.Auth.Request do
   @primary_key false
   embedded_schema do
     field(:accessToken, :string)
-    field(:refreshToken, :string)
   end
 
 
   @impl true
   def changeset(initializer \\ %__MODULE__{}, data) do
     initializer
-    |> cast(data, [:accessToken, :refreshToken])
+    |> cast(data, [:accessToken])
     |> validate_required([:accessToken])
   end
 

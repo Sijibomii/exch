@@ -3,7 +3,7 @@ defmodule Egusi.Auth do
   alias Egusi.Utils.TokenUtils
 
   def authenticate(request, ip) do
-    case TokenUtils.tokens_to_user_id(request.accessToken, request.refreshToken) do
+    case TokenUtils.tokens_to_user_id(request.accessToken, "") do
       nil ->
         {:error, "invalid_authentication"}
 
