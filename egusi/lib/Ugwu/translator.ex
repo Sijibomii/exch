@@ -7,9 +7,9 @@ defmodule Ugwu.Translator do
     V0_1_0.translate_inbound(message)
   end
 
-  # def translate_outbound(message, original = %{}) do
-  #   V0_1_0.translate_outbound(message, original)
-  # end
+  def translate_outbound(message, original = %{}) do
+    V0_1_0.translate_outbound(message, original)
+  end
 
   def translate_outbound(message, _), do: message
 end

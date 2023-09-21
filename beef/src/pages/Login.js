@@ -11,15 +11,16 @@ export const LoginButton= ({
   children,
   loading,
 }) => {
-  const query = "";
+  // const query = "";
+  
   const clickHandler = useCallback(() => {
-    if (typeof query.next === "string" && query.next) {
-      try {
-        localStorage.setItem(loginNextPathKey, query.next);
-      } catch {}
-    }
+    // if (typeof query.next === "string" && query.next) {
+    //   // try {
+    //   //   localStorage.setItem(loginNextPathKey, query.next);
+    //   // } catch {}
+    // }
 
-  }, [query]);
+  }, []);
 
   return (
     <button
@@ -85,7 +86,7 @@ const Login = () => {
                     localStorage.setItem("@exch/token", resp.data?.token);
                     localStorage.setItem("@exch/userId", resp.data?.user.id);
                     localStorage.setItem("@exch/email", resp.data?.user.email);
-                    window.location = '/';;
+                    window.location = '/';
                   }else{
                     alert(resp.message)
                   }

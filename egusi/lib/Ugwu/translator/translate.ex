@@ -47,6 +47,7 @@ defmodule Ugwu.Translator.V0_1_0 do
   defp add_out_err(message, %{e: err}), do: Map.put(message, :e, err)
   defp add_out_err(message, _), do: message
 
+  ######### change the op here
   def translate_out_body(message, "auth:request") do
     %{message | op: "auth-good", d: %{user: message.d}}
   end
