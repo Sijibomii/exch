@@ -20,8 +20,6 @@ export const connect = (
       waitToReconnect,
     }
   ) =>
-
-    
     new Promise((resolve, reject) => {
       const socket = new ReconnectingWebSocket("ws://localhost:8000/socket/", [], {
         connectionTimeout,
@@ -89,7 +87,7 @@ export const connect = (
             },
             user: message.d.user,
             send: apiSend,
-            sendCall: (
+            fetch: (
               opcode,
               parameters,
               doneOpcode

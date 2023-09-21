@@ -1,3 +1,4 @@
+
 import Chart from "../components/Chart";
 import Input from "../components/Input";
 import { Formik, Form } from "formik";
@@ -13,6 +14,8 @@ const TradingPage = () => {
 }
 
 const Trade = () => {
+
+   
     
     return (
         <div className="">

@@ -1,8 +1,17 @@
+import { useEffect, useState, useRef } from "react";
 import { createChart, ColorType } from 'lightweight-charts';
-import { useEffect, useRef } from 'react';
 import data from './data';
 const Chart = () => {
+
     const chartContainerRef = useRef();
+
+    const [orderBook, setOrderBook] = useState(null);
+
+    useEffect(()=> {
+        // get ticker id from url.
+
+        // send 
+    }, [])
     useEffect(() => {
         const width = window.innerWidth;
         const chartProperties = {

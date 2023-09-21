@@ -97,5 +97,6 @@ time, open, close, high, low
 // the incremental socket should also be in this format but close will be the current price at the moment 
 
 ////////
-check if every user gets a trading client id
-make sure auth rabbitmq messages are going 
+on trade/ddd send ws message to request orderbook and plot graph
+make sure server send regular updates
+do buy and sell correctly
