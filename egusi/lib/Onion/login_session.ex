@@ -13,6 +13,13 @@ defmodule Onion.LoginSession do
   end
 
   defmodule User do
+
+    @derive {Jason.Encoder, only: ~w(
+      user_id
+      email
+      trading_client_id
+    )a}
+
     @type t :: %{
           user_id: String.t(),
           trading_client_id: Integer.t(),
@@ -47,15 +54,15 @@ defmodule Onion.LoginSession do
     )
   end
 
-  def start_link() do
+  def start_link(_) do
     GenServer.start_link(
       __MODULE__,
+      0,
       name: via()
     )
   end
 
   defp via(), do: {:via, Registry, {Onion.LoginSessionRegistry, 0}}
-
 
   @receive_exchange "exch"
   @receive_queue "authentication"
@@ -68,9 +75,10 @@ defmodule Onion.LoginSession do
     {:ok, chan} = Channel.open(conn)
     setup_queue(chan)
 
-    queue_to_consume = @receive_queue
+    queue_to_consume_1 = @receive_queue
+    IO.puts("queue_to_consume: " <> queue_to_consume_1)
     # Register the GenServer process as a consumer
-    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume, nil, no_ack: true)
+    {:ok, _consumer_tag} = Basic.consume(chan, queue_to_consume_1, nil, no_ack: true)
 
     {:ok, %State{chan: chan, users: []}}
   end
@@ -85,7 +93,8 @@ defmodule Onion.LoginSession do
 
   defp user_info_impl(_reply, user_id, state) do
     user = Enum.find(state.users, fn user -> user.user_id == user_id end)
-    {:reply, user, state}
+    IO.puts("user found ooo")
+    {:reply, {:ok, user}, state}
   end
 
   # defp add_user(data, )
@@ -115,10 +124,13 @@ defmodule Onion.LoginSession do
         {:basic_deliver, payload, %{delivery_tag: _tag, redelivered: _redelivered}},
         %State{} = state
       ) do
+
+    IO.puts("login session consumer: New message received!")
     data = Jason.decode!(payload)
 
     case data do
       %{"op" => "USER-LOGIN"} ->
+        IO.puts("login session consumer: New message received: user login!")
         {:noreply, %{state | users: [ %User{
 
           user_id: data["data"]["user_id"],
@@ -132,7 +144,10 @@ defmodule Onion.LoginSession do
           }
         } | state.users ]}}
 
-        %{"op" => "USER-LOGIN-NO-WALLET"} -> {:noreply, %{state | users: [ %User{
+        %{"op" => "USER-LOGIN-NO-WALLET"} ->
+          IO.puts("login session consumer: New message received: user login no wallet !")
+
+          {:noreply, %{state | users: [ %User{
           user_id: data["data"]["user_id"],
           email: data["data"]["email"],
           trading_client_id: data["data"]["trading_client_id"],
@@ -146,8 +161,7 @@ defmodule Onion.LoginSession do
   end
 
   defp setup_queue(chan) do
-    {:ok, _} = Queue.declare(chan, "authentication", durable: false)
-    :ok = Queue.bind(chan, "authentication", @receive_exchange)
+    {:ok, _} = Queue.declare(chan, @receive_queue, durable: false)
     :ok = Queue.bind(chan, @receive_queue, @receive_exchange)
   end
 

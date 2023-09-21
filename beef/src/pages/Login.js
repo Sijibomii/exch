@@ -12,7 +12,6 @@ export const LoginButton= ({
   loading,
 }) => {
   const query = "";
- 
   const clickHandler = useCallback(() => {
     if (typeof query.next === "string" && query.next) {
       try {
@@ -83,7 +82,7 @@ const Login = () => {
                 onSubmit={async ({ email, password }) => {
                   const resp = await wrappedClient.login(email, password)
                   if(resp.status===200){
-                    localStorage.setItem("@exch/token", resp.data?.accessToken);
+                    localStorage.setItem("@exch/token", resp.data?.token);
                     localStorage.setItem("@exch/userId", resp.data?.user.id);
                     localStorage.setItem("@exch/email", resp.data?.user.email);
                     window.location = '/';;

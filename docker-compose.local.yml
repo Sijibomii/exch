@@ -37,6 +37,8 @@ services:
 
   nginx:
     image: nginx:latest
+    depends_on:
+      - egusi
     ports:
       - "80:80"
       - "443:443"
@@ -78,11 +80,12 @@ services:
     environment:
       - PORT=6000
     ports:
-      - 6000:6000
+      - 8000:6000
     volumes:
       - shared_keys:/keys
       - shared_tokens:/tokens
       - ssl:/ssl
+    
 
   rabbits:
     container_name: rabbits

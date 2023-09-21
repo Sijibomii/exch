@@ -1,6 +1,6 @@
 // use std::cell::RefCell;
-use std::borrow::BorrowMut;
-use std::sync::{Arc, RwLock};
+use actix_rt;
+use actix::prelude::*;
 use serde::{Deserialize, Serialize};
 use lapin::{
     options::*, types::FieldTable, Channel, BasicProperties, ConnectionProperties,
@@ -11,8 +11,7 @@ use super::errors::Error;
 use lapin::publisher_confirm::PublisherConfirm;
 use std::default::Default;
 use tokio::runtime::Runtime;
-use actix::fut::wrap_future;
-use futures::FutureExt; 
+use log::{debug};
 use deadpool_lapin::{Pool};
 
 // send events when user logs in
@@ -124,7 +123,7 @@ impl Handler<Stop> for RabbitSender {
 }
 
 #[derive(Message,Debug, Deserialize, Serialize)]
-#[rtype(result = "Result<(), Error>")]
+#[rtype(result = "Result<Res, Error>")]
 pub struct PublishLoginData {
     pub data: Data,
 }
@@ -132,11 +131,11 @@ pub struct PublishLoginData {
 pub struct Sender{}
 
 impl Sender{
-
     pub async fn publish_login(
         payload: Data,
         rabbit: &RabbitSenderAddr, 
-    ) -> Result<(), Error> {
+    ) -> Result<Res, Error> {
+        debug!("rabbits: publishing login heree");
         (*rabbit)
         .send(PublishLoginData{
             data: payload
@@ -151,7 +150,8 @@ impl Sender{
     pub async fn publish_login_no_wallet(
         payload: DataNoWallet,
         rabbit: &RabbitSenderAddr, 
-    ) -> Result<(), Error> {
+    ) -> Result<Res, Error> {
+
         (*rabbit)
         .send(PublishLoginNoWalletData{
             data: payload
@@ -211,7 +211,7 @@ pub async fn get_channel(pool: Pool, queue_name: &str) -> Result<Channel, Error>
     });
     let queue_options = QueueDeclareOptions {
         passive: false,
-        durable: false, // Adjust to match the existing queue's durability
+        durable: false,
         exclusive: false,
         auto_delete: false,
         nowait: false
@@ -236,7 +236,7 @@ pub async fn get_channel(pool: Pool, queue_name: &str) -> Result<Channel, Error>
 }
 
 #[derive(Message,Debug, Deserialize, Serialize)]
-#[rtype(result = "Result<(), Error>")]
+#[rtype(result = "Result<Res, Error>")]
 pub struct PublishLoginNoWalletData {
     pub data: DataNoWallet,
 }
@@ -276,14 +276,21 @@ pub struct Wallet{
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Response{
-    refId: Uuid,
-    op: String,
-    data: Data,
+    pub refId: Uuid,
+    pub op: String,
+    pub data: Data,
+}
+#[derive(Debug, PartialEq, Clone)]
+pub struct Res {
+    pub channel: Channel,
+    pub queue: String,
+    pub data: Vec<u8>,
 }
 
-impl Handler<PublishLoginData> for RabbitSender {
 
-    type Result = Result<(), Error>;
+impl Handler<PublishLoginData> for RabbitSender {
+ 
+    type Result = Result<Res, Error>;
 
     fn handle(
         &mut self,
@@ -291,40 +298,36 @@ impl Handler<PublishLoginData> for RabbitSender {
             data
          }: PublishLoginData,
         _: &mut Self::Context,
-    ) -> Self::Result {
-
-        let channel = &self.channel;
+    ) -> Self::Result {  
+        debug!("rabbits: publishing user details email: {} trading_id {}", data.email, data.trading_client_id);
+        let channel = self.channel.to_owned();
         let response = Response{
                     refId: Uuid::new_v4(),
                     op:  "USER-LOGIN".to_string(),
                     data: data
                 };
-        // Serialize the struct to a JSON string
         let json_string = serde_json::to_string(&response).expect("Failed to serialize to JSON");
-        // Convert the JSON string to a &[u8]
-        let bytes: &[u8] = json_string.as_bytes();
-        // Publish a message to the queue
-        // Create a Tokio runtime
-        let rt = Runtime::new()?;
-        rt.block_on(async {
-            let result = publish(channel, self.queue_name.to_string(), bytes).await;
+        let bytes = json_string.as_bytes().to_owned();
+        let queue = self.queue_name.to_owned();
     
-            match result {
-                Ok(_) => println!("Message published successfully"),
-                Err(e) => eprintln!("Error publishing message: {:?}", e),
+        let result  = Ok(
+            Res {
+                channel: channel,
+                queue: queue,
+                data: bytes
             }
-        });
-                        
-        Ok(())
-        
+        );   
+
+        return result;
     }
 }
 
-async fn publish(
+pub async fn publish(
     channel: &Channel,
     queue_name: String,
     payload: &[u8],
 ) -> Result<PublisherConfirm, lapin::Error> {
+    debug!("rabbits publisher: about to publish to rabbitmq....");
     channel
         .basic_publish(
             "exch",
@@ -354,7 +357,7 @@ impl Handler<PublishBalanceData> for RabbitSender {
          }: PublishBalanceData,
         _: &mut Self::Context,
     ) -> Self::Result {
-        let channel = &self.channel;
+        let channel = self.channel.to_owned();
            
         let response = BalanceResponse{
                     refId: Uuid::new_v4(),
@@ -364,16 +367,17 @@ impl Handler<PublishBalanceData> for RabbitSender {
                 // Serialize the struct to a JSON string
         let json_string = serde_json::to_string(&response).expect("Failed to serialize to JSON");
         // Convert the JSON string to a &[u8]
-        let bytes: &[u8] = json_string.as_bytes();
-        // Publish a message to the queue
-        // Create a Tokio runtime
-        let rt = Runtime::new()?;
-        rt.block_on(async {
-            let result = publish(&channel, self.queue_name.to_string(), bytes).await;
-    
-            match result {
-                Ok(_) => println!("Message published successfully"),
-                Err(e) => eprintln!("Error publishing message: {:?}", e),
+        let bytes: Vec<u8> = json_string.as_bytes().to_owned();
+        // task::
+        let queue = self.queue_name.to_owned();
+        actix_rt::spawn({
+            async move {
+                let result = publish(&channel, queue.to_string(), &bytes).await;
+        
+                match result {
+                    Ok(_) => println!("Message published successfully"),
+                    Err(e) => eprintln!("Error publishing message: {:?}", e),
+                }
             }
         });
         
@@ -453,7 +457,7 @@ pub struct WalletCreationResponse{
 // 
 impl Handler<PublishLoginNoWalletData> for RabbitSender {
 
-    type Result = Result<(), Error>;
+    type Result = Result<Res, Error>;
 
     fn handle(
         &mut self,
@@ -462,8 +466,8 @@ impl Handler<PublishLoginNoWalletData> for RabbitSender {
          }: PublishLoginNoWalletData,
         _: &mut Self::Context,
     ) -> Self::Result {
-
-        let channel= &self.channel;
+        debug!("rabbits for no login wallet: starting publishing");
+        let channel= self.channel.to_owned();
             
         let response = DataNoWalletResponse{
                     refId: Uuid::new_v4(),
@@ -473,20 +477,19 @@ impl Handler<PublishLoginNoWalletData> for RabbitSender {
         // Serialize the struct to a JSON string
         let json_string = serde_json::to_string(&response).expect("Failed to serialize to JSON");
         // Convert the JSON string to a &[u8]
-        let bytes: &[u8] = json_string.as_bytes();
+        let bytes = json_string.as_bytes().to_owned();
         // Publish a message to the queue
-        // Create a Tokio runtime
-        let rt = Runtime::new()?;
-        rt.block_on(async {
-            let result = publish(&channel, self.queue_name.to_string(), bytes).await;
+        let queue = self.queue_name.to_owned();
     
-            match result {
-                Ok(_) => println!("Message published successfully"),
-                Err(e) => eprintln!("Error publishing message: {:?}", e),
+        let result  = Ok(
+            Res {
+                channel: channel,
+                queue: queue,
+                data: bytes
             }
-        });
-        
-        Ok(())
+        );   
+
+        return result;
         
     }
 }

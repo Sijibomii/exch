@@ -95,3 +95,7 @@ run c++ to see
 time, open, close, high, low
 
 // the incremental socket should also be in this format but close will be the current price at the moment 
+
+////////
+check if every user gets a trading client id
+make sure auth rabbitmq messages are going 

@@ -22,7 +22,7 @@ pub async fn authenticate(
     password: String,
     postgres: &PgExecutorAddr,
     jwt_private: Vec<u8>
-) -> Result<(String, User), Error> { 
+) -> Result<(String, User), Error> {  
     match User::find_by_email(email, postgres).await {
         Ok(user) => {
             // Do something with the user...
@@ -42,7 +42,7 @@ pub async fn authenticate(
                 N_ITER,
                 &salt,
                 password.as_bytes(),
-                &password_hash,
+                &password_hash, 
             )
             // If the verification fails, it maps the error to the Error::IncorrectPassword variant and converts it into a future.
             .map_err(|_| Error::IncorrectPassword).and_then(move |_| {

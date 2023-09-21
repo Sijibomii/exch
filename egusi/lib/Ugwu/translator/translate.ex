@@ -15,6 +15,7 @@ defmodule Ugwu.Translator.V0_1_0 do
   defguard translates(message) when :erlang.map_get("op", message) in @operators
 
   def translate_inbound(message = %{"op" => operator}) do
+    IO.puts("Translate inbound")
     message
     |> translate_operation
     |> translate_in_body(operator)

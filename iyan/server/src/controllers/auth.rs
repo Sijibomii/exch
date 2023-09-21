@@ -1,5 +1,6 @@
 use actix_web::{web};
 use actix_web::web::Json;
+use failure::_core::panic;
 use super::super::state::AppState; 
 use serde::Deserialize;
 use serde_json::json;
@@ -10,7 +11,7 @@ use core::client::Client;
 use super::super::auth::AuthUser;
 use uuid::Uuid;
 use log::{debug};
-use rabbitmq::sender::{Sender, Data, Wallet, DataNoWallet};
+use rabbitmq::sender::{self, Sender, Data, Wallet, DataNoWallet};
 
 #[derive(Deserialize)]
 pub struct LoginParams {
@@ -59,8 +60,26 @@ pub async fn authentication(
                                     balance: wallet.balance
                                 }
                             };
-                            let _ = Sender::publish_login(payload, &state.rabbit_sender).await;
-                            return Ok(Json(json!({ "token": token, "user": user.export() })));
+                            // just do the sending here and block
+                            match Sender::publish_login(payload, &state.rabbit_sender).await {
+                                Ok(res) => {
+                                    match sender::publish(&res.channel, res.queue, &res.data).await {
+                                        Ok(_) => {
+                                            debug!("controller: published successfully");
+                                            return Ok(Json(json!({ "token": token, "user": user.export() })));
+                                        }
+
+                                        Err(_) => {
+                                            debug!("controller: could not successfully publish");
+                                            panic!("could not successfully publish")
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    debug!("controller: could not send publish message");
+                                    panic!("could not send publish message")
+                                }
+                            }                       
                         }
                         None => {
                             // still publish but set wallet to nil -> 
@@ -73,8 +92,25 @@ pub async fn authentication(
                                 last_order_number: u.last_order_id,
                                 last_seq_num: u.last_seq_num,
                             };
-                            let _ = Sender::publish_login_no_wallet(payload, &state.rabbit_sender).await;
-                            return Ok(Json(json!({ "token": token, "user": user.export() })));
+                            match Sender::publish_login_no_wallet(payload, &state.rabbit_sender).await {
+                                Ok(res) => {
+                                    match sender::publish(&res.channel, res.queue, &res.data).await {
+                                        Ok(_) => {
+                                            debug!("controller: published successfully");
+                                            return Ok(Json(json!({ "token": token, "user": user.export() })));
+                                        }
+
+                                        Err(_) => {
+                                            debug!("controller: could not successfully publish");
+                                            panic!("could not successfully publish")
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    debug!("controller: could not send publish message");
+                                    panic!("could not send publish message")
+                                }
+                            }
                         }
                     }
 
@@ -132,6 +168,8 @@ pub async fn registration(
     payload.last_seq_num = Some(0);
     payload.last_order_id = Some(0);
     payload.trading_client_id = Some(client_.next_id);
+
+    debug!("controller: current user client count is {}", client_.next_id);
 
     let res = services::users::register(
         payload,

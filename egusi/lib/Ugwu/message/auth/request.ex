@@ -31,14 +31,17 @@ defmodule Ugwu.Message.Auth.Request do
 
   @impl true
   def execute(changeset, state) do
+    IO.puts("execution")
     with {:ok, request} <- apply_action(changeset, :validate),
          {:ok, user} <- Egusi.Auth.authenticate(request, state.ip) do
 
-      {:reply, user, %{ state | trading_id: user.trading_client_id, email: user.email, id: user.id }}
+      {:reply, user, %{ state | trading_id: user.trading_client_id, email: user.email, id: user.user_id }}
     else
       # don't tolerate malformed requests with any response besides closing
       # out websocket.
-      _ -> {:close, 4001, "invalid_authentication"}
+      _ ->
+        IO.puts("Auth issue")
+        {:close, 4001, "invalid_authentication"}
     end
   end
 end

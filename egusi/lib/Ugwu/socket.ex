@@ -1,6 +1,7 @@
 defmodule Ugwu.SocketHandler do
   require Logger
-
+  use Plug.Builder
+  use Plug.Builder
   defstruct email: nil,
             id: nil,
             ip: nil,
@@ -18,6 +19,8 @@ defmodule Ugwu.SocketHandler do
           compression: nil | :zlib,
           callers: [pid]
         }
+  plug Corsica, origins: "*"
+
 
   @behaviour :cowboy_websocket
 
@@ -111,11 +114,11 @@ defmodule Ugwu.SocketHandler do
 
   def websocket_handle({:text, command_json}, state) do
     with {:ok, message_map!} <- Jason.decode(command_json),
-      # translation
+      # translation##############################################
       message_map! = Ugwu.Translator.translate_inbound(message_map!),
       {:ok, message = %{errors: nil}} <- validate(message_map!, state),
       :ok <- auth_check(message, state) do
-
+      IO.puts("Message ready to be dispatched")
       dispatch(message, state)
     else
       {:error, :auth} ->
@@ -142,6 +145,7 @@ defmodule Ugwu.SocketHandler do
 
   @spec validate(map, state) :: {:ok, Ugwu.Message.t()} | {:error, Ecto.Changeset.t()}
   def validate(message, state) do
+    IO.puts("validate inbound")
     message
     |> Ugwu.Message.changeset(state)
     |> apply_action(:validate)
@@ -150,6 +154,7 @@ defmodule Ugwu.SocketHandler do
   def auth_check(%{operator: op}, state), do: op.auth_check(state)
 
   def dispatch(message, state) do
+    IO.puts("dispatch")
     # called from here
     case message.operator.execute(message.payload, state) do
       close when elem(close, 0) == :close ->

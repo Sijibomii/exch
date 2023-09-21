@@ -143,11 +143,11 @@ defmodule Ugwu.Message do
 
   # encoding will only happen on egress out to the websocket.
   defimpl Jason.Encoder do
+
     def encode(message, opts) do
       %{
         op: operator(message),
-        p: message.payload,
-        v: message.version
+        p: message.payload
       }
       |> add_reference(message)
       |> add_errors(message)

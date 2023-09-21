@@ -16,7 +16,7 @@ defmodule Egusi.MixProject do
   def application do
     [
       mod: {Egusi, []},
-      extra_applications: [:amqp, :logger,:crypto]
+      extra_applications: [:amqp, :logger, :crypto]
     ]
   end
 
@@ -25,7 +25,10 @@ defmodule Egusi.MixProject do
     [
       {:amqp, "~> 3.3"},
       {:plug_cowboy, "~> 2.6.1"},
+      {:plug, "~> 1.0"},
+      {:corsica, "~> 2.0"},
       {:phoenix_pubsub, "~> 2.1.3"},
+      {:jose, "~> 1.11.6"},
       {:ecto_sql, "~> 3.10.2"},
       {:ecto_enum, "~> 1.4.0"},
       {:jason, "~> 1.4.1"},

@@ -8,7 +8,7 @@ const apiUrl = "ws://localhost:6000/socket";
 const connectionTimeout = 15000;
 
 export const connect = (
-    token,
+    token, 
     refreshToken,
     {
       logger = () => {},
@@ -20,38 +20,23 @@ export const connect = (
       waitToReconnect,
     }
   ) =>
+
+    
     new Promise((resolve, reject) => {
-      const socket = new ReconnectingWebSocket("ws://localhost:6000/socket", [], {
+      const socket = new ReconnectingWebSocket("ws://localhost:8000/socket/", [], {
         connectionTimeout,
         WebSocket,
       });
-      const api2Send = (opcode, data, ref=false) => {
-        
-        // tmp fix
-        // this is to avoid ws events queuing up while socket is closed
-        // then it reconnects and fires before auth goes off
-        // and you get logged out
-        if (socket.readyState !== socket.OPEN) return;
-  
+
+      const apiSend = (opcode, data, ref) => {
+        if (socket.readyState !== socket.OPEN) {
+          return;
+        } 
         const raw = `{"v":"0.2.0", "op":"${opcode}","p":${JSON.stringify(data)}${
           ref ? `,"ref":"${ref}"` : ""
         }}`;
   
         socket.send(raw);
-        logger("out", opcode, data, ref, raw);
-      };
-      const apiSend = (opcode, data, fetchId) => {
-        console.log("AUTHHHHHH")
-        
-        if (socket.readyState !== socket.OPEN) {
-          return;
-        }
-        const raw = `{"op":"${opcode}","d":${JSON.stringify(data)}${
-          fetchId ? `,"fetchId":"${fetchId}"` : ""
-        }}`;
-  
-        socket.send(raw);
-        logger("out", opcode, data, fetchId, raw);
       };
   
       const listeners = [];
@@ -104,17 +89,12 @@ export const connect = (
             },
             user: message.d.user,
             send: apiSend,
-            sendCast: api2Send,
             sendCall: (
               opcode,
               parameters,
               doneOpcode
             ) =>
               new Promise((resolveCall, rejectFetch) => {
-                // tmp fix
-                // this is to avoid ws events queuing up while socket is closed
-                // then it reconnects and fires before auth goes off
-                // and you get logged out
                 if (socket.readyState !== socket.OPEN) {
                   rejectFetch(new Error("websocket not connected"));
   
@@ -141,42 +121,8 @@ export const connect = (
                   }, fetchTimeout);
                 }
   
-                api2Send(opcode, parameters, ref || undefined);
-              }),
-            fetch: (opcode, parameters, doneOpcode) =>
-              new Promise((resolveFetch, rejectFetch) => {
-                // tmp fix
-                // this is to avoid ws events queuing up while socket is closed
-                // then it reconnects and fires before auth goes off
-                // and you get logged out
-                if (socket.readyState !== socket.OPEN) {
-                  rejectFetch(new Error("websocket not connected"));
-  
-                  return;
-                }
-                const fetchId = !doneOpcode && generateUuid();
-                let timeoutId = null;
-                const unsubscribe = connection.addListener(
-                  doneOpcode ?? "fetch_done",
-                  (data, arrivedId) => {
-                    if (!doneOpcode && arrivedId !== fetchId) return;
-  
-                    if (timeoutId) clearTimeout(timeoutId);
-  
-                    unsubscribe();
-                    resolveFetch(data);
-                  }
-                );
-  
-                if (fetchTimeout) {
-                  timeoutId = setTimeout(() => {
-                    unsubscribe();
-                    rejectFetch(new Error("timed out"));
-                  }, fetchTimeout);
-                }
-  
-                apiSend(opcode, parameters, fetchId || undefined);
-              }),
+                apiSend(opcode, parameters, ref || undefined);
+              })
           };
   
           resolve(connection);
@@ -190,8 +136,7 @@ export const connect = (
       });
   
       socket.addEventListener("open", () => {
-        console.log("AUTHHHHHH")
-
+        
         const id = setInterval(() => {
           if (socket.readyState === socket.CLOSED) {
             clearInterval(id);
@@ -203,7 +148,7 @@ export const connect = (
   
         apiSend("auth", {
           ...getAuthOptions?.(),
-        });
+        }, generateUuid());
       });
     });
 

@@ -1,6 +1,6 @@
 defmodule Egusi.AccessToken do
   def __default_signer__,
-    do: Joken.Signer.create("RS256", Application.fetch_env!(:egusi, :access_token_secret))
+    do: Joken.Signer.create("RS256", Application.fetch_env!(:egusi, ":access_token_secret"))
 
   use Joken.Config
 
