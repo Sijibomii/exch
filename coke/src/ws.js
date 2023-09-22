@@ -1,13 +1,13 @@
-import WebSocket from "isomorphic-ws";
-import ReconnectingWebSocket from "reconnecting-websocket";
-import { v4 as generateUuid } from "uuid";
+const WebSocket = require("isomorphic-ws");
+const ReconnectingWebSocket = require("reconnecting-websocket");
+const { v4: generateUuid } = require("uuid");
 
 const heartbeatInterval = 8000;
 const apiUrl = "ws://localhost:6000/socket";
 
 const connectionTimeout = 15000;
 
-export const connect = (
+connect = (
     token, 
     refreshToken,
     {
@@ -18,7 +18,7 @@ export const connect = (
       fetchTimeout,
       getAuthOptions, 
       waitToReconnect,
-    }
+    } 
   ) =>
     new Promise((resolve, reject) => {
       const socket = new ReconnectingWebSocket("ws://localhost:8000/socket/", [], {
@@ -31,10 +31,9 @@ export const connect = (
           return;
         } 
 
-        const raw = `{"v":"0.2.0", "op":"${opcode}","p":${JSON.stringify(data)}${
+        const raw = `{"op":"${opcode}","p":${JSON.stringify(data)}${
           ref ? `,"ref":"${ref}"` : ""
         }}`;
-        console.log(ref)
         socket.send(raw);
       };
   
@@ -150,4 +149,6 @@ export const connect = (
         }, generateUuid());
       });
     });
+
+module.exports = { connect };
 

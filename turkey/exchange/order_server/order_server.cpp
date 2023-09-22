@@ -113,34 +113,34 @@ namespace Exchange {
 
   int OrderServer::onMessage(AMQPMessage * message) {
     (void)message;
-    // uint32_t j = 0;
-    // char * data = message->getMessage(&j);
-    // if (data){
-    //     std::string jsonString(data);
-    //     json jsonData = json::parse(jsonString);
-    //     // add trade modify
-    //     ClientRequestType req = (jsonData["op"] == "TRADE-NEW") ? ClientRequestType::NEW : (jsonData["op"] == "TRADE-CANCEL") ? ClientRequestType::CANCEL : ClientRequestType::INVALID;
-    //     size_t seq_num = jsonData["data"]["seq_num"];
-    //     uint32_t client_id = jsonData["data"]["client_id"];
-    //     uint32_t ticker_id = jsonData["data"]["ticker_id"]; 
-    //     uint64_t order_id = jsonData["data"]["order_id"];
-    //     Side side = (jsonData["data"]["side"] == "BUY") ? Side::BUY : Side::SELL;
-    //     int64_t price = jsonData["data"]["price"];
-    //     uint32_t qty = jsonData["data"]["qty"];
-    //     // get next expected sequence number
-    //     auto &next_exp_seq_num = cid_next_exp_seq_num_[client_id];
-    //     if (seq_num != next_exp_seq_num) { // TODO - change this to send a reject back to the client.
+    uint32_t j = 0;
+    char * data = message->getMessage(&j);
+    if (data){
+        std::string jsonString(data);
+        json jsonData = json::parse(jsonString);
+        // add trade modify
+        ClientRequestType req = (jsonData["op"] == "TRADE-NEW") ? ClientRequestType::NEW : (jsonData["op"] == "TRADE-CANCEL") ? ClientRequestType::CANCEL : ClientRequestType::INVALID;
+        size_t seq_num = jsonData["data"]["seq_num"];
+        uint32_t client_id = jsonData["data"]["client_id"];
+        uint32_t ticker_id = jsonData["data"]["ticker_id"]; 
+        uint64_t order_id = jsonData["data"]["order_id"];
+        Side side = (jsonData["data"]["side"] == "BUY") ? Side::BUY : Side::SELL;
+        int64_t price = jsonData["data"]["price"];
+        uint32_t qty = jsonData["data"]["qty"];
+        // get next expected sequence number
+        auto &next_exp_seq_num = cid_next_exp_seq_num_[client_id];
+        if (seq_num != next_exp_seq_num) { // TODO - change this to send a reject back to the client.
+        }else{
+            MEClientRequest me_request{req, client_id, ticker_id, order_id, side, price, qty};
+            OMClientRequest request {seq_num, me_request};
+            (void)request;
 
-    //     }else{
-    //         MEClientRequest me_request{req, client_id, ticker_id, order_id, side, price, qty};
-    //         OMClientRequest request {seq_num, me_request};
-    //         (void)request;
-    //         // logger_.log("%:% %() % Received % % \n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_), request.seq_num_, redelivered);
-    //         //  Exchange::fifo_sequencer_->addClientRequest(getCurrentNanos(), me_request);
-    //         //  Exchange::fifo_sequencer_->sequenceAndPublish();
-    //         next_exp_seq_num++;
-    //     }
-    // }
+            fifo_sequencer_->addClientRequest(getCurrentNanos(), me_request);
+            fifo_sequencer_->sequenceAndPublish();
+
+            next_exp_seq_num++;
+        }
+    }
     return 0;
   }
 

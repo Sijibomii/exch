@@ -86,6 +86,7 @@ defmodule Egusi do
     Onion.LoginSession.start_supervised(0)
     Onion.MDRabbit.start_supervised(0)
     Onion.OrderRabbit.start_supervised(0)
+    Onion.TokenRabbit.start_supervised(0)
     IO.puts("finished rabbits")
   end
 end

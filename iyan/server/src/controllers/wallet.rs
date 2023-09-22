@@ -9,8 +9,8 @@ use super::super::services::{ self, errors::Error };
 use core::wallet::WalletPayload;
 use super::super::auth::AuthUser;
 use uuid::Uuid;
-
-use rabbitmq::sender::{Sender, WalletCreationData, BalanceData};
+use log::{debug};
+use rabbitmq::sender::{self, Sender, WalletCreationData, BalanceData};
 // send event 
 // create a wallet
 pub async fn create_wallet(
@@ -42,11 +42,28 @@ pub async fn create_wallet(
                         amount: 0,
                         wallet_id: wallet.id
                     };
-                    Sender::wallet_creation(payload, &state.rabbit_sender).await;
-                    return Ok(Json(json!({ "wallet" : wallet })))
+                    match Sender::wallet_creation(payload, &state.rabbit_sender).await {
+                        Ok(res) => {
+                            match sender::publish(&res.channel, res.queue, &res.data).await {
+                                Ok(_) => {
+                                    debug!("controller: published successfully");
+                                    return Ok(Json(json!({ "wallet" : wallet })));
+                                }
+        
+                                Err(_) => {
+                                    debug!("controller: could not successfully publish");
+                                    panic!("could not successfully publish")
+                                }
+                            }
+                        }
+                        Err(_) => {
+                            debug!("controller: could not send publish message");
+                            panic!("could not send publish message")
+                        }
+                    }
                 }
                 Err(error) => {
-                    return Err(Error::from(error))
+                    return Err(Error::from(error)) 
                 }
             } 
         }
@@ -64,7 +81,7 @@ pub struct FundWalletParams {
 }
 // fund wallet
 // send event
-pub async fn fund_wallet(
+pub async fn fund_wallet( 
     data: web::Json<FundWalletParams>,
     state: web::Data<AppState>,
     user: AuthUser
@@ -87,8 +104,26 @@ pub async fn fund_wallet(
                                 amount: data.deposit,
                                 wallet_id: wallet.id
                             };
-                            Sender::publish_balance(payload, &state.rabbit_sender).await;
-                            return Ok(Json(json!({ "wallet" : new_wallet })))
+                            match Sender::publish_balance(payload, &state.rabbit_sender).await {
+                                Ok(res) => {
+                                    match sender::publish(&res.channel, res.queue, &res.data).await {
+                                        Ok(_) => {
+                                            debug!("controller: published successfully");
+                                            return Ok(Json(json!({ "wallet" : new_wallet })));
+                                        }
+                
+                                        Err(_) => {
+                                            debug!("controller: could not successfully publish");
+                                            panic!("could not successfully publish")
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    debug!("controller: could not send publish message");
+                                    panic!("could not send publish message")
+                                }
+                            }
+                            
                         }
                         Err(error) => {
                             return Err(Error::from(error))

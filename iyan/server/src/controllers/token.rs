@@ -52,7 +52,8 @@ pub async fn create_token(
         Ok(token) => {
             let pay = TokenData { ticker_id: token.ticker_id};
             // chnage migrations
-            match Sender::publish_new_token(pay, &state.rabbit_sender).await {
+            // should be token sender
+            match Sender::publish_new_token(pay, &state.token_sender).await {
                 Ok(res) => {
                     match sender::publish(&res.channel, res.queue, &res.data).await {
                         Ok(_) => {

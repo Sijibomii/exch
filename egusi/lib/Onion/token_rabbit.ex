@@ -80,7 +80,9 @@ defmodule Onion.TokenRabbit do
     data = Jason.decode!(payload)
     # how to make sure that each ticker is up to date
     case data do
-      %{ "op" => "TOKEN-CREATION" } -> Onion.TickerSession.start_supervised(ticker_id: data["data"]["ticker_id"])
+      %{ "op" => "TOKEN-CREATION" } ->
+        IO.puts("token rabbits consumer: New message received!")
+        Onion.TickerSession.start_supervised(ticker_id: data["data"]["ticker_id"])
         :ok
 
       _ ->:ok

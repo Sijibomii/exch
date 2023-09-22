@@ -58,26 +58,34 @@ impl FromRequest for JWTPayload {
 
     fn from_request(req: &HttpRequest, _payload: &mut Payload) -> Self::Future {
         let state = req.app_data::<web::Data<AppState>>().unwrap();
-
+        
         let auth_header = match req.headers().get("authorization") {
-            Some(auth_header) => auth_header,
-            None => return future::err(error::ErrorUnauthorized("invalid authorization token")),
+            Some(auth_header) => {
+                debug!("got auth header");
+                auth_header
+            }
+            None => {
+                debug!("failed to get auth header");
+                return future::err(error::ErrorUnauthorized("invalid authorization token."))
+            }
         };
 
         let auth_header_parts: Vec<_> = auth_header.to_str().unwrap().split_whitespace().collect();
         if auth_header_parts.len() != 2 {
-            return future::err(error::ErrorUnauthorized("invalid authorization token"));
+            debug!("auth header error");
+            return future::err(error::ErrorUnauthorized("invalid authorization token.."));
         }
 
         if auth_header_parts.len() != 2 || auth_header_parts[0].to_lowercase() != "bearer" {
-            return future::err(error::ErrorUnauthorized("invalid authorization token"));
+            debug!("bearer error");
+            return future::err(error::ErrorUnauthorized("invalid authorization token..."));
         }
 
         let validation = jsonwebtoken::Validation::new(jsonwebtoken::Algorithm::RS256);
         let jwt_public = DecodingKey::from_rsa_pem(&state.jwt_public).expect("Failed to create DecodingKey");
         match jsonwebtoken::decode::<JWTPayload>(&auth_header_parts[1], &jwt_public, &validation) {
             Ok(token) => ready(Ok(token.claims)),
-            Err(_) => future::err(error::ErrorUnauthorized("invalid authorization token")),
+            Err(_) => future::err(error::ErrorUnauthorized("invalid authorization token....")),
         }
     }
 }

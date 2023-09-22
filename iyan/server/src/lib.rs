@@ -77,7 +77,8 @@ pub async fn run(
         jwt_private: fs::read("/keys/private_key.pem")
             .expect("failed to open the private key file"),
         rabbit_sender: rabbits[0].clone(),
-        balance_sender: rabbits[1].clone()
+        balance_sender: rabbits[1].clone(),
+        token_sender: rabbits[2].clone()
     };
     // write the tokens to file 
     setup(&app_state.postgres).await;
@@ -130,8 +131,8 @@ pub async fn run(
                     .route("/token/{id}", web::delete().to(controllers::token::delete_token))
                     .route("/token/trade", web::post().to(controllers::token::begin_trading_token))
                     .route("/token/halt", web::post().to(controllers::token::halt_trading_token))
-                    .route("/wallet/", web::post().to(controllers::wallet::create_wallet))
-                    .route("/wallet/", web::get().to(controllers::wallet::get_user_wallets))
+                    .route("/wallet", web::post().to(controllers::wallet::create_wallet))
+                    .route("/wallet", web::get().to(controllers::wallet::get_user_wallets))
                     .route("/wallet/{id}", web::get().to(controllers::wallet::get_wallet))
                     .route("/wallet/{id}", web::delete().to(controllers::wallet::delete_wallet))
                     .route("/wallet/{id}/fund", web::post().to(controllers::wallet::fund_wallet))
@@ -164,9 +165,20 @@ pub async fn setup_rabbits(p0: Pool, p1: Pool) -> Vec<Addr<RabbitSender>>{
             let rabbit_sender = RabbitSender::start(RabbitSender::new(p0.clone(), "authentication".to_string(), channel));
             match get_channel(p0.clone(), "balance").await {
                 Ok(channel) => {
-                    let balance_sender = RabbitSender::start(RabbitSender::new(p1.clone(), "balance".to_string(), channel));
+                    let balance_sender = RabbitSender::start(RabbitSender::new(p0.clone(), "balance".to_string(), channel));
 
-                    return vec![rabbit_sender, balance_sender];
+                    match get_channel(p1.clone(), "token").await {
+                        Ok(channel) => {
+                            let token_sender = RabbitSender::start(RabbitSender::new(p1.clone(), "token".to_string(), channel));
+        
+                            return vec![rabbit_sender, balance_sender, token_sender];
+                        }
+                        Err(err) => {
+                            // Handle the error here
+                            panic!("Error getting channel: {:?}", err);
+                            return vec![];
+                        }
+                    }
                 }
                 Err(err) => {
                     // Handle the error here
