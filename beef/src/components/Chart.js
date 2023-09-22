@@ -1,17 +1,30 @@
 import { useEffect, useState, useRef } from "react";
 import { createChart, ColorType } from 'lightweight-charts';
 import data from './data';
+import { useWrappedConn } from "../lib/useConnection";
+import { useParams } from 'react-router-dom';
 const Chart = () => {
 
     const chartContainerRef = useRef();
-
+    const conn = useWrappedConn();
     const [orderBook, setOrderBook] = useState(null);
+    let { id } = useParams();
 
     useEffect(()=> {
-        // get ticker id from url.
+        const number = parseInt(id);
+
+     conn.query.getOrderBook(number)
+        .then((response) => {
+        // Handle the successful response here
+            console.log('OrderBook response:', response);
+        })
+        .catch((error) => {
+            // Handle errors here
+            console.error('OrderBook error:', error);
+        });
 
         // send 
-    }, [])
+    }, [id, conn.query])
     useEffect(() => {
         const width = window.innerWidth;
         const chartProperties = {

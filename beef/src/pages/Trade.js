@@ -15,7 +15,7 @@ const TradingPage = () => {
 
 const Trade = () => {
 
-   
+    
     
     return (
         <div className="">
