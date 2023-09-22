@@ -14,13 +14,15 @@ use serde_json::Value;
 pub struct ClientPayload {
     pub id: Option<Uuid>,
     pub next_id: Option<i64>,
+    pub next_ticker_id: Option<i64>,
 }  
 
 impl ClientPayload {
     pub fn new() -> Self {
         ClientPayload {
             id: None,
-            next_id: None
+            next_id: None,
+            next_ticker_id: None
         }
     }
 }
@@ -29,7 +31,8 @@ impl From<Client> for ClientPayload {
     fn from(client: Client) -> Self {
         ClientPayload {
             id: Some(client.id),
-            next_id: Some(client.next_id)
+            next_id: Some(client.next_id),
+            next_ticker_id: Some(client.next_ticker_id)
         }
     } 
 }
@@ -40,6 +43,7 @@ impl From<Client> for ClientPayload {
 pub struct Client {
     pub id: Uuid,
     pub next_id: i64,
+    pub next_ticker_id: i64,
 }
 
 impl Client {

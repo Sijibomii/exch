@@ -16,6 +16,7 @@ pub struct TokenPayload {
     pub is_trading: Option<bool>,
     pub supply: Option<i64>,
     pub user_id: Option<Uuid>,
+    pub ticker_id: Option<i64>
 }
 
 impl TokenPayload {
@@ -26,6 +27,7 @@ impl TokenPayload {
             is_trading: None,
             supply: None,
             user_id: None,
+            ticker_id: None
         }
     }
 }
@@ -38,6 +40,7 @@ impl From<Token> for TokenPayload {
             is_trading: Some(token.is_trading),
             supply: Some(token.supply),
             user_id: Some(token.user_id),
+            ticker_id: Some(token.ticker_id)
         }
     }
 }
@@ -51,6 +54,7 @@ pub struct Token {
     pub is_trading: bool,
     pub supply: i64,
     pub user_id: Uuid,
+    pub ticker_id: i64
 }
 
 

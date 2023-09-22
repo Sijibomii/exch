@@ -16,6 +16,7 @@ defmodule Egusi do
       Onion.Supervisors.ClientRabbit,
       Onion.Supervisors.MDRabbit,
       Onion.Supervisors.OrderRabbit,
+      Onion.Supervisors.TokenRabbit,
       # Onion.Telemetry,
       Plug.Cowboy.child_spec(
         scheme: :http,
@@ -80,7 +81,6 @@ defmodule Egusi do
     # start rabbits with ids 0, 1
     IO.puts("about to start_rabbits")
     # start all rabbit client both senders and listeners
-    # TODO: WHEN THIS ARE CALLED WHAT ID IS USED??
     Onion.BalanceRabbit.start_supervised(0)
     Onion.ClientRabbit.start_supervised(0)
     Onion.LoginSession.start_supervised(0)

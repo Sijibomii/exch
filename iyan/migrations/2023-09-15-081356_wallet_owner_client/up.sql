@@ -13,7 +13,8 @@ CREATE TABLE wallet
 CREATE TABLE client 
 (
     id uuid PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
-    next_id BIGINT NOT NULL
+    next_id BIGINT NOT NULL,
+    next_ticker_id BIGINT NOT NULL
 );
 
 CREATE TABLE token_ownership
@@ -23,3 +24,4 @@ CREATE TABLE token_ownership
     token_id uuid NOT NULL,
     balance BIGINT NOT NULL
 );
+ 

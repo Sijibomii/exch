@@ -46,7 +46,7 @@ pub fn find_client(conn: &mut PooledConnection) -> Result<Client, Error> {
             if ctl.is_some() {
                 return  Ok(ctl.unwrap());
             }else {
-                return Ok(Client { id: Uuid::new_v4(), next_id: 0 })
+                return Ok(Client { id: Uuid::new_v4(), next_id: 0, next_ticker_id: 0 })
             }
         })
 }

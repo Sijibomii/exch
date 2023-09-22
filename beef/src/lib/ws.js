@@ -30,10 +30,11 @@ export const connect = (
         if (socket.readyState !== socket.OPEN) {
           return;
         } 
+
         const raw = `{"v":"0.2.0", "op":"${opcode}","p":${JSON.stringify(data)}${
           ref ? `,"ref":"${ref}"` : ""
         }}`;
-  
+        console.log(ref)
         socket.send(raw);
       };
   

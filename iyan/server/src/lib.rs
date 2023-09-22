@@ -90,6 +90,7 @@ pub async fn run(
         Err(_) => {
             // could not find the client
             let mut payload = ClientPayload::new();
+            payload.next_ticker_id = Some(0);
             payload.next_id = Some(0);
             payload.id = Some(Uuid::new_v4());
             match services::client::insert(payload, &postgres).await {

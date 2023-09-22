@@ -7,5 +7,6 @@ CREATE TABLE tokens
     ticker VARCHAR UNIQUE NOT NULL,
     is_trading BOOLEAN NOT NULL DEFAULT false,
     supply BIGINT,
-    user_id uuid NOT NULL
+    user_id uuid NOT NULL,
+    ticker_id BIGINT NOT NULL
 );

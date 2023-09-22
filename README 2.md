@@ -97,6 +97,7 @@ time, open, close, high, low
 // the incremental socket should also be in this format but close will be the current price at the moment 
 
 ////////
-on trade/ddd send ws message to request orderbook and plot graph
+creating a new ticker and starting tickersession (done) -> test using postman
+on trade/ddd send ws message to request orderbook and plot graph 
 make sure server send regular updates
 do buy and sell correctly

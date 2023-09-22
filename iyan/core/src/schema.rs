@@ -7,6 +7,7 @@ diesel::table! {
         is_trading -> Bool,
         supply -> BigInt,
         user_id -> Uuid,
+        ticker_id -> BigInt,
     }
 }
   
@@ -59,7 +60,8 @@ diesel::table! {
 diesel::table! {
     client(id) {
         id -> Uuid,
-        next_id -> BigInt
+        next_id -> BigInt,
+        next_ticker_id -> BigInt
     }
 }
 

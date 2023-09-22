@@ -118,7 +118,7 @@ impl Handler<Stop> for RabbitSender {
     type Result = ();
 
     fn handle(&mut self, _: Stop, ctx: &mut Self::Context) -> Self::Result {
-        ctx.stop();
+        ctx.stop(); 
     }
 }
 
@@ -163,10 +163,27 @@ impl Sender{
         })
     }
 
+
+    pub async fn publish_new_token(
+        payload: TokenData,
+        rabbit: &RabbitSenderAddr, 
+    ) -> Result<Res, Error> {
+
+        (*rabbit)
+        .send(PublishNewTokenData{
+            data: payload
+        })
+        .await
+        .map_err(Error::from)
+        .and_then(|res| {
+            res.map_err(|e| Error::from(e))
+        })
+    }
+
     pub async fn publish_balance(
         payload: BalanceData,
         rabbit: &RabbitSenderAddr, 
-    ) -> Result<(), Error> {
+    ) -> Result<Res, Error> {
         (*rabbit)
         .send(PublishBalanceData{
             data: payload
@@ -181,7 +198,7 @@ impl Sender{
     pub async fn wallet_creation(
         payload: WalletCreationData,
         rabbit: &RabbitSenderAddr, 
-    ) -> Result<(), Error> {
+    ) -> Result<Res, Error> {
         (*rabbit)
         .send(PublishWalletCreationData{
             data: payload
@@ -262,7 +279,7 @@ pub struct DataNoWalletResponse{
 pub struct Data {
     pub user_id: uuid::Uuid,
     pub email: String,
-    pub trading_client_id: i64,
+    pub trading_client_id: i64, 
     pub last_order_number: i64,
     pub last_seq_num: i64,
     pub wallet: Wallet
@@ -339,16 +356,72 @@ pub async fn publish(
         .await
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+pub struct TokenData {
+    pub ticker_id: i64,
+}
+#[derive(Debug, Deserialize, Serialize)]
+pub struct TokenResponse{
+    refId: Uuid,
+    op: String,
+    data: TokenData,
+}
 
 #[derive(Message,Debug, Deserialize, Serialize)]
-#[rtype(result = "Result<(), Error>")]
+#[rtype(result = "Result<Res, Error>")]
+pub struct PublishNewTokenData {
+    pub data: TokenData,
+}
+
+
+impl Handler<PublishNewTokenData> for RabbitSender {
+
+    type Result = Result<Res, Error>;
+
+    fn handle(
+        &mut self,
+        PublishNewTokenData { 
+            data
+         }: PublishNewTokenData,
+        _: &mut Self::Context,
+    ) -> Self::Result {
+        let channel = self.channel.to_owned();
+           
+        let response = TokenResponse{
+                    refId: Uuid::new_v4(),
+                    op:  "TOKEN-CREATION".to_string(),
+                    data: data
+                };
+                // Serialize the struct to a JSON string
+        let json_string = serde_json::to_string(&response).expect("Failed to serialize to JSON");
+        // Convert the JSON string to a &[u8]
+        let bytes: Vec<u8> = json_string.as_bytes().to_owned();
+        // task::
+        let queue = self.queue_name.to_owned();
+            
+        let result  = Ok(
+            Res {
+                channel: channel,
+                queue: queue,
+                data: bytes
+            }
+        );   
+
+        return result;
+        
+    }
+}
+
+#[derive(Message,Debug, Deserialize, Serialize)]
+#[rtype(result = "Result<Res, Error>")]
 pub struct PublishBalanceData {
     pub data: BalanceData,
 }
 
+
 impl Handler<PublishBalanceData> for RabbitSender {
 
-    type Result = Result<(), Error>;
+    type Result = Result<Res, Error>;
 
     fn handle(
         &mut self,
@@ -370,21 +443,21 @@ impl Handler<PublishBalanceData> for RabbitSender {
         let bytes: Vec<u8> = json_string.as_bytes().to_owned();
         // task::
         let queue = self.queue_name.to_owned();
-        actix_rt::spawn({
-            async move {
-                let result = publish(&channel, queue.to_string(), &bytes).await;
-        
-                match result {
-                    Ok(_) => println!("Message published successfully"),
-                    Err(e) => eprintln!("Error publishing message: {:?}", e),
-                }
+            
+        let result  = Ok(
+            Res {
+                channel: channel,
+                queue: queue,
+                data: bytes
             }
-        });
-        
-        Ok(())
+        );   
+
+        return result;
         
     }
 }
+
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BalanceData {
     pub client_id: i64,
@@ -399,13 +472,13 @@ pub struct BalanceResponse{
 }
 
 #[derive(Message,Debug, Deserialize, Serialize)]
-#[rtype(result = "Result<(), Error>")]
+#[rtype(result = "Result<Res, Error>")]
 pub struct PublishWalletCreationData {
     pub data: WalletCreationData,
 }
 impl Handler<PublishWalletCreationData> for RabbitSender {
 
-    type Result = Result<(), Error>;
+    type Result = Result<Res, Error>;
 
     fn handle(
         &mut self,
@@ -415,7 +488,7 @@ impl Handler<PublishWalletCreationData> for RabbitSender {
         _: &mut Self::Context,
     ) -> Self::Result {
 
-        let channel = &self.channel;
+        let channel = self.channel.to_owned();
         let response = WalletCreationResponse{
                     refId: Uuid::new_v4(),
                     op:  "WALLET-CREATED".to_string(),
@@ -424,20 +497,19 @@ impl Handler<PublishWalletCreationData> for RabbitSender {
         // Serialize the struct to a JSON string
         let json_string = serde_json::to_string(&response).expect("Failed to serialize to JSON");
         // Convert the JSON string to a &[u8]
-        let bytes: &[u8] = json_string.as_bytes();
-        // Publish a message to the queue
-        // Create a Tokio runtime
-        let rt = Runtime::new()?;
-        rt.block_on(async {
-            let result = publish(&channel, self.queue_name.to_string(), bytes).await;
-    
-            match result {
-                Ok(_) => println!("Message published successfully"),
-                Err(e) => eprintln!("Error publishing message: {:?}", e),
-            }
-        });
+        let bytes = json_string.as_bytes().to_owned();
         
-        Ok(())
+        let queue = self.queue_name.to_owned();
+        
+        let result  = Ok(
+            Res {
+                channel: channel,
+                queue: queue,
+                data: bytes
+            }
+        );   
+
+        return result;
         
     }
 }

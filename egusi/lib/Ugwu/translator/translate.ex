@@ -35,6 +35,9 @@ defmodule Ugwu.Translator.V0_1_0 do
 
   # out boubd translations here
   def translate_outbound(message, original) do
+    IO.puts("OUTBOUNDDDD TRANSLATION")
+    IO.inspect(message)
+    IO.inspect(original)
     %{op: "fetch_done", d: message.p}
     |> add_out_ref(message)
     |> add_out_err(message)

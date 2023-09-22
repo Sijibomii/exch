@@ -8,7 +8,9 @@ use super::super::services::{ self, errors::Error };
 use core::token::TokenPayload;
 use super::super::auth::AuthUser;
 use uuid::Uuid;
-
+use rabbitmq::sender::{self, Sender, TokenData};
+use core::client::Client;
+use log::{debug};
 #[derive(Deserialize)]
 pub struct CreateTokenParams {
     pub ticker: String,
@@ -24,10 +26,22 @@ pub async fn create_token(
 
     let mut payload = TokenPayload::new();
 
-    payload.is_trading = Some(false);
+    let ctl: Result<Client, Error> = match services::client::get_client_count(&state.postgres).await {
+        Ok(client) => {
+            Ok(client)
+        }
+        Err(err) => {
+            Err(err.into())
+        }
+    };
+    let client_ = ctl.unwrap();
+    // check for the last ticker_id
+    payload.is_trading = Some(true);
     payload.user_id = Some(user.id);
     payload.supply = Some(params.supply);
     payload.ticker = Some(params.ticker);
+    payload.ticker_id = Some(client_.next_ticker_id);
+    
 
     let res = services::tokens::create(
         payload,
@@ -36,7 +50,28 @@ pub async fn create_token(
 
     match res {
         Ok(token) => {
-            return Ok(Json(json!({ "token" : token })))
+            let pay = TokenData { ticker_id: token.ticker_id};
+            // chnage migrations
+            match Sender::publish_new_token(pay, &state.rabbit_sender).await {
+                Ok(res) => {
+                    match sender::publish(&res.channel, res.queue, &res.data).await {
+                        Ok(_) => {
+                            debug!("controller: published successfully");
+                            return Ok(Json(json!({ "token" : token })));
+                        }
+
+                        Err(_) => {
+                            debug!("controller: could not successfully publish");
+                            panic!("could not successfully publish")
+                        }
+                    }
+                }
+                Err(_) => {
+                    debug!("controller: could not send publish message");
+                    panic!("could not send publish message")
+                }
+            }
+            
         }
         Err(error) => {
             return Err(Error::from(error))
