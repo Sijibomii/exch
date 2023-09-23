@@ -44,13 +44,13 @@ defmodule Ugwu.Message.Trade.New do
     with {:ok, trade_spec} <- apply_action(changeset!, :validation),
          {:ok, %{trade: trade}} <-
           Egusi.Trade.Create.create(
-            state.user.trading_id,
+            state.trading_id,
             trade_spec.ticker_id,
             trade_spec.side,
             trade_spec.price,
             trade_spec.qty
           ) do
-      {:reply, struct(__MODULE__,  Map.from_struct(trade) |> Map.update!(:success, fn _ -> true end)), state}
+      {:reply, struct(__MODULE__,  trade |> Map.put(:success, true)), state}
           else
             # error handling
             {:error, message } -> {:error, message}

@@ -6,6 +6,7 @@ defmodule Ugwu.Translator.V0_1_0 do
   @operator_translations %{
     "add_new_trade" => "trade:new",
     "cancel_trade" => "trade:cancel",
+    "listen_trade" => "trade:listen",
     "all_orders" => "orders:all",
     "auth" => "auth:request",
   }

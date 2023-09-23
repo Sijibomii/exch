@@ -223,7 +223,7 @@ impl User {
     }
 
     pub async fn find_by_id(
-        id: Uuid,
+        id: Uuid, 
         postgres: &PgExecutorAddr,
     ) ->  Result<User, Error> {
         let sum_result = (*postgres)

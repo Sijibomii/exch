@@ -135,8 +135,8 @@ namespace Exchange {
             OMClientRequest request {seq_num, me_request};
             (void)request;
 
-            fifo_sequencer_->addClientRequest(getCurrentNanos(), me_request);
-            fifo_sequencer_->sequenceAndPublish();
+            fifo_sequencer_.addClientRequest(getCurrentNanos(), me_request);
+            fifo_sequencer_.sequenceAndPublish();
 
             next_exp_seq_num++;
         }

@@ -49,6 +49,7 @@ defmodule Onion.OrderRabbit do
   end
 
   def handle_cast({:send, msg}, %State{chan: chan, id: id} = state) do
+    IO.puts("sending out new order!")
     AMQP.Basic.publish(chan, "exch", @send_queue, Jason.encode!(msg))
     {:noreply, state}
   end
@@ -75,6 +76,7 @@ defmodule Onion.OrderRabbit do
     data = Jason.decode!(payload)
     # how to make sure that each ticker is up to date
     case data do
+
       _ -> :ok
     end
 

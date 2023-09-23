@@ -110,7 +110,7 @@ pub async fn register(
 // get a user by id 
 pub async fn get(id: Uuid, postgres: &PgExecutorAddr) -> Result<User, Error> {
     match User::find_by_id(id, postgres).await {
-        Ok(user) => {
+        Ok(user) => { 
             Ok(user)
          }
          Err(err) => {

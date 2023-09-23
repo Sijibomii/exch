@@ -116,11 +116,22 @@ defmodule Onion.UserSession do
     {:reply, :ok, %{state | pid: pid}}
   end
 
+  def listen_trades(user_trading_id, ticker_id), do: call(user_trading_id, {:listen, ticker_id})
+
+  defp listen_impl(ticker_id, reply, state) do
+    IO.puts("usersession: request to listen to new trades!")
+    Onion.TickerSession.add_listener(ticker_id, state.trading_client_id)
+
+    {:reply, :ok, state}
+  end
+
   def new_trade(user_trading_id, trade), do: call(user_trading_id, {:new_trade, trade})
 
   defp new_trade_impl(ticker_id, side, price, qty, _reply, state) do
+    IO.puts("usersession: request to add new trades!")
     # check balance
     if state.wallet.balance < (price*qty) do
+      IO.puts("usersession: insufficient funds sir!")
       {:reply, {:error, "insufficient balance in wallet"}, state}
     else
       new_balance = state.balace - (price*qty)
@@ -154,6 +165,7 @@ defmodule Onion.UserSession do
   def cancel_trade(user_trading_id, trade), do: call(user_trading_id, {:cancel_trade, trade})
 
   defp cancel_trade_impl(ticker_id, order_id, _reply, state) do
+    IO.puts("usersession: request to cancel trades!")
     random_id = :rand.uniform(3)
     Onion.OrderRabbit.send(random_id, %{
       refId: :uuid.uuid4(),
@@ -172,10 +184,11 @@ defmodule Onion.UserSession do
 
   defp client_response_impl(response, state) do
     # check if cancel accepted add balance back
+    IO.puts("usersession: got a new response")
     case response["op"] == "CLIENT-RESPONSE-CANCELED" do
 
       true ->
-        # String.to_integer(string_number) ??
+        IO.puts("usersession: got a new cancel response!")
         Onion.BalanceRabbit.send(0, %{
           refId: :uuid.uuid4(),
           op: "WALLET-BALANCE-CHANGE",
@@ -197,6 +210,7 @@ defmodule Onion.UserSession do
   def new_wallet(user_trading_id, wallet), do: cast(user_trading_id, {:new_wallet, wallet})
 
   defp new_wallet_impl(wallet, state) do
+    IO.puts("usersession: got a new wallet!")
     {:noreply, %{ state | wallet: %Wallet{
       id: wallet["wallet_id"],
       balance: 0
@@ -206,6 +220,7 @@ defmodule Onion.UserSession do
   def wallet_deposit(user_trading_id, details), do: cast(user_trading_id, {:wallet_deposit, details})
 
   def wallet_deposit_impl(data, state) do
+    IO.puts("usersession: got a new wallet deposit!")
     {:noreply, %{ state | wallet: %Wallet{
       id: data["wallet_id"],
       balance: state.wallet.balance + data["amount"]
@@ -238,11 +253,12 @@ defmodule Onion.UserSession do
   def handle_cast({:new_wallet, wallet}, state), do: new_wallet_impl(wallet, state)
   def handle_cast({:wallet_deposit, details}, state), do: wallet_deposit_impl(details, state)
 
+  def handle_call({:listen, ticker_id}, reply, state), do: listen_impl(ticker_id, reply, state)
   def handle_call({:get, key}, reply, state), do: get_impl(key, reply, state)
   def handle_call({:set_active_ws, pid}, reply, state), do: set_active_ws(pid, reply, state)
+  # {:new_trade, trade}
   def handle_call({:new_trade, %{ ticker_id: ticker_id, side: side, price: price, qty: qty }}, reply, state),  do: new_trade_impl(ticker_id, side, price, qty, reply, state)
   def handle_call({:cancel_trade, %{ ticker_id: ticker_id, order_id: order_id }}, reply, state),  do: cancel_trade_impl(ticker_id, order_id, reply, state)
   def handle_info({:DOWN, _ref, :process, pid, _reason}, state), do: handle_disconnect(pid, state)
 
-  # WHEN REQUESTING ORDERBOOK FROM TICKER MAKE SURE TO FILTER ONLY TRADES AND RETURN TO CLIENT
 end

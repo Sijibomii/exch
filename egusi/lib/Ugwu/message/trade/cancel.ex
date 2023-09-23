@@ -38,11 +38,11 @@ defmodule Ugwu.Message.Trade.Cancel do
     with {:ok, trade_spec} <- apply_action(changeset!, :validation),
          {:ok, %{trade: trade}} <-
           Egusi.Trade.Cancel.cancel(
-            state.user.trading_id,
+            state.trading_id,
             trade_spec.ticker_id,
             trade_spec.order_id
           ) do
-      {:reply, struct(__MODULE__,  Map.from_struct(trade) |> Map.update!(:success, fn _ -> true end)), state}
+      {:reply, struct(__MODULE__,  trade |> Map.put(:success, true)), state}
           else
             # error handling
             {:error, message } -> {:error, message}

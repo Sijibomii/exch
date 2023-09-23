@@ -137,6 +137,8 @@ defmodule Onion.TickerSession do
     {:reply, {:ok, Enum.reverse(state.chart_data)}, state}
   end
 
+  def add_listener(ticker_id, user_trading_id), do: cast(ticker_id, {:listen, user_trading_id})
+
   defp add_listener_impl(user_trading_id, state) do
     {:noreply, %{state | listeners: [user_trading_id | state.listeners]}}
   end

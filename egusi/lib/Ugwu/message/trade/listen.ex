@@ -1,7 +1,8 @@
-defmodule Ugwu.Message.Request.Orderbook do
+defmodule Ugwu.Message.Trade.Listen do
   use Ugwu.Message.Call,
   needs_auth: true
 
+  @derive Jason.Encoder
   @primary_key false
   embedded_schema do
     field(:ticker_id, :integer)
@@ -13,7 +14,6 @@ defmodule Ugwu.Message.Request.Orderbook do
     |> cast(data, [:ticker_id])
     |> validate_required([:ticker_id])
   end
-
 
   defmodule Reply do
     use Ugwu.Message.Push
@@ -33,16 +33,17 @@ defmodule Ugwu.Message.Request.Orderbook do
   @impl true
   def execute(changeset!, state) do
 
-    with {:ok, spec} <- apply_action(changeset!, :validation),
-         {:ok, %{orders: orders}} <-
-          Egusi.Request.request_orderbook(
+    with {:ok, trade_spec} <- apply_action(changeset!, :validation),
+         {:ok, %{trade: trade}} <-
+          Egusi.Trade.Listen.listen(
             state.trading_id,
-            spec.ticker_id
+            trade_spec.ticker_id
           ) do
-      {:reply, struct(__MODULE__,  orders |> Map.put(:success, true)), state}
+      {:reply, struct(__MODULE__,  trade |> Map.put(:success, true)), state}
           else
             # error handling
             {:error, message } -> {:error, message}
     end
   end
+
 end

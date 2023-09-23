@@ -14,6 +14,7 @@ defenum(
     {Trade.New, 11},
     {Trade.Modify, 12},
     {Trade.Cancel, 13},
+    {Trade.Listen, 14},
 
     # request 21..30
     {Request.Orderbook, 21},

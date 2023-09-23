@@ -43,7 +43,7 @@ pub fn find_by_id(id: Uuid, conn: &mut PooledConnection) -> Result<User, Error> 
     use super::super::schema::users::dsl;
 
     dsl::users
-        .filter(dsl::id.eq(id).and(dsl::is_verified.ne(false)))
+        .filter(dsl::id.eq(id))
         .first::<User>(conn)
         .map_err(|e| Error::from(e))
 }

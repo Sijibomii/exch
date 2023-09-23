@@ -8,7 +8,7 @@ defmodule Ugwu.Message.Manifest do
     "trade:new" => Trade.New,
     "trade:modify" => Trade.Modify,
     "trade:cancel" => Trade.Cancel,
-
+    "trade:listen" => Trade.Listen,
     "orders:all" => Request.Orderbook,
   }
 

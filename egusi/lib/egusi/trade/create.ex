@@ -9,12 +9,12 @@ defmodule Egusi.Trade.Create do
     qty
   ) do
 
-    case UserSession.new_trade(user_trading_id, {:new_trade, %{
+    case UserSession.new_trade(user_trading_id, %{
       ticker_id: ticker_id,
       side: side,
       price: price,
       qty: qty
-    }}) do
+    }) do
 
       {:ok} -> {:ok, %{trade: %{
         ticker_id: ticker_id,

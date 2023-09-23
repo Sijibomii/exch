@@ -29,7 +29,7 @@ pub async fn create_wallet(
         &state.postgres
     ).await;
 
-    // get user by id
+    // get user by id 
     let resUser = services::users::get(user.id, &state.postgres).await;
 
     match res {

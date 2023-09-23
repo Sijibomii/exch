@@ -152,8 +152,10 @@ defmodule Ugwu.SocketHandler do
     |> apply_action(:validate)
   end
 
-  def auth_check(%{operator: op}, state), do: op.auth_check(state)
-
+  def auth_check(%{operator: op}, state) do
+    IO.puts("AUTHH CHECK")
+    op.auth_check(state)
+  end
   def dispatch(message, state) do
     IO.puts("dispatch")
     # called from here

@@ -131,7 +131,7 @@ defmodule Ugwu.Message do
 
   defp validate_calls_have_references(changeset) do
     operator = get_field(changeset, :operator)
-
+    IO.inspect(changeset)
     # if the operator has a reply submodule then it must be a "call" message.
     # verify that these
     if function_exported?(operator, :reply_module, 0) do
