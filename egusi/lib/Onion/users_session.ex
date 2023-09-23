@@ -32,8 +32,8 @@ defmodule Onion.UserSession do
               pid: nil,
               email: nil,
               wallet: nil,
-              last_order_number: nil,
-              last_seq_num: nil,
+              last_order_number: -1,
+              last_seq_num: -1,
               last_incoming_seq_num: nil
   end
 
@@ -134,19 +134,18 @@ defmodule Onion.UserSession do
       IO.puts("usersession: insufficient funds sir!")
       {:reply, {:error, "insufficient balance in wallet"}, state}
     else
-      new_balance = state.balace - (price*qty)
+      new_balance = state.wallet.balance - (price*qty)
 
-      random_id = :rand.uniform(2)
-      Onion.BalanceRabbit.send(random_id, %{
-        refId: :uuid.uuid4(),
+      Onion.BalanceRabbit.send(0, %{
+        refId: UUID.uuid4(),
         op: "WALLET-BALANCE-CHANGE",
         data: %{
           client_id: state.trading_client_id,
           balance: new_balance
         }
       })
-      Onion.OrderRabbit.send(random_id, %{
-        refId: :uuid.uuid4(),
+      Onion.OrderRabbit.send(0, %{
+        refId: UUID.uuid4(),
         op: "TRADE-NEW",
         data: %{
           seq_num: state.last_seq_num + 1,
@@ -168,7 +167,7 @@ defmodule Onion.UserSession do
     IO.puts("usersession: request to cancel trades!")
     random_id = :rand.uniform(3)
     Onion.OrderRabbit.send(random_id, %{
-      refId: :uuid.uuid4(),
+      refId: UUID.uuid4(),
       op: "TRADE-CANCEL",
       data: %{
         seq_num: state.last_seq_num + 1,
@@ -190,7 +189,7 @@ defmodule Onion.UserSession do
       true ->
         IO.puts("usersession: got a new cancel response!")
         Onion.BalanceRabbit.send(0, %{
-          refId: :uuid.uuid4(),
+          refId: UUID.uuid4(),
           op: "WALLET-BALANCE-CHANGE",
           data: %{
             client_id: state.trading_client_id,

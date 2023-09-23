@@ -1,7 +1,7 @@
 defmodule Ugwu.Message.Trade.Cancel do
   use Ugwu.Message.Call,
   needs_auth: true
-
+  @derive Jason.Encoder
   @primary_key false
   embedded_schema do
     field(:ticker_id, :integer)

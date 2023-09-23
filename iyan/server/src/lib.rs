@@ -136,7 +136,7 @@ pub async fn run(
                     .route("/wallet/{id}", web::get().to(controllers::wallet::get_wallet))
                     .route("/wallet/{id}", web::delete().to(controllers::wallet::delete_wallet))
                     .route("/wallet/{id}/fund", web::post().to(controllers::wallet::fund_wallet))
-        )      
+        )       
     })
     .bind(format!("{}:{}", "0.0.0.0", 4001))
     .expect(&format!("can not bind {}:{}", "0.0.0.0", 4001))

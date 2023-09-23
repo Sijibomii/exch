@@ -57,7 +57,7 @@ USER-LOGIN
 
 When there's a new trade, all lister get a ws message
 {
- ref: :uuid.uuid4(),
+ ref: UUID.uuid4(),
   op: "MARKET-UPDATE--NEW-TRADE",
   data: {
     side:

@@ -157,7 +157,7 @@ const run = async () => {
       },
       data: {}
     });
-
+    setTimeout(() => {}, 2000);
     // fund wallet
     const respFundWallet1 = await axios({
       url: `${BASE_URL}${`/api/v1/wallet/${respWallet1.data.wallet.id}/fund`}`,
@@ -195,7 +195,7 @@ const run = async () => {
         deposit: 1000
       }
     });
-
+    setTimeout(() => {}, 2000);
     // listen to update from this ticker from user 3
     const wrappedConn3 = wrap(connectionForUser3);
     wrappedConn3.mutation.addAsListener(respToken.data.token.ticker_id); 

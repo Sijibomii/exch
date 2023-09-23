@@ -80,15 +80,16 @@ defmodule Onion.BalanceRabbit do
         %State{} = state
       ) do
     data = Jason.decode!(payload)
+    IO.puts("balance: new balance message received!")
     # how to make sure that each ticker is up to date
     case data do
       %{ "op" => "WALLET-DEPOSIT" } ->
         IO.puts("new wallet deposit!")
-        Onion.UserSession.new_wallet(data["data"]["client_id"], data["data"])
-
-      %{ "op" => " WALLET-CREATED"} ->
-        IO.puts("new wallet created!")
         Onion.UserSession.wallet_deposit(data["data"]["client_id"], data["data"])
+
+      %{ "op" => "WALLET-CREATED"} ->
+        IO.puts("new wallet created!")
+        Onion.UserSession.new_wallet(data["data"]["client_id"], data["data"])
 
       _ ->:ok
     end

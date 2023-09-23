@@ -41,8 +41,8 @@ pub async fn create_wallet(
                         client_id: user.trading_client_id,
                         amount: 0,
                         wallet_id: wallet.id
-                    };
-                    match Sender::wallet_creation(payload, &state.rabbit_sender).await {
+                    }; 
+                    match Sender::wallet_creation(payload, &state.balance_sender).await {
                         Ok(res) => {
                             match sender::publish(&res.channel, res.queue, &res.data).await {
                                 Ok(_) => {
@@ -104,7 +104,7 @@ pub async fn fund_wallet(
                                 amount: data.deposit,
                                 wallet_id: wallet.id
                             };
-                            match Sender::publish_balance(payload, &state.rabbit_sender).await {
+                            match Sender::publish_balance(payload, &state.balance_sender).await {
                                 Ok(res) => {
                                     match sender::publish(&res.channel, res.queue, &res.data).await {
                                         Ok(_) => {

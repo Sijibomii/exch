@@ -116,6 +116,7 @@ namespace Exchange {
     uint32_t j = 0;
     char * data = message->getMessage(&j);
     if (data){
+        std::cerr << "Received message from the order channel" <<  std::endl;
         std::string jsonString(data);
         json jsonData = json::parse(jsonString);
         // add trade modify
@@ -130,6 +131,7 @@ namespace Exchange {
         // get next expected sequence number
         auto &next_exp_seq_num = cid_next_exp_seq_num_[client_id];
         if (seq_num != next_exp_seq_num) { // TODO - change this to send a reject back to the client.
+          std::cerr << "Error: seq_num != next_exp_seq_num" <<  std::endl;
         }else{
             MEClientRequest me_request{req, client_id, ticker_id, order_id, side, price, qty};
             OMClientRequest request {seq_num, me_request};
@@ -137,11 +139,11 @@ namespace Exchange {
 
             fifo_sequencer_.addClientRequest(getCurrentNanos(), me_request);
             fifo_sequencer_.sequenceAndPublish();
-
+            std::cerr << "Success: successfully published to matching engine" <<  std::endl;
             next_exp_seq_num++;
         }
     }
-    return 0;
+    return 0; 
   }
 
   

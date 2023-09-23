@@ -225,7 +225,7 @@ defmodule Onion.TickerSession do
         # more that 20 sec so new candle stick. how does it know when to start building a new candlestick
         Enum.each(state.listeners, fn tid ->
           Onion.UserSession.send_ws(tid, %{
-            ref: :uuid.uuid4(),
+            ref: UUID.uuid4(),
             op: "MARKET-UPDATE--NEW-TRADE",
             data: %{
               time: current_timestamp,
@@ -271,7 +271,7 @@ defmodule Onion.TickerSession do
         # current_low: message["price"]
         Enum.each(state.listeners, fn tid ->
           Onion.UserSession.send_ws(tid, %{
-            ref: :uuid.uuid4(),
+            ref: UUID.uuid4(),
             op: "MARKET-UPDATE--NEW-TRADE",
             data: %{
               time: state.last_update_time,
