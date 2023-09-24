@@ -2,7 +2,7 @@ import EctoEnum
 
 alias Ugwu.Message.Auth
 alias Ugwu.Message.Trade
-alias Uqwu.Message.Request
+alias Ugwu.Message.Request
 
 defenum(
   Ugwu.Message.Types.Operator,

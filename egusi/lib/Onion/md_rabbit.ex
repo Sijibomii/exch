@@ -82,7 +82,12 @@ defmodule Onion.MDRabbit do
       # order filled, rejected,..
 
       # publish order types depending on ticker_id
-      %{"op" => _} -> Onion.TickerSession.add_order(data["data"]["ticker_id"], %{ data["data"] | "operation" => data["op"]})
+      %{"op" => _} ->
+        IO.puts("md rabbits: received a new message")
+        # %{ data["data"] | "operation" => data["op"]}
+        IO.inspect(data)
+        Onion.TickerSession.add_order(data["data"]["ticker_id"], Map.put(data["data"],"operation", data["op"]))
+        :ok
     end
 
     # You might want to run payload consumption in separate Tasks in production

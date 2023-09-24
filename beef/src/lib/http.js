@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "https://localhost:4001";
+const BASE_URL = "http://localhost:4001";
 
 export const create = (baseOpts) => {
     return { 
@@ -8,12 +8,11 @@ export const create = (baseOpts) => {
         method,
         endpoint,
         body, 
-        opts,
         headers 
       ) => {
-        const { baseUrl = BASE_URL } = { ...baseOpts, ...opts };
+        // const { baseUrl = BASE_URL } = { ...baseOpts, ...opts };
         return await axios({
-            url: `${baseUrl}${endpoint}`,
+            url: `${BASE_URL}${endpoint}`,
             method,
             headers: { "Content-Type": "application/json", ...headers},
             data:  body ? body : undefined
@@ -29,6 +28,18 @@ export const wrap = (http) => {
       }),
       register: (email, password) => http.request("POST", "/api/v1/register", { 
           email, password
+      }),
+      createWallet: (token) => http.request("POST", "/api/v1/wallet", {}, { 
+        "Authorization": `Bearer ${token}`
+      }),
+      getWallets: (token) => http.request("GET", "/api/v1/wallet",{}, {
+      "Authorization": `Bearer ${token}`
+      }),
+      fundWallet: (id, token, deposit) => http.request("POST", `/api/v1/wallet/${id}/fund`, {
+        id,
+        deposit
+      },{
+        "Authorization": `Bearer ${token}`
       })
     };
   };

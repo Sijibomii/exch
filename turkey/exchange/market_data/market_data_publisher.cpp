@@ -11,7 +11,6 @@ namespace Exchange {
     
   }
 
-
   /// Main run loop for this thread - consumes market updates from the lock free queue from the matching engine, publishes them on the incremental multicast stream and forwards them to the snapshot synthesizer.
   auto MarketDataPublisher::run() noexcept -> void {
     while (run_) {
@@ -56,9 +55,9 @@ namespace Exchange {
         ex->setHeader("Delivery-mode", AMQP_DELIVERY_PERSISTENT);
         ex->setHeader("Content-type", "text/text");
         ex->setHeader("Content-encoding", "UTF-8");
-
+        
         ex->Publish(message, "incremental");
-
+        std::cerr << "Successfully published to incremental queue" <<  std::endl;
     } catch (AMQPException &ec) {
         std::cout << ec.getMessage() << std::endl;
     }

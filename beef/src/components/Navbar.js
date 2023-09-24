@@ -20,7 +20,10 @@ function Navbar() {
                 <a href="/register" className="text-[#E3A014] px-3">Register</a>
                 </>
               ): (
+                <>
+                <a href="/wallets" className="text-[#E3A014] px-3">Wallets</a>
                 <button onClick={logOut}  className="text-[#E3A014] px-3">Logout</button>
+                </>
               )}
                 
             </div>

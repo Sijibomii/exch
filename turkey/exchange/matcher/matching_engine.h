@@ -74,7 +74,7 @@ namespace Exchange {
       const auto me_client_request = incoming_requests_->getNextToRead();
       if (LIKELY(me_client_request)) {
         // TTT_MEASURE(T3_MatchingEngine_LFQueue_read, logger_);
-
+          std::cerr << "matching engine: processing requests" <<  std::endl;
         // logger_.log("%:% %() % Processing %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
         //             me_client_request->toString());
         // START_MEASURE(Exchange_MatchingEngine_processClientRequest);
@@ -82,19 +82,19 @@ namespace Exchange {
         // END_MEASURE(Exchange_MatchingEngine_processClientRequest, logger_);
         incoming_requests_->updateReadIndex();
       }
-      // while (run_) {
-      //   const auto me_client_request = incoming_requests_->getNextToRead();
-      //   if (LIKELY(me_client_request)) {
-      //     // TTT_MEASURE(T3_MatchingEngine_LFQueue_read, logger_);
-
-      //     logger_.log("%:% %() % Processing %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
-      //                 me_client_request->toString());
-      //     // START_MEASURE(Exchange_MatchingEngine_processClientRequest);
-      //     processClientRequest(me_client_request);
-      //     // END_MEASURE(Exchange_MatchingEngine_processClientRequest, logger_);
-      //     incoming_requests_->updateReadIndex();
-      //   }
-      // }
+      while (run_) {
+        const auto me_client_request = incoming_requests_->getNextToRead();
+        if (LIKELY(me_client_request)) {
+          // TTT_MEASURE(T3_MatchingEngine_LFQueue_read, logger_);
+          std::cerr << "matching engine: processing requests..." <<  std::endl;
+          // logger_.log("%:% %() % Processing %\n", __FILE__, __LINE__, __FUNCTION__, Common::getCurrentTimeStr(&time_str_),
+          //             me_client_request->toString());
+          // START_MEASURE(Exchange_MatchingEngine_processClientRequest);
+          processClientRequest(me_client_request);
+          // END_MEASURE(Exchange_MatchingEngine_processClientRequest, logger_);
+          incoming_requests_->updateReadIndex();
+        }
+      }
     }
 
     /// Deleted default, copy & move constructors and assignment-operators.

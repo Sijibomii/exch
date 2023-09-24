@@ -2,6 +2,7 @@ const axios = require("axios");
 const { connect, wrap } = require("./ws");
 const BASE_URL = "http://localhost:4001";
 
+
 const run = async () => {
     const socketUrl = "ws://localhost:6000/socket";
     // register a user 1
@@ -218,13 +219,16 @@ const run = async () => {
       2,
       10
     );
-    // setTimeout(() => {}, 2000);
-    // await wrappedConn2.mutation.sendTrade(
-    //   respToken.data.token.ticker_id,
-    //   "SELL",
-    //   2,
-    //   10
-    // );
+    
+    setTimeout(() => {}, 2000);
+    // const wrappedConn4 = wrap(connectionForUser3);
+    await wrappedConn3.mutation.sendTrade(
+      respToken.data.token.ticker_id,
+      "SELL",
+      2,
+      10
+    );
+    // TODO: CHECK WHY MDP IS NOT PUBLISHING UPDATES!!! 
 
     // await wrappedConn1.mutation.sendTrade(
     //   respToken.data.token.ticker_id,

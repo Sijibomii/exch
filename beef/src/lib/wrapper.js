@@ -1,3 +1,5 @@
+import { v4 as generateUuid } from "uuid";
+
 const wrap = (connection) => ({
     connection,
 
@@ -18,12 +20,12 @@ const wrap = (connection) => ({
 
     mutation: {
         // add subscription to market trade i.e listen for market updates
-        addAsListener: (ticker_id)=> connection.fetch(`schedule_room`, { ticker_id }),
+        addAsListener: (ticker_id) => connection.fetch(`listen_trade`, { ticker_id }),
         // send trade
         // BUY
-        sendTrade:  (ticker_id, side, qty, price) => connection.fetch(`add_new_trade`, { ticker_id, side, qty, price }),
+        sendTrade:  (ticker_id, side, qty, price) => connection.send(`add_new_trade`, { ticker_id, side, qty, price }, generateUuid()),
         // cancel trade
-        cancelTrade:  (ticker_id, order_id) => connection.fetch(`cancel_trade`, { ticker_id, order_id }),
+        cancelTrade:  (ticker_id, order_id) => connection.send(`cancel_trade`, { ticker_id, order_id }, generateUuid()),
     },
 });
 

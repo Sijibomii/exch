@@ -154,28 +154,21 @@ pub struct ListParams {
 
 // get wallets by user
 pub async fn get_user_wallets(
-    data: web::Json<ListParams>,
     state: web::Data<AppState>,
     user: AuthUser
 ) -> Result<Json<Value>, Error> {
 
-    let mut limit = LIMIT;
-    let mut offset = OFFSET;
+    let limit = LIMIT;
+    let offset = OFFSET;
 
-    if let Some(_limit) = data.limit { 
-        if _limit < LIMIT {
-            limit = _limit;
-        }
-    };
-
-    if let Some(_offset) = data.offset {
-        offset = _offset;
-    };
+    debug!("controller: calling user wallet service");
     match services::wallet::all_wallet_by_user(limit, offset, user.id, &state.postgres).await {
         Ok(wallets) => {
+            debug!("controller: successfully got wallet");
             return Ok(Json(json!({ "wallets": wallets })))
         }
         Err(error) => {
+            debug!("controller: errror");
             return Err(Error::from(error))
         }
     }

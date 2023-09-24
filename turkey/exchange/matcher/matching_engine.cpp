@@ -25,7 +25,7 @@ namespace Exchange {
       order_book = nullptr;
     }
   }
-
+ 
   /// Start and stop the matching engine main thread.
   auto MatchingEngine::start() -> void {
     run_ = true;

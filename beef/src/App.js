@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Trade from './pages/Trade';
+import Wallet from './pages/Wallet';
 function App() {
 
   const router = createBrowserRouter(
@@ -15,6 +16,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/wallets" element={<Wallet />} />
           <Route path="/trade/:ticker" element={<Trade />} />
       </Route>
     )

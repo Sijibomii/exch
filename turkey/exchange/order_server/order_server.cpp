@@ -87,11 +87,12 @@ namespace Exchange {
 
       qu2->Declare();
       qu2->Bind(exchange, queue);
-
+      std::cerr << "About to publish to responses queue" <<  std::endl;
       ex->setHeader("Delivery-mode", AMQP_DELIVERY_PERSISTENT);
       ex->setHeader("Content-type", "text/text");
       ex->setHeader("Content-encoding", "UTF-8");
       ex->Publish(message, "responses");
+      std::cerr << "Successfully published to responses queue" <<  std::endl;
       // // receive from order queue
       // AMQPQueue * order = amqp.createQueue("order");
       // order->Declare();
