@@ -203,7 +203,7 @@ const run = async () => {
 
     const handler = (data, ref) => {
       console.log("GOT DATA: ", data);
-      console.log("GOT REF: ", ref)
+      console.log("GOT REF: ", ref)  
     };
 
     await wrappedConn3.subscribe.newTradeMsg(handler);

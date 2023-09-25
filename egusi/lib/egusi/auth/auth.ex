@@ -22,21 +22,28 @@ defmodule Egusi.Auth do
     case LoginSession.call(0, {:get_user_info, user_id}) do
       {:ok, user} ->
         IO.puts("User session about to be called")
-        UserSession.start_supervised(
-          user_id: user.user_id,
-          ip: ip,
-          email: user.email,
-          wallet: user.wallet,
-          ip: ip,
-          trading_client_id: user.trading_client_id
-          # ,last_order_number: user.last_order_number,
-          # last_seq_num: 0
-        )
-        UserSession.set_active_ws(user.trading_client_id, self())
+        # ### check if this user already has a session...
+        case Registry.lookup(Onion.UserSessionRegistry, user.trading_client_id) do
+          [{_, pid}] ->
+            IO.puts("Found user session so i ignore")
+            {:ok, user}
 
-        {:ok, user}
+          [] ->
+            UserSession.start_supervised(
+              user_id: user.user_id,
+              ip: ip,
+              email: user.email,
+              wallet: user.wallet,
+              ip: ip,
+              trading_client_id: user.trading_client_id
+              # ,last_order_number: user.last_order_number,
+              # last_seq_num: 0
+            )
+            UserSession.set_active_ws(user.trading_client_id, self())
+            {:ok, user}
+        end
 
-        # else if there is none: treat that. i.e before user creates wallet. maybe rust should sent a message with wallet nil
+
       _ -> {:close, 4001, "invalid_authentication"}
     end
   end

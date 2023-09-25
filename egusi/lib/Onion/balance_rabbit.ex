@@ -86,10 +86,12 @@ defmodule Onion.BalanceRabbit do
       %{ "op" => "WALLET-DEPOSIT" } ->
         IO.puts("new wallet deposit!")
         Onion.UserSession.wallet_deposit(data["data"]["client_id"], data["data"])
+        :ok
 
       %{ "op" => "WALLET-CREATED"} ->
         IO.puts("new wallet created!")
         Onion.UserSession.new_wallet(data["data"]["client_id"], data["data"])
+        :ok
 
       _ ->:ok
     end

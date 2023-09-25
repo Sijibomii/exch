@@ -9,7 +9,7 @@ const Chart = () => {
     const conn = useWrappedConn();
     const [orderBook, setOrderBook] = useState(null);
     let { id } = useParams();
-
+ 
     useEffect(()=> {
         const number = parseInt(id);
 

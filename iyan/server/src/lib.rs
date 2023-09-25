@@ -118,7 +118,7 @@ pub async fn run(
             //         .max_age(3600),
         )
         .app_data(web::Data::new(app_state.clone()))
-        .service( 
+        .service(  
             web::scope("/api/v1")
                     .route("/hello", web::get().to(index))
                     .route("/login", web::post().to(controllers::auth::authentication))

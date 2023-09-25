@@ -40,6 +40,8 @@ export const wrap = (http) => {
         deposit
       },{
         "Authorization": `Bearer ${token}`
-      })
+      }),
+      getTokens: ()=> http.request("GET", "/api/v1/token", {}),
+      // getToken
     };
   };

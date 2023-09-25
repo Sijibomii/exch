@@ -9,29 +9,36 @@ const Wallet = () => {
     const httpClient = useHttpClient();
     const wrappedClient = wrap(httpClient.http);
     const [wallets, setWallets] = useState([]);
-
+    const [render, setRender] = useState(true)
     async function createWallet(){
         const { data } = await wrappedClient.createWallet(accessToken);
         setWallets(wallets.push(data.wallet));
+        setRender(true);
     }
 
     async function fundWallet(walletId, amount){
         const { data } = await wrappedClient.fundWallet(walletId, accessToken, amount);
         const { wallet } = data;
         setWallets(wallets.map((wall) =>wall.id === wallet.id ? wallet : wall));
+        setRender(true);
+    }
+
+    async function getWallets(){
+        const { data } = await wrappedClient.getWallets(accessToken);
+        if (data.wallets) {
+            setWallets(data.wallets)
+        }else{
+            setWallets([])
+        }
     }
 
     useEffect(() => {
-        async function getWallets(){
-            const { data } = await wrappedClient.getWallets(accessToken);
-            if (data.wallets) {
-                setWallets(data.wallets)
-            }else{
-                setWallets([])
-            }
+        console.log("called")
+        if(render){
+            getWallets();
         }
-        getWallets();
-    }, [wallets, accessToken, wrappedClient])
+        setRender(false)
+    }, [wallets])
 
     return (
         <div className="">
@@ -44,7 +51,7 @@ const Wallet = () => {
                     <h3 className="text-[#E3A014] text-3xl">All Wallets</h3>
 
                     <div className="wallets">
-                        {wallets && wallets.map((wallet) => (
+                        {wallets && Array.isArray(wallets) && wallets.map((wallet) => (
                             <div className="wallet bg-[#E3A014] py-4 px-8 flex items-center justify-between my-2" key={wallet.id}>
                                 <h3 className="">{wallet.id}</h3>
                                 <h6 className="">$ {wallet.balance}</h6>

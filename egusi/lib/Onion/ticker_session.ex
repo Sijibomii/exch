@@ -226,7 +226,7 @@ defmodule Onion.TickerSession do
         Enum.each(state.listeners, fn tid ->
           Onion.UserSession.send_ws(tid, %{
             ref: UUID.uuid4(),
-            op: "MARKET-UPDATE--NEW-TRADE",
+            op: "MARKET-UPDATE-NEW-TRADE",
             data: %{
               time: current_timestamp,
               open: message["price"],

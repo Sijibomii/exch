@@ -34,7 +34,7 @@ export const connect = (
         const raw = `{"v":"0.2.0", "op":"${opcode}","p":${JSON.stringify(data)}${
           ref ? `,"ref":"${ref}"` : ""
         }}`;
-        console.log(ref)
+
         socket.send(raw);
       };
   
@@ -63,6 +63,8 @@ export const connect = (
         }
   
         const message = JSON.parse(e.data);
+
+        console.log(message)
   
         logger("in", message.op, message.d, message.fetchId, e.data);
   
@@ -82,8 +84,9 @@ export const connect = (
             addListener: (opcode, handler) => {
               const listener = { opcode, handler };
   
-              listeners.push(listener);
-  
+              listeners.push(listener); 
+
+              
               return () => listeners.splice(listeners.indexOf(listener), 1);
             },
             user: message.d.user,
@@ -126,10 +129,11 @@ export const connect = (
   
           resolve(connection);
         } else {
+
           listeners
             .filter(({ opcode }) => opcode === message.op)
             .forEach((it) =>
-              it.handler(message.d || message.p, message.fetchId || message.ref)
+              it.handler(message)
             );
         }
       });

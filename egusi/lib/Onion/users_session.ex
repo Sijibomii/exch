@@ -209,17 +209,22 @@ defmodule Onion.UserSession do
   def new_wallet(user_trading_id, wallet), do: cast(user_trading_id, {:new_wallet, wallet})
 
   defp new_wallet_impl(wallet, state) do
+    IO.inspect(wallet)
     IO.puts("usersession: got a new wallet!")
-    {:noreply, %{ state | wallet: %Wallet{
+    new_state =  %{ state | wallet: %Wallet{
       id: wallet["wallet_id"],
       balance: 0
-    }}}
+    }}
+    IO.inspect(new_state)
+    {:noreply, new_state}
   end
 
   def wallet_deposit(user_trading_id, details), do: cast(user_trading_id, {:wallet_deposit, details})
 
   def wallet_deposit_impl(data, state) do
+    IO.inspect(state)
     IO.puts("usersession: got a new wallet deposit!")
+
     {:noreply, %{ state | wallet: %Wallet{
       id: data["wallet_id"],
       balance: state.wallet.balance + data["amount"]
