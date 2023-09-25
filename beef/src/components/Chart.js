@@ -2,16 +2,33 @@ import { useEffect, useState, useRef } from "react";
 import { createChart, ColorType } from 'lightweight-charts';
 import data from './data';
 import { useWrappedConn } from "../lib/useConnection";
-import { useParams } from 'react-router-dom';
+import { useLocation } from "react-router-dom"
+
 const Chart = () => {
 
     const chartContainerRef = useRef();
     const conn = useWrappedConn();
     const [orderBook, setOrderBook] = useState(null);
-    let { id } = useParams();
+
+    const location = useLocation();
+
+    function extractIdFromPath(path) {
+        // Define a regular expression to match the "/trade/" followed by digits
+        const regex = /\/trade\/(\d+)/;
+        
+        // Use the exec method to search for a match in the path
+        const match = regex.exec(path);
+        
+        // Check if there is a match and return the captured ID or null
+        if (match && match[1]) {
+          return match[1]; // The ID is captured in the first capturing group (match[1])
+        } else {
+          return null; // Return null if no match is found
+        }
+      }
  
     useEffect(()=> {
-        const number = parseInt(id);
+        const number = parseInt(extractIdFromPath(location.pathname));
 
      conn.query.getOrderBook(number)
         .then((response) => {
@@ -24,7 +41,7 @@ const Chart = () => {
         });
 
         // send 
-    }, [id, conn.query])
+    }, [conn.query])
     useEffect(() => {
         const width = window.innerWidth;
         const chartProperties = {

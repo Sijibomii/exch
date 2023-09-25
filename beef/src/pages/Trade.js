@@ -24,8 +24,9 @@ const Trade = () => {
     };
 
     async function sub(){
-      console.log("subsc")
       await conn.subscribe.newTradeMsg(handler);
+      // listen 
+      await conn.mutation.addAsListener(extractIdFromPath(location.pathname))
     }
 
     useEffect(() => {
@@ -115,7 +116,7 @@ const Trade = () => {
                           />
                     </div>
                     
-                    <button loading={isSubmitting} type="submit" className="bg-[green] py-2">
+                    <button  type="submit" className="bg-[green] py-2">
                         BUY
                     </button>
                 </div>
@@ -188,7 +189,7 @@ const Trade = () => {
                                 />
                             </div>
                             
-                            <button loading={isSubmitting} type="submit" className="bg-[red] py-2">
+                            <button type="submit" className="bg-[red] py-2">
                                 SELL
                             </button>
                         </div>

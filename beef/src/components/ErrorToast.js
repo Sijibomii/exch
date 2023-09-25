@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-const ErrorToast = ({ duration = "default" ,message, button, onClose }) =>{
+const ErrorToast = ({ duration = "default" ,message, button, onClose, isError }) =>{
     const onCloseRef = useRef(onClose);
     onCloseRef.current = onClose;
     useEffect(() => {
@@ -18,7 +18,7 @@ const ErrorToast = ({ duration = "default" ,message, button, onClose }) =>{
       }, [duration]);
 
     return(
-        <div className={`flex rounded-8 p-3 relative w-full items-center justify-center text-button transition-transform duration-300 bg-[#FF0000]`}
+        <div className={`flex rounded-8 p-3 relative w-full items-center justify-center text-button transition-transform duration-300 ${isError ? "bg-[#FF0000]" : "bg-[#008000]"}`}
             data-testid="error-message"
             >
             {onClose ? (

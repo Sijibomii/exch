@@ -1,6 +1,7 @@
 import { useEffect, useContext } from "react";
 import { WebSocketContext } from "./WebsocketProvider";
 import ShowError from "./showError";
+import showInfo from "./showInfo";
 import { useOrderBookStore  } from "./useOrderBook";
 
 
@@ -52,8 +53,7 @@ export const useMainWsHandler = () => {
                         ShowError(proccessError(message.e))
                         return 
                     }
-
-                    console.log(message)
+                    showInfo("trade successfully added!")
                 }
             }),
             conn.addListener("MARKET-UPDATE-NEW-TRADE", (message) => {
@@ -62,7 +62,7 @@ export const useMainWsHandler = () => {
                         ShowError(proccessError(message.e))
                         return 
                     }   
-                    console.log(message)
+                    showInfo("new trade came in!!!")
 
                     // useOrderBookStore 
                     //     .getState()

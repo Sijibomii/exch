@@ -9,6 +9,7 @@ import Register from './pages/Register';
 import Trade from './pages/Trade';
 import Wallet from './pages/Wallet';
 import Error from './components/Error';
+import { Info } from './components/Error';
 function App() {
 
   const router = createBrowserRouter(
@@ -40,6 +41,7 @@ const Root = () => {
           <WebSocketProvider shouldConnect={(window.location !== '/login') && (window.location !== '/register')}>
             <MainWsHandlerProvider>
               <Error />
+              <Info />
               <Outlet />
             </MainWsHandlerProvider>
           </WebSocketProvider>

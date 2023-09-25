@@ -201,7 +201,7 @@ defmodule Onion.UserSession do
         {:noreply, %{state | balance: state.wallet.balance + response["data"]["price"] }}
 
 
-      false -> send_ws(state.trading_client_id,response["data"]["client_id"])
+      false -> send_ws(state.trading_client_id, response["data"]["client_id"])
       {:noreply, state}
     end
   end

@@ -1,8 +1,8 @@
 import { useErrorToastStore } from "./useErrorStore";
 
-const ShowError = (m) => {
+const ShowError = (m) => { 
     console.log("showErrorToast: ", m);
     useErrorToastStore.getState().showToast({ message: m });
 };
 
-export default ShowError;
+export default ShowError; 

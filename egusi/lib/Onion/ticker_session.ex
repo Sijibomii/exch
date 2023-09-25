@@ -219,8 +219,9 @@ defmodule Onion.TickerSession do
 
   def handle_cast({:incremental, message}, state) do
     # if op is trading send ws message to all listeners
-    IO.puts("incremental called!!")
     if message["op"] == "MARKET-UPDATE-TRADE" do
+      IO.puts("incremental called for trade!!")
+      IO.inspect(state.listeners)
       current_timestamp = System.system_time(:millisecond)
       if is_nil(state.last_update_time) or is_nil(state.current_high) or is_nil(state.current_low) do
         Enum.each(state.listeners, fn tid ->
@@ -229,34 +230,34 @@ defmodule Onion.TickerSession do
             op: "MARKET-UPDATE-NEW-TRADE",
             data: %{
               time: current_timestamp,
-              open: message["price"],
-              close: message["price"],
-              high: message["price"],
-              low: message["price"]
+              open: message["data"]["price"],
+              close: message["data"]["price"],
+              high: message["data"]["price"],
+              low: message["data"]["price"]
             }
           })
         end)
 
         {:noreply, %{state | order_book: append(state.order_book, %Order{
-          id: message["id"],
-          side: message["side"],
+          id: message["data"]["id"],
+          side: message["data"]["side"],
           operation: message["op"],
           time: System.system_time(:millisecond),
-          volume: message["qty"],
-          seq_num: message["seq_num"],
-          price: message["price"],
+          volume: message["data"]["qty"],
+          seq_num: message["data"]["seq_num"],
+          price: message["data"]["price"],
         }),
           chart_data: [%Data{
           time: current_timestamp,
-          open: message["price"],
-          close: message["price"],
-          high: message["price"],
-          low: message["price"]
+          open: message["data"]["price"],
+          close: message["data"]["price"],
+          high: message["data"]["price"],
+          low: message["data"]["price"]
           } | state.chart_data],
           last_update_time: current_timestamp,
-          current_open: message["price"],
-          current_high: message["price"],
-          current_low: message["price"]
+          current_open: message["data"]["price"],
+          current_high: message["data"]["price"],
+          current_low: message["data"]["price"]
           }}
       else
         elapsed_time_ms = current_timestamp - state.last_update_time
@@ -265,37 +266,37 @@ defmodule Onion.TickerSession do
           Enum.each(state.listeners, fn tid ->
             Onion.UserSession.send_ws(tid, %{
               ref: UUID.uuid4(),
-              op: "MARKET-UPDATE--NEW-TRADE",
+              op: "MARKET-UPDATE-NEW-TRADE",
               data: %{
                 time: current_timestamp,
-                open: message["price"],
-                close: message["price"],
-                high: message["price"],
-                low: message["price"]
+                open: message["data"]["price"],
+                close: message["data"]["price"],
+                high: message["data"]["price"],
+                low: message["data"]["price"]
               }
             })
           end)
 
           {:noreply, %{state | order_book: append(state.order_book, %Order{
-            id: message["id"],
-            side: message["side"],
+            id: message["data"]["id"],
+            side: message["data"]["side"],
             operation: message["op"],
             time: System.system_time(:millisecond),
-            volume: message["qty"],
-            seq_num: message["seq_num"],
-            price: message["price"],
+            volume: message["data"]["qty"],
+            seq_num: message["data"]["seq_num"],
+            price: message["data"]["price"],
           }),
             chart_data: [%Data{
             time: current_timestamp,
-            open: message["price"],
-            close: message["price"],
-            high: message["price"],
-            low: message["price"]
+            open: message["data"]["price"],
+            close: message["data"]["price"],
+            high: message["data"]["price"],
+            low: message["data"]["price"]
             } | state.chart_data],
             last_update_time: current_timestamp,
-            current_open: message["price"],
-            current_high: message["price"],
-            current_low: message["price"]
+            current_open: message["data"]["price"],
+            current_high: message["data"]["price"],
+            current_low: message["data"]["price"]
             }}
         else
 
