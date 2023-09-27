@@ -3,10 +3,10 @@ defmodule Egusi.Auth do
   alias Egusi.Utils.TokenUtils
 
   def authenticate(request, ip) do
-    IO.puts("Authenticating user with token : #{request.accessToken}")
+
     case TokenUtils.tokens_to_user_id(request.accessToken, "") do
       nil ->
-        IO.puts("Error: could not auth user successfully")
+
         {:error, "invalid_authentication"}
 
       {:existing_claim, user_id} ->
@@ -18,14 +18,14 @@ defmodule Egusi.Auth do
   defp do_auth(user_id, tokens, request, ip) do
     alias Onion.UserSession
     alias Onion.LoginSession
-    IO.puts("DO AUTHHHHHH")
+
     case LoginSession.call(0, {:get_user_info, user_id}) do
       {:ok, user} ->
-        IO.puts("User session about to be called")
+
         # ### check if this user already has a session...
         case Registry.lookup(Onion.UserSessionRegistry, user.trading_client_id) do
           [{_, pid}] ->
-            IO.puts("Found user session so i ignore")
+
             {:ok, user}
 
           [] ->

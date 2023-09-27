@@ -21,21 +21,20 @@ export const useMainWsHandler = () => {
         return keyValuePairs.join(', ');
     } 
 
-    useEffect(()=>{
+    useEffect(()=>{ 
         if (!conn) {
             return;
         }
         // orders:all
         // incrmental
-        // trade:new:reply
+        // trade:new:reply 
         const unsubs = [
             conn.addListener("error", (message) => {
                 ShowError(message);
             }),
-
             conn.addListener("orders:all:reply", (message) => {
                 if(message !== null){
-                    console.log(message)
+                    
                     if (message.e){
                         ShowError(proccessError(message.e))
                         return 
@@ -45,7 +44,7 @@ export const useMainWsHandler = () => {
                         .setOrderBook(message.p.orders);
                 }
             }),
-            conn.addListener("trade:new:reply", (message) => {
+            conn.addListener("trade:new:reply", (message) => { 
                 if(message){
                     if (message.e){
                         ShowError(proccessError(message.e))
@@ -53,19 +52,28 @@ export const useMainWsHandler = () => {
                     }
                     showInfo("trade successfully added!")
                 }
-            }),
+            }), 
             conn.addListener("MARKET-UPDATE-NEW-TRADE", (message) => {
-                if(message){
-                    console.log(message)
+                
+                if(message !== null){
+                    
                     if (message.e){
                         ShowError(proccessError(message.e))
                         return 
                     }   
+
                     showInfo("new trade came in!!!")
                     
                     useOrderBookStore 
                         .getState()
-                        .appendOrder(message.p)
+                        .appendOrder(message.data)
+
+                   
+                    const tradeEvent = new CustomEvent('trade', {
+                        detail: message.data,
+                    });
+
+                    window.dispatchEvent(tradeEvent);
                 }
             })
 

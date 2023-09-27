@@ -36,9 +36,8 @@ const Chart = () => {
     useEffect(()=> {
         const number = parseInt(extractIdFromPath(location.pathname));
 
-        async function getOrders(number) {
+        async function getOrders(number) { 
             await conn.query.getOrderBook(number);
-            console.log("orders");
         }
         
         getOrders(number);
@@ -68,9 +67,13 @@ const Chart = () => {
             }
             
         }
-        const handleResize = () => {
+        const handleResize = () => { 
             chart.applyOptions({ width: chartContainerRef.current.clientWidth });
         };
+
+        const tradeHandler = (event) => {
+            console.log('Custom trade event received', event.detail);
+        }
 
         const chartData = data.map(d => {
             return {time:d[0]/1000,open:parseFloat(d[1]),high:parseFloat(d[2]),low:parseFloat(d[3]),close:parseFloat(d[4])}
@@ -80,14 +83,15 @@ const Chart = () => {
         chart.timeScale().fitContent();
 
         const newSeries = chart.addCandlestickSeries();
-        const ord = orders.filter((order) => (order.close !== null) && (order.high !== null ));
+        const ord = orders.filter((order) => ((order !== undefined) && (order !== null)) &&  (order.close !== null) && (order.high !== null ));
         newSeries.setData(ord);
-        
+
+        window.addEventListener('trade', tradeHandler);
         window.addEventListener('resize', handleResize);
 
         return () => {
             window.removeEventListener('resize', handleResize);
-
+            window.removeEventListener('trade', tradeHandler);
             chart.remove();
         };
     },[orders]);

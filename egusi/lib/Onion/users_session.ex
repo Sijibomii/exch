@@ -88,6 +88,7 @@ defmodule Onion.UserSession do
   def send_ws(user_trading_id, msg), do: cast(user_trading_id, {:send_ws, msg})
 
   defp send_ws_impl(msg, state = %{pid: pid}) do
+
     if pid, do: Ugwu.SocketHandler.remote_send(pid, msg)
     {:noreply, state}
   end

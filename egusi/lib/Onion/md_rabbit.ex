@@ -84,7 +84,6 @@ defmodule Onion.MDRabbit do
       # publish order types depending on ticker_id
       %{"op" => _} ->
         IO.puts("md rabbits: received a new message")
-        IO.inspect(data)
         # change it to operatio here
         Onion.TickerSession.add_order(data["data"]["ticker_id"], data)
         :ok

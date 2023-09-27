@@ -21,7 +21,7 @@ defmodule Egusi.Utils.TokenUtils do
         {:existing_claim, claims["user"]["id"]}
 
       _ ->
-        IO.puts("validating claims: ERROR VALIDATING CLAIMS ")
+
         nil
     end
   end

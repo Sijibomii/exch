@@ -7,7 +7,9 @@ const apiUrl = "ws://localhost:6000/socket";
 
 const connectionTimeout = 15000;
 
-connect = (
+
+
+connect = ( 
     token, 
     refreshToken,
     {
@@ -164,22 +166,22 @@ const wrap = (connection) => ({
   query: {
       // get order book... take care of reply. Make sure the reply is been traslated to what the frontend expects
       getOrderBook: (
-          ticker_id 
-        )=> connection.fetch("all_orders", { ticker_id }),
+          ticker_id  
+        )=> connection.send("all_orders", { ticker_id }, generateUuid()),
   },
 
 
   mutation: {
       // add subscription to market trade i.e listen for market updates
-      addAsListener: (ticker_id) => connection.fetch(`listen_trade`, { ticker_id }),
-      // send trade
+      addAsListener: (ticker_id) => connection.send(`listen_trade`, { ticker_id }, generateUuid()),
+      // send trade 
       // BUY
       sendTrade:  (ticker_id, side, qty, price) => connection.send(`add_new_trade`, { ticker_id, side, qty, price }, generateUuid()),
       // cancel trade
       cancelTrade:  (ticker_id, order_id) => connection.send(`cancel_trade`, { ticker_id, order_id }, generateUuid()),
   },
 });
-  
+
 
 module.exports = { connect, wrap };
 

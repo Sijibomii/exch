@@ -151,9 +151,20 @@ defmodule Onion.TickerSession do
   def add_listener(ticker_id, user_trading_id), do: cast(ticker_id, {:listen, user_trading_id})
 
   defp add_listener_impl(user_trading_id, state) do
-    {:noreply, %{state | listeners: [user_trading_id | state.listeners]}}
+    {:noreply, %{state | listeners: add_elem(state.listeners, user_trading_id)}}
   end
 
+  def add_elem(list, element) do
+    if contains?(list, element) do
+      list
+    else
+      [element | list]
+    end
+  end
+
+  defp contains?([head | tail], element) when head == element, do: true
+  defp contains?([], _element), do: false
+  defp contains?([_head | tail], element), do: contains?(tail, element)
 
   #########################################################################
   ##list impl
@@ -230,8 +241,7 @@ defmodule Onion.TickerSession do
   def handle_cast({:incremental, message}, state) do
     # if op is trading send ws message to all listeners
     if message["op"] == "MARKET-UPDATE-TRADE" do
-      IO.puts("incremental called for trade!!")
-      IO.inspect(state.listeners)
+
       current_timestamp = System.system_time(:millisecond)
       if is_nil(state.last_update_time) or is_nil(state.current_high) or is_nil(state.current_low) do
         # just started trading
@@ -240,7 +250,7 @@ defmodule Onion.TickerSession do
             ref: UUID.uuid4(),
             op: "MARKET-UPDATE-NEW-TRADE",
             data: %{
-              time: current_timestamp,
+              time: System.system_time(:millisecond),
               open: 0,
               close: message["data"]["price"],
               high: message["data"]["price"],
@@ -259,13 +269,13 @@ defmodule Onion.TickerSession do
           price: message["data"]["price"],
         }),
           chart_data: [%Data{
-          time: current_timestamp,
+          time: System.system_time(:millisecond),
           open: 0,
           close: message["data"]["price"],
           high: message["data"]["price"],
           low: 0
           } | state.chart_data],
-          last_update_time: current_timestamp,
+          last_update_time: System.system_time(:millisecond),
           current_open: 0,
           current_high: message["data"]["price"],
           current_low: 0
@@ -284,7 +294,7 @@ defmodule Onion.TickerSession do
                   ref: UUID.uuid4(),
                   op: "MARKET-UPDATE-NEW-TRADE",
                   data: %{
-                    time: current_timestamp,
+                    time: System.system_time(:millisecond),
                     open: head.close,
                     close: message["data"]["price"],
                     high: ht,
@@ -303,14 +313,14 @@ defmodule Onion.TickerSession do
                 price: message["data"]["price"],
               }),
                 chart_data: [%Data{
-                time: current_timestamp,
+                time: System.system_time(:millisecond),
                 open: head.close,
                 close: message["data"]["price"],
                 high: ht,
                 low: lw
                 } | state.chart_data],
 
-                last_update_time: current_timestamp,
+                last_update_time: System.system_time(:millisecond),
                 current_open: head.close,
                 current_high: ht,
                 current_low: lw
@@ -324,7 +334,7 @@ defmodule Onion.TickerSession do
                 ref: UUID.uuid4(),
                 op: "MARKET-UPDATE-NEW-TRADE",
                 data: %{
-                  time: current_timestamp,
+                  time: System.system_time(:millisecond),
                   open: message["data"]["price"],
                   close: message["data"]["price"],
                   high: message["data"]["price"],
@@ -343,13 +353,13 @@ defmodule Onion.TickerSession do
                 price: message["data"]["price"],
               }),
                 chart_data: [%Data{
-                time: current_timestamp,
+                time: System.system_time(:millisecond),
                 open: message["data"]["price"],
                 close: message["data"]["price"],
                 high: message["data"]["price"],
                 low: message["data"]["price"]
                 } | state.chart_data],
-                last_update_time: current_timestamp,
+                last_update_time: System.system_time(:millisecond),
                 current_open: message["data"]["price"],
                 current_high: message["data"]["price"],
                 current_low: message["data"]["price"]
@@ -357,24 +367,23 @@ defmodule Onion.TickerSession do
 
           end
         else
-          IO.inspect(state)
           current_high = cond do
-            state.current_high > message["price"] -> state.current_high
-            true -> message["price"]
+            state.current_high > message["data"]["price"] -> state.current_high
+            true -> message["data"]["price"]
           end
           current_low = cond do
-            state.current_low < message["price"] -> state.current_low
-            true -> message["price"]
+            state.current_low < message["data"]["price"] -> state.current_low
+            true -> message["data"]["price"]
           end
-          # current_low: message["price"]
+          # current_low: message["data"]["price"]
           Enum.each(state.listeners, fn tid ->
             Onion.UserSession.send_ws(tid, %{
               ref: UUID.uuid4(),
               op: "MARKET-UPDATE-NEW-TRADE",
               data: %{
-                time: state.last_update_time,
+                time: System.system_time(:millisecond),
                 open: state.current_open,
-                close: message["price"],
+                close: message["data"]["price"],
                 high: current_high,
                 low: current_low
               }
@@ -388,16 +397,16 @@ defmodule Onion.TickerSession do
             time: System.system_time(:millisecond),
             volume: message["qty"],
             seq_num: message["seq_num"],
-            price: message["price"],
+            price: message["data"]["price"],
           }),
             chart_data: [%Data{
-            time: state.last_update_time,
+            time: System.system_time(:millisecond),
             open: state.current_open,
-            close: message["price"],
+            close: message["data"]["price"],
             high: current_high,
             low: current_low
             } | state.chart_data],
-            last_update_time: state.last_update_time,
+            last_update_time: System.system_time(:millisecond),
             current_high: current_high,
             current_low: current_low
             }}

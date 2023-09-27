@@ -4,7 +4,7 @@ const wrap = (connection) => ({
     connection,
 
     subscribe: {
-        // market trade
+        // market trade 
         // takes a function that handles the message
         newTradeMsg: (handler) => connection.addListener("market_trade", handler),
     },
@@ -14,7 +14,7 @@ const wrap = (connection) => ({
         // get order book... take care of reply. Make sure the reply is been traslated to what the frontend expects
         getOrderBook: (
             ticker_id  
-          )=> connection.send("all_orders", { ticker_id }, generateUuid()),
+          )=> connection.send("all_orders", { ticker_id }, generateUuid()), 
     },
 
 

@@ -25,7 +25,7 @@ const Trade = () => {
 
     async function sub(){
       await conn.subscribe.newTradeMsg(handler);
-      // listen 
+      // listen  
       await conn.mutation.addAsListener(extractIdFromPath(location.pathname))
     }
 

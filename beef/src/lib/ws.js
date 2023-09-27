@@ -1,6 +1,7 @@
 import WebSocket from "isomorphic-ws";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { v4 as generateUuid } from "uuid";
+import { useListenersStore } from "./useListeners";
 
 const heartbeatInterval = 8000;
 const apiUrl = "ws://localhost:6000/socket";
@@ -38,7 +39,7 @@ export const connect = (
         socket.send(raw);
       };
   
-      const listeners = [];
+
 
       socket.addEventListener("close", (error) => {
         console.log(error);
@@ -62,9 +63,8 @@ export const connect = (
           return;
         }
         const message = JSON.parse(e.data);
-        // console.log(message)
-        logger("in", message.op, message.d, message.fetchId, e.data);
-  
+        // logger("in", message.op, message.d, message.fetchId, e.data);
+        const listeners = useListenersStore.getState().listeners
         if (message.op === "auth-good") {
           const connection = {
             close: () => socket.close(),
@@ -80,9 +80,12 @@ export const connect = (
             },
             addListener: (opcode, handler) => {
               const listener = { opcode, handler };
-  
-              listeners.push(listener); 
+              console.log(opcode)
 
+              useListenersStore.getState().appendListener(listener)
+              // listeners.push(listener); 
+
+              const listeners = useListenersStore.getState().listeners;
               
               return () => listeners.splice(listeners.indexOf(listener), 1);
             },
@@ -128,12 +131,13 @@ export const connect = (
   
           resolve(connection);
         } else {
-
+          
           listeners
             .filter(({ opcode }) => opcode === message.op)
             .forEach((it) =>
               it.handler(message)
             );
+
         }
       });
   

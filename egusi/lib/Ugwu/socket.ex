@@ -98,6 +98,7 @@ defmodule Ugwu.SocketHandler do
 
   @spec remote_send_impl(Egusi.json(), state) :: call_result
   defp remote_send_impl(message, state) do
+    IO.inspect(message)
     ws_push(prepare_socket_msg(message, state), state)
   end
 
