@@ -13,8 +13,8 @@ const wrap = (connection) => ({
     query: {
         // get order book... take care of reply. Make sure the reply is been traslated to what the frontend expects
         getOrderBook: (
-            ticker_id 
-          )=> connection.fetch("all_orders", { ticker_id }),
+            ticker_id  
+          )=> connection.send("all_orders", { ticker_id }, generateUuid()),
     },
 
 

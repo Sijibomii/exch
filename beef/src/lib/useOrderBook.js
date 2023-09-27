@@ -6,15 +6,18 @@ export const useOrderBookStore = create(
   combine(
     {
       orders: [],
+      chart: null
     },
     (set) => ({
         setOrderBook: (orders) => {
-            set(orders);
+            set({
+              orders
+          });
         },
         appendOrder: (order) => {
             set((state) => ({
                 orders: [...state.orders, order],
-            }));
+            })); 
         }
     })
   )

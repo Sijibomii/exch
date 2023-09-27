@@ -61,9 +61,8 @@ export const connect = (
           logger("in", "pong");
           return;
         }
-  
         const message = JSON.parse(e.data);
-        console.log(message)
+        // console.log(message)
         logger("in", message.op, message.d, message.fetchId, e.data);
   
         if (message.op === "auth-good") {
@@ -100,6 +99,7 @@ export const connect = (
   
                   return;
                 }
+                console.log("about to fetch")
                 const ref = !doneOpcode && generateUuid();
                 let timeoutId = null;
                 const unsubscribe = connection.addListener(
@@ -110,6 +110,7 @@ export const connect = (
                     if (timeoutId) clearTimeout(timeoutId);
   
                     unsubscribe();
+                    console.log("resolvingg....")
                     resolveCall(data);
                   }
                 );

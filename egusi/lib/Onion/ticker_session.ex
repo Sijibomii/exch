@@ -44,6 +44,16 @@ defmodule Onion.TickerSession do
   end
 
   defmodule Data do
+
+    @derive {Jason.Encoder, only: ~w(
+      time
+      open
+      close
+      high
+      low
+    )a}
+
+
     @type t :: %{
       time: integer(),
       open: String.t(),
@@ -224,16 +234,17 @@ defmodule Onion.TickerSession do
       IO.inspect(state.listeners)
       current_timestamp = System.system_time(:millisecond)
       if is_nil(state.last_update_time) or is_nil(state.current_high) or is_nil(state.current_low) do
+        # just started trading
         Enum.each(state.listeners, fn tid ->
           Onion.UserSession.send_ws(tid, %{
             ref: UUID.uuid4(),
             op: "MARKET-UPDATE-NEW-TRADE",
             data: %{
               time: current_timestamp,
-              open: message["data"]["price"],
+              open: 0,
               close: message["data"]["price"],
               high: message["data"]["price"],
-              low: message["data"]["price"]
+              low: 0
             }
           })
         end)
@@ -249,70 +260,117 @@ defmodule Onion.TickerSession do
         }),
           chart_data: [%Data{
           time: current_timestamp,
-          open: message["data"]["price"],
+          open: 0,
           close: message["data"]["price"],
           high: message["data"]["price"],
-          low: message["data"]["price"]
+          low: 0
           } | state.chart_data],
           last_update_time: current_timestamp,
-          current_open: message["data"]["price"],
+          current_open: 0,
           current_high: message["data"]["price"],
-          current_low: message["data"]["price"]
+          current_low: 0
           }}
       else
         elapsed_time_ms = current_timestamp - state.last_update_time
         if elapsed_time_ms >= 20000 do
           # more that 20 sec so new candle stick. how does it know when to start building a new candlestick
-          Enum.each(state.listeners, fn tid ->
-            Onion.UserSession.send_ws(tid, %{
-              ref: UUID.uuid4(),
-              op: "MARKET-UPDATE-NEW-TRADE",
-              data: %{
+
+          case state.chart_data do
+            [head | _tail] ->
+              ht = if head.close > message["data"]["price"], do: head.close, else: message["data"]["price"]
+              lw = if head.close < message["data"]["price"], do: head.close, else: message["data"]["price"]
+              Enum.each(state.listeners, fn tid ->
+                Onion.UserSession.send_ws(tid, %{
+                  ref: UUID.uuid4(),
+                  op: "MARKET-UPDATE-NEW-TRADE",
+                  data: %{
+                    time: current_timestamp,
+                    open: head.close,
+                    close: message["data"]["price"],
+                    high: ht,
+                    low: lw
+                  }
+                })
+              end)
+
+              {:noreply, %{state | order_book: append(state.order_book, %Order{
+                id: message["data"]["id"],
+                side: message["data"]["side"],
+                operation: message["op"],
+                time: System.system_time(:millisecond),
+                volume: message["data"]["qty"],
+                seq_num: message["data"]["seq_num"],
+                price: message["data"]["price"],
+              }),
+                chart_data: [%Data{
+                time: current_timestamp,
+                open: head.close,
+                close: message["data"]["price"],
+                high: ht,
+                low: lw
+                } | state.chart_data],
+
+                last_update_time: current_timestamp,
+                current_open: head.close,
+                current_high: ht,
+                current_low: lw
+                }}
+
+            _ ->
+              # this should never happen
+              IO.puts("empty ooo")
+              Enum.each(state.listeners, fn tid ->
+              Onion.UserSession.send_ws(tid, %{
+                ref: UUID.uuid4(),
+                op: "MARKET-UPDATE-NEW-TRADE",
+                data: %{
+                  time: current_timestamp,
+                  open: message["data"]["price"],
+                  close: message["data"]["price"],
+                  high: message["data"]["price"],
+                  low: message["data"]["price"]
+                }
+              })
+              end)
+
+              {:noreply, %{state | order_book: append(state.order_book, %Order{
+                id: message["data"]["id"],
+                side: message["data"]["side"],
+                operation: message["op"],
+                time: System.system_time(:millisecond),
+                volume: message["data"]["qty"],
+                seq_num: message["data"]["seq_num"],
+                price: message["data"]["price"],
+              }),
+                chart_data: [%Data{
                 time: current_timestamp,
                 open: message["data"]["price"],
                 close: message["data"]["price"],
                 high: message["data"]["price"],
                 low: message["data"]["price"]
-              }
-            })
-          end)
+                } | state.chart_data],
+                last_update_time: current_timestamp,
+                current_open: message["data"]["price"],
+                current_high: message["data"]["price"],
+                current_low: message["data"]["price"]
+                }}
 
-          {:noreply, %{state | order_book: append(state.order_book, %Order{
-            id: message["data"]["id"],
-            side: message["data"]["side"],
-            operation: message["op"],
-            time: System.system_time(:millisecond),
-            volume: message["data"]["qty"],
-            seq_num: message["data"]["seq_num"],
-            price: message["data"]["price"],
-          }),
-            chart_data: [%Data{
-            time: current_timestamp,
-            open: message["data"]["price"],
-            close: message["data"]["price"],
-            high: message["data"]["price"],
-            low: message["data"]["price"]
-            } | state.chart_data],
-            last_update_time: current_timestamp,
-            current_open: message["data"]["price"],
-            current_high: message["data"]["price"],
-            current_low: message["data"]["price"]
-            }}
+          end
         else
-
+          IO.inspect(state)
           current_high = cond do
-            String.to_integer(state.current_high) > String.to_integer(message["price"]) -> state.current_high
+            state.current_high > message["price"] -> state.current_high
             true -> message["price"]
           end
           current_low = cond do
-            String.to_integer(state.current_low) < String.to_integer(message["price"]) -> state.current_low
+            state.current_low < message["price"] -> state.current_low
             true -> message["price"]
           end
           # current_low: message["price"]
           Enum.each(state.listeners, fn tid ->
             Onion.UserSession.send_ws(tid, %{
               ref: UUID.uuid4(),
-              op: "MARKET-UPDATE--NEW-TRADE",
+              op: "MARKET-UPDATE-NEW-TRADE",
               data: %{
                 time: state.last_update_time,
                 open: state.current_open,
@@ -345,7 +403,6 @@ defmodule Onion.TickerSession do
             }}
 
         end
-
       end
     else
       {:noreply, state}

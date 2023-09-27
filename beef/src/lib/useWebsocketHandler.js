@@ -16,7 +16,7 @@ export const useMainWsHandler = () => {
             if (obj.hasOwnProperty(key)) {
                 keyValuePairs.push(`${key}: ${obj[key]}`);
             }
-        }
+        } 
 
         return keyValuePairs.join(', ');
     } 
@@ -33,18 +33,16 @@ export const useMainWsHandler = () => {
                 ShowError(message);
             }),
 
-            conn.addListener("orders:all", (message) => {
-                console.log(message)
+            conn.addListener("orders:all:reply", (message) => {
                 if(message !== null){
+                    console.log(message)
                     if (message.e){
-                        
                         ShowError(proccessError(message.e))
                         return 
                     }
-
                     useOrderBookStore 
                         .getState()
-                        .setOrderBook(message.p);
+                        .setOrderBook(message.p.orders);
                 }
             }),
             conn.addListener("trade:new:reply", (message) => {
@@ -58,15 +56,16 @@ export const useMainWsHandler = () => {
             }),
             conn.addListener("MARKET-UPDATE-NEW-TRADE", (message) => {
                 if(message){
+                    console.log(message)
                     if (message.e){
                         ShowError(proccessError(message.e))
                         return 
                     }   
                     showInfo("new trade came in!!!")
-
-                    // useOrderBookStore 
-                    //     .getState()
-                    //     .setOrderBook(message.p);
+                    
+                    useOrderBookStore 
+                        .getState()
+                        .appendOrder(message.p)
                 }
             })
 

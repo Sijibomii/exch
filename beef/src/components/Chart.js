@@ -3,12 +3,15 @@ import { createChart, ColorType } from 'lightweight-charts';
 import data from './data';
 import { useWrappedConn } from "../lib/useConnection";
 import { useLocation } from "react-router-dom"
+import { useOrderBookStore } from "../lib/useOrderBook";
 
 const Chart = () => {
 
     const chartContainerRef = useRef();
     const conn = useWrappedConn();
-    const [orderBook, setOrderBook] = useState(null);
+    const [orderBook, setOrderBook] = useState([]);
+    const [render, setRender] = useState(false)
+    const { orders } = useOrderBookStore();
 
     const location = useLocation();
 
@@ -26,22 +29,22 @@ const Chart = () => {
           return null; // Return null if no match is found
         }
       }
+    //   const orders = useOrderBookStore.getState().orders;
+
+    
  
     useEffect(()=> {
         const number = parseInt(extractIdFromPath(location.pathname));
 
-     conn.query.getOrderBook(number)
-        .then((response) => {
-        // Handle the successful response here
-            console.log('OrderBook response:', response);
-        })
-        .catch((error) => {
-            // Handle errors here
-            console.error('OrderBook error:', error);
-        });
+        async function getOrders(number) {
+            await conn.query.getOrderBook(number);
+            console.log("orders");
+        }
+        
+        getOrders(number);
 
-        // send 
-    }, [conn.query])
+    }, [location.pathname])
+
     useEffect(() => {
         const width = window.innerWidth;
         const chartProperties = {
@@ -77,8 +80,9 @@ const Chart = () => {
         chart.timeScale().fitContent();
 
         const newSeries = chart.addCandlestickSeries();
-        newSeries.setData(chartData);
-
+        const ord = orders.filter((order) => (order.close !== null) && (order.high !== null ));
+        newSeries.setData(ord);
+        
         window.addEventListener('resize', handleResize);
 
         return () => {
@@ -86,7 +90,7 @@ const Chart = () => {
 
             chart.remove();
         };
-    },[]);
+    },[orders]);
     return (
        <div className="" ref={chartContainerRef}>
 
