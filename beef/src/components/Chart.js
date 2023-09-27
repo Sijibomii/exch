@@ -71,9 +71,7 @@ const Chart = () => {
             chart.applyOptions({ width: chartContainerRef.current.clientWidth });
         };
 
-        const tradeHandler = (event) => {
-            console.log('Custom trade event received', event.detail);
-        }
+        
 
         const chartData = data.map(d => {
             return {time:d[0]/1000,open:parseFloat(d[1]),high:parseFloat(d[2]),low:parseFloat(d[3]),close:parseFloat(d[4])}
@@ -86,8 +84,15 @@ const Chart = () => {
         const ord = orders.filter((order) => ((order !== undefined) && (order !== null)) &&  (order.close !== null) && (order.high !== null ));
         newSeries.setData(ord);
 
+        const tradeHandler = (event) => {
+            newSeries.update(event.detail)
+            console.log('Custom trade event received', event.detail);
+        }
+
         window.addEventListener('trade', tradeHandler);
         window.addEventListener('resize', handleResize);
+
+        
 
         return () => {
             window.removeEventListener('resize', handleResize);

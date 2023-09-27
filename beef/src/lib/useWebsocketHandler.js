@@ -64,9 +64,9 @@ export const useMainWsHandler = () => {
 
                     showInfo("new trade came in!!!")
                     
-                    useOrderBookStore 
-                        .getState()
-                        .appendOrder(message.data)
+                    // useOrderBookStore 
+                    //     .getState()
+                    //     .appendOrder(message.data)
 
                    
                     const tradeEvent = new CustomEvent('trade', {

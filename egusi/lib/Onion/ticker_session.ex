@@ -241,7 +241,6 @@ defmodule Onion.TickerSession do
   def handle_cast({:incremental, message}, state) do
     # if op is trading send ws message to all listeners
     if message["op"] == "MARKET-UPDATE-TRADE" do
-
       current_timestamp = System.system_time(:millisecond)
       if is_nil(state.last_update_time) or is_nil(state.current_high) or is_nil(state.current_low) do
         # just started trading
@@ -284,7 +283,6 @@ defmodule Onion.TickerSession do
         elapsed_time_ms = current_timestamp - state.last_update_time
         if elapsed_time_ms >= 20000 do
           # more that 20 sec so new candle stick. how does it know when to start building a new candlestick
-
           case state.chart_data do
             [head | _tail] ->
               ht = if head.close > message["data"]["price"], do: head.close, else: message["data"]["price"]
@@ -324,7 +322,7 @@ defmodule Onion.TickerSession do
                 current_open: head.close,
                 current_high: ht,
                 current_low: lw
-                }}
+              }}
 
             _ ->
               # this should never happen
@@ -363,8 +361,7 @@ defmodule Onion.TickerSession do
                 current_open: message["data"]["price"],
                 current_high: message["data"]["price"],
                 current_low: message["data"]["price"]
-                }}
-
+              }}
           end
         else
           current_high = cond do
