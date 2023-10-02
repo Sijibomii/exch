@@ -47,7 +47,7 @@ async function run () {
     
         setTimeout(() => {}, 2000);
     
-        const respFundWallet = await axios({
+        await axios({
             url: `${BASE_URL}${`/api/v1/wallet/${respWallet.data.wallet.id}/fund`}`,
             method: "POST",
             headers: { 
@@ -89,7 +89,7 @@ async function run () {
                     5,
                     (priceIncrement*i) + priceIncrement
                 );
-                setTimeout(() => {}, 2000);
+                // setTimeout(() => {}, 2000);
             }else{
                 await wrappedConn3.mutation.sendTrade(
                     ticker_id,
@@ -97,7 +97,7 @@ async function run () {
                     2,
                     (priceIncrement*i) + priceIncrement
                 );
-                setTimeout(() => {}, 2000);
+                // setTimeout(() => {}, 2000);
             }
         }
     

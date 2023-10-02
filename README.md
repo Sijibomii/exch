@@ -2,7 +2,7 @@
 
 
 <p align="center">
-  <strong>An exchange platform for fundraising</strong>
+  <strong>A Token exchange platform</strong>
 </p>
 
 
@@ -10,9 +10,14 @@
 | :-------------------- | :-----------------------: |
 | [iyan](iyan)          |      Rust API             |
 | [egusi](egusi)        |       Elixir server       |
-| [turkey](turkey)      | Event persiting service   |
+| [turkey](turkey)      |      Matchine Engine      |
 | [nginx](ngnix)        |       Gateway             |
-| [ewedu](ewedu)        |   React Native App        |
-| [beef](beef)          |      Client               |
+| [beef](beef)          |     React Frontend        |
 
+## To run locally
+
+1. clone the repo
+2. cd exch
+3. docker-compose -f docker-compose.local.yml build
+4. docker-compose -f docker-compose.local.yml up
 
