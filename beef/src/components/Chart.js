@@ -82,7 +82,7 @@ const Chart = () => {
 
         const newSeries = chart.addCandlestickSeries();
         const ord = orders.filter((order) => ((order !== undefined) && (order !== null)) &&  (order.close !== null) && (order.high !== null ));
-        newSeries.setData(ord);
+        newSeries.setData(chartData);
 
         const tradeHandler = (event) => {
             newSeries.update(event.detail)

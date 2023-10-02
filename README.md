@@ -5,6 +5,8 @@
   <strong>A Token exchange platform</strong>
 </p>
 
+<img src="https://github.com/Sijibomii/exch/blob/main/Screen%20Shot%202023-10-02%20at%208.46.25%20AM.png" alt="exch trading page" />
+
 
 | Codebase              |      Description          |
 | :-------------------- | :-----------------------: |
